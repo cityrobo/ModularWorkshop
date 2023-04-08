@@ -11,25 +11,32 @@ namespace ModularWorkshop
         public Sprite Icon;
         public FVRFireArmAttachmentMount[] AttachmentMounts;
 
-        private Transform[] childObjects;
+        public ModularWeaponPartsAttachmentPoint[] SubAttachmentPoints;
 
-        protected List<Transform>_objectsToKeep = new();
+        private Transform[] _childObjects;
+
+        protected List<Transform> _objectsToKeep = new();
 
         public virtual void Awake()
         {
-            childObjects = this.GetComponentsInDirectChildren<Transform>(true);
+            _childObjects = this.GetComponentsInDirectChildren<Transform>(true);
 
-            foreach (Transform child in childObjects)
+            foreach (Transform child in _childObjects)
             {
                 child.SetParent(transform.parent);
+            }
+
+            foreach (var point in SubAttachmentPoints)
+            {
+                point.ModularPartUIPos = new(point.ModularPartUIPoint, transform);
             }
         }
 
         public virtual void OnDestroy()
         {
-            foreach (Transform child in childObjects)
+            foreach (Transform child in _childObjects)
             {
-                if (!_objectsToKeep.Contains(child)) Destroy(child.gameObject);
+                if (child != null && !_objectsToKeep.Contains(child)) Destroy(child.gameObject);
             }
         }
     }

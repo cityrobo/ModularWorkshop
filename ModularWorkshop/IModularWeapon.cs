@@ -3,34 +3,40 @@ using System.Collections.Generic;
 using UnityEngine;
 using FistVR;
 using System.Linq;
+using OpenScripts2;
 
 namespace ModularWorkshop
 {
     public interface IModularWeapon
     {
         public GameObject UIPrefab { get; }
-        public Transform GetModularBarrelPosition { get; }
-        public TransformProxy GetModularBarrelUIPosition { get; }
-        public GameObject[] ModularBarrelPrefabs { get; }
-        public Transform GetModularHandguardPosition { get; }
-        public TransformProxy GetModularHandguardUIPosition { get; }
-        public GameObject[] ModularHandguardPrefabs { get; }
-        public Transform GetModularStockPosition { get; }
-        public TransformProxy GetModularStockUIPosition { get; }
-        public GameObject[] ModularStockPrefabs { get; }
+        public string ModularBarrelPartID { get; }
+        public Transform ModularBarrelPosition { get; }
+        public TransformProxy ModularBarrelUIPosition { get; }
+        public Dictionary<string,GameObject> ModularBarrelPrefabsDictionary { get; }
+        public string ModularHandguardPartID { get; }
+        public Transform ModularHandguardPosition { get; }
+        public TransformProxy ModularHandguardUIPosition { get; }
+        public Dictionary<string, GameObject> ModularHandguardPrefabsDictionary { get; }
+        public string ModularStockPartID { get; }
+        public Transform ModularStockPosition { get; }
+        public TransformProxy ModularStockUIPosition { get; }
+        public Dictionary<string, GameObject> ModularStockPrefabsDictionary { get; }
 
-        public int GetSelectedModularBarrel { get; }
-        public int GetSelectedModularHandguard { get; }
-        public int GetSelectedModularStock { get; }
+        public string SelectedModularBarrel { get;}
+        public string SelectedModularHandguard { get;}
+        public string SelectedModularStock { get;}
 
-        public ModularWeaponPartsAttachmentPoint[] GetModularWeaponPartsAttachmentPoints { get; }
-        public Dictionary<string, List<GameObject>> GetModularWeaponPartsDictionary { get; }
+        public ModularWeaponPartsAttachmentPoint[] ModularWeaponPartsAttachmentPoints { get; }
 
-        public void ConfigureModularWeaponPart(ModularWeaponPartsAttachmentPoint modularWeaponPartsAttachmentPoint, int index);
+        public ModularWeaponPart ConfigureModularWeaponPart(ModularWeaponPartsAttachmentPoint modularWeaponPartsAttachmentPoint, string partName);
 
-        public void ConfigureModularBarrel(int index);
-        public void ConfigureModularHandguard(int index);
+        public ModularBarrel ConfigureModularBarrel(string partName);
+        public ModularHandguard ConfigureModularHandguard(string partName);
 
-        public void ConfigureModularStock(int index);
+        public ModularStock ConfigureModularStock(string partName);
+
+        public ModularWorkshopPlatform WorkshopPlatform { get; set; }
+        public List<ModularWeaponPartsAttachmentPoint> SubAttachmentPoints { get; }
     }
 }

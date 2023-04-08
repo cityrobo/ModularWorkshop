@@ -31,6 +31,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'MeatKit|AnyCPU'">
     <OutputPath>bin\MeatKit\</OutputPath>
@@ -99,17 +100,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ModularFVRFireArm.cs" />
+    <Compile Include="IPartFireArmRequirement.cs" />
     <Compile Include="IModularWeapon.cs" />
-    <Compile Include="ModularWeaponPartsPrefabs.cs" />
+    <Compile Include="HeatingEffectAddon.cs" />
     <Compile Include="ModularWeaponPartsAttachmentPoint.cs" />
-    <Compile Include="TransformProxy.cs" />
     <Compile Include="ModularBarrel.cs" />
     <Compile Include="ModularClosedBoltWeapon.cs" />
     <Compile Include="ModularHandguard.cs" />
     <Compile Include="ModularRevolver.cs" />
     <Compile Include="ModularStock.cs" />
     <Compile Include="ModularWeaponPart.cs" />
-    <Compile Include="ModularWeaponTester.cs" />
     <Compile Include="ModularWorkshopManager.cs" />
     <Compile Include="ModularWorkshopPartsDefinition.cs" />
     <Compile Include="ModularWorkshopPlatform.cs" />

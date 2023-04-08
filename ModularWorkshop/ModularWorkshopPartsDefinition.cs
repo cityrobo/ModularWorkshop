@@ -12,24 +12,21 @@ namespace ModularWorkshop
     [CreateAssetMenu(fileName = "New ModularWorkshopPartsDefinition", menuName = "ModularWorkshop/ModularWorkshopPartsDefinition", order = 0)]
     public class ModularWorkshopPartsDefinition : ScriptableObject
     {
-        public string WeaponSystemID;
-        public GameObject UIPrefab;
-        public List<GameObject> ModularBarrelPrefabs;
-        public List<GameObject> ModularHandguardPrefabs;
-        public List<GameObject> ModularStockPrefabs;
-        public List<ModularWeaponPartsPrefabs> ModularWeaponPartsPrefabs;
+        public string PartsID;
+        public List<GameObject> ModularPrefabs;
 
-        public Dictionary<string, List<GameObject>> ModularWeaponPartsDictionary 
-        { 
-            get 
+        public Dictionary<string, GameObject> PartsDictionary
+        {
+            get
             {
-                Dictionary<string, List<GameObject>> keyValuePairs = new();
-                foreach (var item in ModularWeaponPartsPrefabs)
+                Dictionary<string, GameObject> keyValuePairs = new();
+                foreach (var item in ModularPrefabs)
                 {
-                    keyValuePairs.Add(item.GroupName, item.Prefabs);
+                    string Name = item.GetComponent<ModularWeaponPart>().Name;
+                    keyValuePairs.Add(Name, item);
                 }
                 return keyValuePairs;
-            } 
+            }
         }
     }
 }

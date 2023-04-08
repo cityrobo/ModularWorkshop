@@ -13,10 +13,12 @@ namespace ModularWorkshop
         public Vector3 localPosition;
         public Quaternion localRotation;
 
-        public TransformProxy(Transform transform)
+        public TransformProxy(Transform transform, bool setParent = false)
         {
             localPosition = transform.localPosition;
             localRotation = transform.localRotation;
+
+            if (setParent) parent = transform.parent;
         }
 
         public TransformProxy(Transform transform, Transform parent)
