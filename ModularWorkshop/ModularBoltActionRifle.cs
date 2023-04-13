@@ -4,11 +4,10 @@ using UnityEngine;
 using FistVR;
 using System.Linq;
 using OpenScripts2;
-using System.Reflection;
 
 namespace ModularWorkshop
 {
-    public class ModularRevolver : Revolver , IModularWeapon
+    public class ModularBoltActionRifle : BoltActionRifle , IModularWeapon
     {
         [Header("Modular Configuration")]
         public ModularFVRFireArm ModularFVRFireArm;
@@ -77,7 +76,6 @@ namespace ModularWorkshop
         {
             return ModularFVRFireArm.ConfigureModularWeaponPart(modularWeaponPartsAttachmentPoint, selectedPart, this);
         }
-
         public ModularBarrel ConfigureModularBarrel(string selectedPart)
         {
             return ModularFVRFireArm.ConfigureModularBarrel(selectedPart, this);
@@ -110,9 +108,16 @@ namespace ModularWorkshop
         [ContextMenu("Copy Existing Firearm Component")]
         public void CopyFirearm()
         {
-            Revolver[] attachments = GetComponents<Revolver>();
-            Revolver toCopy = attachments.Single(c => c != this);
-            toCopy.Cylinder.Revolver = this;
+            BoltActionRifle[] weapons = GetComponents<BoltActionRifle>();
+            BoltActionRifle toCopy = weapons.Single(c => c != this);
+            toCopy.BoltHandle.Rifle = this;
+            
+            if (toCopy.Foregrip != null)
+            {
+                toCopy.Foregrip.GetComponent<FVRAlternateGrip>().PrimaryObject = this;
+            }
+            BoltActionMagEjectionTrigger grabTrigger = toCopy.GetComponentInChildren<BoltActionMagEjectionTrigger>();
+            if (grabTrigger != null) grabTrigger.Rifle = this;
 
             foreach (var mount in toCopy.AttachmentMounts)
             {
@@ -120,31 +125,7 @@ namespace ModularWorkshop
                 mount.Parent = this;
             }
 
-            CopyRevolver(toCopy);
-        }
-
-        public void CopyRevolver(Revolver reference)
-        {
-            Type type = typeof(Revolver);
-            //if (type != reference.GetType()) return null; // type mis-match
-            BindingFlags flags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
-            PropertyInfo[] pinfos = type.GetProperties(flags);
-            foreach (var pinfo in pinfos)
-            {
-                if (pinfo.CanWrite)
-                {
-                    try
-                    {
-                        pinfo.SetValue(this, pinfo.GetValue(reference, null), null);
-                    }
-                    catch { } // In case of NotImplementedException being thrown. For some reason specifying that exception didn't seem to catch it, so I didn't catch anything specific.
-                }
-            }
-            FieldInfo[] finfos = type.GetFields(flags);
-            foreach (var finfo in finfos)
-            {
-                finfo.SetValue(this, finfo.GetValue(reference));
-            }
+            this.CopyComponent(toCopy);
         }
     }
 }

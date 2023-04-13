@@ -10,7 +10,7 @@ namespace ModularWorkshop
     [RequireComponent(typeof(FirearmHeatingEffect))]
     public class HeatingEffectAddon : MonoBehaviour , IPartFireArmRequirement
     {
-        public FVRFireArm FireArm 
+        public FVRFireArm FireArm
         { 
             set 
             {

@@ -12,22 +12,22 @@ namespace ModularWorkshop
         [Header("Modular Configuration")]
         public ModularFVRFireArm ModularFVRFireArm;
         public GameObject UIPrefab => ModularFVRFireArm.UIPrefab;
-        public string ModularBarrelPartID => ModularFVRFireArm.ModularBarrelPartID;
-        public Transform ModularBarrelPosition => ModularFVRFireArm.ModularBarrelPosition;
-        public TransformProxy ModularBarrelUIPosition => ModularFVRFireArm.ModularBarrelUIPositionProxy;
-        public Dictionary<string, GameObject> ModularBarrelPrefabsDictionary => ModularWorkshopManager.ModularWorkshopDictionary[ModularFVRFireArm.ModularBarrelPartID].PartsDictionary;
-        public string ModularHandguardPartID => ModularFVRFireArm.ModularHandguardPartID;
-        public Transform ModularHandguardPosition => ModularFVRFireArm.ModularHandguardPosition;
-        public TransformProxy ModularHandguardUIPosition => ModularFVRFireArm.ModularHandguardUIPositionProxy;
-        public Dictionary<string, GameObject> ModularHandguardPrefabsDictionary => ModularWorkshopManager.ModularWorkshopDictionary[ModularFVRFireArm.ModularHandguardPartID].PartsDictionary;
-        public string ModularStockPartID => ModularFVRFireArm.ModularStockPartID;
-        public Transform ModularStockPosition => ModularFVRFireArm.ModularStockPosition;
-        public TransformProxy ModularStockUIPosition => ModularFVRFireArm.ModularStockUIPositionProxy;
-        public Dictionary<string, GameObject> ModularStockPrefabsDictionary => ModularWorkshopManager.ModularWorkshopDictionary[ModularFVRFireArm.ModularStockPartID].PartsDictionary;
+        public string ModularBarrelPartsID => ModularFVRFireArm.ModularBarrelAttachmentPoint.ModularPartsGroupID;
+        public Transform ModularBarrelPoint => ModularFVRFireArm.ModularBarrelAttachmentPoint.ModularPartPoint;
+        public TransformProxy ModularBarrelUIPointProxy => ModularFVRFireArm.ModularBarrelAttachmentPoint.ModularPartUIPointProxy;
+        public Dictionary<string, GameObject> ModularBarrelPrefabsDictionary => ModularFVRFireArm.ModularBarrelPrefabsDictionary;
+        public string ModularHandguardPartsID => ModularFVRFireArm.ModularHandguardAttachmentPoint.ModularPartsGroupID;
+        public Transform ModularHandguardPoint => ModularFVRFireArm.ModularHandguardAttachmentPoint.ModularPartPoint;
+        public TransformProxy ModularHandguardUIPointProxy => ModularFVRFireArm.ModularHandguardAttachmentPoint.ModularPartUIPointProxy;
+        public Dictionary<string, GameObject> ModularHandguardPrefabsDictionary => ModularFVRFireArm.ModularHandguardPrefabsDictionary;
+        public string ModularStockPartsID => ModularFVRFireArm.ModularStockAttachmentPoint.ModularPartsGroupID;
+        public Transform ModularStockPoint => ModularFVRFireArm.ModularStockAttachmentPoint.ModularPartPoint;
+        public TransformProxy ModularStockUIPointProxy => ModularFVRFireArm.ModularStockAttachmentPoint.ModularPartUIPointProxy;
+        public Dictionary<string, GameObject> ModularStockPrefabsDictionary => ModularFVRFireArm.ModularStockPrefabsDictionary;
 
-        public string SelectedModularBarrel => ModularFVRFireArm.SelectedModularBarrel;
-        public string SelectedModularHandguard => ModularFVRFireArm.SelectedModularHandguard;
-        public string SelectedModularStock => ModularFVRFireArm.SelectedModularStock;
+        public string SelectedModularBarrel => ModularFVRFireArm.ModularBarrelAttachmentPoint.SelectedModularWeaponPart;
+        public string SelectedModularHandguard => ModularFVRFireArm.ModularHandguardAttachmentPoint.SelectedModularWeaponPart;
+        public string SelectedModularStock => ModularFVRFireArm.ModularStockAttachmentPoint.SelectedModularWeaponPart;
         public ModularWeaponPartsAttachmentPoint[] ModularWeaponPartsAttachmentPoints => ModularFVRFireArm.ModularWeaponPartsAttachmentPoints;
         public ModularWorkshopPlatform WorkshopPlatform
         {
@@ -35,6 +35,17 @@ namespace ModularWorkshop
             set => ModularFVRFireArm.WorkshopPlatform = value;
         }
         public List<ModularWeaponPartsAttachmentPoint> SubAttachmentPoints => ModularFVRFireArm.SubAttachmentPoints;
+        public ModularFVRFireArm GetModularFVRFireArm => ModularFVRFireArm;
+
+        public Dictionary<string, ModularWeaponPartsAttachmentPoint> AllAttachmentPoints
+        {
+            get
+            {
+                Dictionary<string, ModularWeaponPartsAttachmentPoint> allAttachmentPoints = ModularFVRFireArm.AllAttachmentPoints;
+
+                return allAttachmentPoints;
+            }
+        }
 
         public override void Awake()
         {
@@ -80,12 +91,12 @@ namespace ModularWorkshop
 
         public void ConfigureAll()
         {
-            if (ModularFVRFireArm.ModularBarrelPartID != string.Empty) ConfigureModularBarrel(ModularFVRFireArm.SelectedModularBarrel);
-            if (ModularFVRFireArm.ModularHandguardPartID != string.Empty) ConfigureModularHandguard(ModularFVRFireArm.SelectedModularHandguard);
-            if (ModularFVRFireArm.ModularStockPartID != string.Empty) ConfigureModularStock(ModularFVRFireArm.SelectedModularStock);
+            if (ModularBarrelPartsID != string.Empty) ConfigureModularBarrel(SelectedModularBarrel);
+            if (ModularHandguardPartsID != string.Empty) ConfigureModularHandguard(SelectedModularHandguard);
+            if (ModularStockPartsID != string.Empty) ConfigureModularStock(SelectedModularStock);
             foreach (ModularWeaponPartsAttachmentPoint attachmentPoint in ModularFVRFireArm.ModularWeaponPartsAttachmentPoints)
             {
-                if (ModularWorkshopManager.ModularWorkshopDictionary.TryGetValue(attachmentPoint.PartID, out ModularWorkshopPartsDefinition prefabs) && prefabs.PartsDictionary.Count > 0) ConfigureModularWeaponPart(attachmentPoint, attachmentPoint.SelectedModularWeaponPart);
+                if (ModularWorkshopManager.ModularWorkshopDictionary.TryGetValue(attachmentPoint.ModularPartsGroupID, out ModularWorkshopPartsDefinition prefabs) && prefabs.PartsDictionary.Count > 0) ConfigureModularWeaponPart(attachmentPoint, attachmentPoint.SelectedModularWeaponPart);
             }
         }
 
@@ -97,9 +108,18 @@ namespace ModularWorkshop
         [ContextMenu("Copy Existing Firearm Component")]
         public void CopyFirearm()
         {
-            ClosedBoltWeapon[] attachments = GetComponents<ClosedBoltWeapon>();
-            ClosedBoltWeapon toCopy = attachments.Single(c => c != this);
+            ClosedBoltWeapon[] weapon = GetComponents<ClosedBoltWeapon>();
+            ClosedBoltWeapon toCopy = weapon.Single(c => c != this);
             toCopy.Bolt.Weapon = this;
+            if (toCopy.Handle != null) toCopy.Handle.Weapon = this;
+
+            if (toCopy.Foregrip != null)
+            {
+                toCopy.Foregrip.GetComponent<FVRAlternateGrip>().PrimaryObject = this;
+            }
+
+            ClosedBoltMagEjectionTrigger grabTrigger = toCopy.GetComponentInChildren<ClosedBoltMagEjectionTrigger>();
+            if (grabTrigger != null) grabTrigger.Receiver = this;
 
             foreach (var mount in toCopy.AttachmentMounts)
             {

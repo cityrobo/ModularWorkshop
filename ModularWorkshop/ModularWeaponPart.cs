@@ -28,7 +28,7 @@ namespace ModularWorkshop
 
             foreach (var point in SubAttachmentPoints)
             {
-                point.ModularPartUIPos = new(point.ModularPartUIPoint, transform);
+                point.ModularPartUIPointProxy = new(point.ModularPartUIPoint, transform);
             }
         }
 

@@ -13,20 +13,32 @@ namespace ModularWorkshop
 {
     public class ModularWorkshopUI : MonoBehaviour
     {
+        [Header("Required interface parts.")]
         public OptionsPanel_ButtonSet ButtonSet;
         public GameObject[] PartButtons;
         public Text[] PartTexts;
         public Image[] PartImages;
         public GameObject BackButton;
         public GameObject NextButton;
-        public GameObject ShowButton;
-        public Text ShowButtonText;
-        public GameObject HideButton;
-        public GameObject MainCanvas;
+        [Header("Optional interface parts.")]
+        [Tooltip("Optional Field that displays the selected and maximum page index.")]
         public Text PageIndex;
+        [Tooltip("Button that allows to show the UI when hidden. Requires ShowButtonText, HideButton and MainCanvas to be set up as well.")]
+        public GameObject ShowButton;
+        [Tooltip("Text field that shows the part group name on the show button. Requires ShowButton, HideButton and MainCanvas to be set up as well.")]
+        public Text ShowButtonText;
+        [Tooltip("Button that allows to hide the UI when shown. Requires ShowButton, ShowButtonText and MainCanvas to be set up as well.")]
+        public GameObject HideButton;
+        [Tooltip("Game object that contains all objects that should be hidden. Requires ShowButton, ShowButtonText and HideButton to be set up as well.")]
+        public GameObject MainCanvas;
+        [Tooltip("Optional Field that simply displays the name of the part group. Can be the PartsID or the DisplayName, depending on how the PartsDefinition is set up.")]
+        public Text DisplayNameText;
         //public GameObject ApplyButton;
-
+        [Header("Sound effects.")]
         public AudioEvent AudEvent_Beep;
+        public AudioEvent ApplySound;
+        public AudioEvent ShowSound;
+        public AudioEvent HideSound;
 
         [HideInInspector]
         public IModularWeapon ModularWeapon;
@@ -42,9 +54,9 @@ namespace ModularWorkshop
         [HideInInspector]
         public EPartType PartType;
         [HideInInspector]
-        public string PartID;
+        public string ModularPartsGroupID;
 
-        private int _entryIndex;
+        private int _pageIndex;
         private int _selectedButton;
         private int _selectedPart;
 
@@ -89,10 +101,10 @@ namespace ModularWorkshop
                     part = ModularWeapon.ConfigureModularStock(_partNames[_selectedPart]);
                     break;
                 case EPartType.MainWeaponGeneralAttachmentPoint:
-                    part = ModularWeapon.ConfigureModularWeaponPart(ModularWeapon.ModularWeaponPartsAttachmentPoints.Single(obj => obj.PartID == PartID), _partNames[_selectedPart]);
+                    part = ModularWeapon.ConfigureModularWeaponPart(ModularWeapon.ModularWeaponPartsAttachmentPoints.Single(obj => obj.ModularPartsGroupID == ModularPartsGroupID), _partNames[_selectedPart]);
                     break;
                 case EPartType.SubAttachmentPoint:
-                    part = ModularWeapon.ConfigureModularWeaponPart(ModularWeapon.SubAttachmentPoints.Single(obj => obj.PartID == PartID), _partNames[_selectedPart]);
+                    part = ModularWeapon.ConfigureModularWeaponPart(ModularWeapon.SubAttachmentPoints.Single(obj => obj.ModularPartsGroupID == ModularPartsGroupID), _partNames[_selectedPart]);
                     break;
                 default:
                     part = null;
@@ -104,26 +116,26 @@ namespace ModularWorkshop
         {
             _isShowingUI = true;
             UpdateDisplay();
-            Beep();
+            SM.PlayCoreSound(FVRPooledAudioType.Generic, ShowSound, transform.position);
         }
 
         public void PButton_HideUI()
         {
             _isShowingUI = false;
             UpdateDisplay();
-            Beep();
+            SM.PlayCoreSound(FVRPooledAudioType.Generic, HideSound, transform.position);
         }
 
         public void PBButton_Next()
         {
-            _entryIndex += PartButtons.Length;
+            _pageIndex++;
             //_selectedButton--;
             UpdateDisplay();
             Beep();
         }
         public void PBButton_Previous()
         {
-            _entryIndex -= PartButtons.Length;
+            _pageIndex--;
             //_selectedButton++;
             UpdateDisplay();
             Beep();
@@ -132,10 +144,10 @@ namespace ModularWorkshop
         public void PButton_Select(int i)
         {
             _selectedButton = i;
-            _selectedPart = _selectedButton + _entryIndex;
+            _selectedPart = _selectedButton + _pageIndex;
             UpdateDisplay();
             PBButton_Apply();
-            Beep();
+            SM.PlayCoreSound(FVRPooledAudioType.Generic, ApplySound, transform.position);
         }
 
         public void InitializeArrays()
@@ -158,62 +170,56 @@ namespace ModularWorkshop
                     _selectedPart = Array.IndexOf(_partNames, ModularWeapon.SelectedModularStock);
                     break;
                 case EPartType.MainWeaponGeneralAttachmentPoint:
-                    _partDictionary = ModularWorkshopManager.ModularWorkshopDictionary[PartID].PartsDictionary;
+                    _partDictionary = ModularWorkshopManager.ModularWorkshopDictionary[ModularPartsGroupID].PartsDictionary;
                     _partNames = _partDictionary.Select(prefab => prefab.Key).ToArray();
-                    _selectedPart = Array.IndexOf(_partNames, ModularWeapon.ModularWeaponPartsAttachmentPoints.Single(obj => obj.PartID == PartID).SelectedModularWeaponPart);
+                    _selectedPart = Array.IndexOf(_partNames, ModularWeapon.ModularWeaponPartsAttachmentPoints.Single(obj => obj.ModularPartsGroupID == ModularPartsGroupID).SelectedModularWeaponPart);
                     break;
                 case EPartType.SubAttachmentPoint:
-                    _partDictionary = ModularWorkshopManager.ModularWorkshopDictionary[PartID].PartsDictionary;
+                    _partDictionary = ModularWorkshopManager.ModularWorkshopDictionary[ModularPartsGroupID].PartsDictionary;
                     _partNames = _partDictionary.Select(prefab => prefab.Key).ToArray();
-                    _selectedPart = Array.IndexOf(_partNames, ModularWeapon.SubAttachmentPoints.Single(obj => obj.PartID == PartID).SelectedModularWeaponPart);
+                    _selectedPart = Array.IndexOf(_partNames, ModularWeapon.SubAttachmentPoints.Single(obj => obj.ModularPartsGroupID == ModularPartsGroupID).SelectedModularWeaponPart);
                     break;
             }
             _partSprites = _partDictionary.Select(prefab => prefab.Value.GetComponent<ModularWeaponPart>().Icon).ToArray();
 
-            _entryIndex = _selectedPart - (PartButtons.Length - 1);
-            if (_entryIndex < 0) _entryIndex = 0;
-            _selectedButton = _selectedPart - _entryIndex;
+            _pageIndex = Mathf.FloorToInt(_selectedPart / PartButtons.Length);
+            if (_pageIndex < 0) _pageIndex = 0;
+            _selectedButton = _selectedPart - _pageIndex * PartButtons.Length;
         }
 
         public void UpdateDisplay()
         {
+            if (DisplayNameText != null) DisplayNameText.text = ModularWorkshopManager.ModularWorkshopDictionary[ModularPartsGroupID].DisplayName;
+
             if (_isShowingUI)
             {
                 MainCanvas.SetActive(true);
                 ShowButton.SetActive(false);
                 HideButton.SetActive(true);
 
-                for (int i = _entryIndex; i - _entryIndex < PartButtons.Length; i++)
+                for (int i = 0; i < PartButtons.Length; i++)
                 {
-                    if (i < _partDictionary.Count)
+                    if (i + PartButtons.Length * _pageIndex < _partDictionary.Count)
                     {
-                        PartButtons[i - _entryIndex].SetActive(true);
-                        PartTexts[i - _entryIndex].text = _partNames[i];
-                        PartImages[i - _entryIndex].sprite = _partSprites[i];
+                        PartButtons[i].SetActive(true);
+                        PartTexts[i].text = _partNames[i + PartButtons.Length * _pageIndex];
+                        PartImages[i].sprite = _partSprites[i + PartButtons.Length * _pageIndex];
                     }
                     else
                     {
-                        PartButtons[i - _entryIndex].SetActive(false);
+                        PartButtons[i].SetActive(false);
                     }
                 }
 
-                //for (int i = 0; i < Mathf.Min(_partDictionary.Count, PartButtons.Length); i++)
-                //{
-                //    PartButtons[i].SetActive(true);
-
-                //    PartTexts[i].text = _partNames[i + _entryIndex];
-                //    PartImages[i].sprite = _partSprites[i + _entryIndex];
-                //}
-
-                if (_entryIndex == 0) BackButton.SetActive(false);
+                if (_pageIndex == 0) BackButton.SetActive(false);
                 else BackButton.SetActive(true);
 
-                if (_partDictionary.Count > PartButtons.Length + _entryIndex) NextButton.SetActive(true);
+                if (_partDictionary.Count > PartButtons.Length * _pageIndex) NextButton.SetActive(true);
                 else NextButton.SetActive(false);
 
                 ButtonSet.SetSelectedButton(_selectedButton);
 
-                if (PageIndex != null) PageIndex.text = $"{1 + (_entryIndex / PartButtons.Length)}/{Mathf.CeilToInt(1 + (_partDictionary.Count / PartButtons.Length))}";
+                if (PageIndex != null) PageIndex.text = $"{1 + _pageIndex}/{Mathf.CeilToInt(1 + (_partDictionary.Count / PartButtons.Length))}";
             }
             else
             {
@@ -221,26 +227,7 @@ namespace ModularWorkshop
                 ShowButton.SetActive(true);
                 HideButton.SetActive(false);
 
-                ShowButtonText.text = PartID;
-
-                //switch (PartType)
-                //{
-                //    case EPartType.Barrel:
-                //        ShowButtonText.text = "Barrel";
-                //        break;
-                //    case EPartType.Handguard:
-                //        ShowButtonText.text = "Handguard";
-                //        break;
-                //    case EPartType.Stock:
-                //        ShowButtonText.text = "Stock";
-                //        break;
-                //    case EPartType.MainWeaponGeneralAttachmentPoint:
-                //        ShowButtonText.text = PartID;
-                //        break;
-                //    case EPartType.SubAttachmentPoint:
-                //        ShowButtonText.text = PartID;
-                //        break;
-                //}
+                ShowButtonText.text = ModularWorkshopManager.ModularWorkshopDictionary[ModularPartsGroupID].DisplayName;
             }
         }
     }

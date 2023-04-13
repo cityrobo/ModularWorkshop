@@ -32,38 +32,38 @@ namespace ModularWorkshop
                     GameObject UIPrefab = ModularWeapon.UIPrefab;
                     GameObject UIObject;
                     ModularWorkshopUI UI;
-                    if (ModularWeapon.ModularBarrelPartID != string.Empty)
+                    if (ModularWeapon.ModularBarrelPartsID != string.Empty)
                     {
-                        UIObject = Instantiate(UIPrefab, ModularWeapon.ModularBarrelUIPosition.position, ModularWeapon.ModularBarrelUIPosition.rotation, ModularWeapon.ModularBarrelUIPosition.parent);
+                        UIObject = Instantiate(UIPrefab, ModularWeapon.ModularBarrelUIPointProxy.position, ModularWeapon.ModularBarrelUIPointProxy.rotation, ModularWeapon.ModularBarrelUIPointProxy.parent);
                         _UIScreens.Add(UIObject);
                         UI = UIObject.GetComponent<ModularWorkshopUI>();
                         UI.PartType = ModularWorkshopUI.EPartType.Barrel;
                         UI.ModularWeapon = ModularWeapon;
-                        UI.PartID = ModularWeapon.ModularBarrelPartID;
+                        UI.ModularPartsGroupID = ModularWeapon.ModularBarrelPartsID;
 
                         UI.InitializeArrays();
                         UI.UpdateDisplay();
                     }
-                    if (ModularWeapon.ModularHandguardPartID != string.Empty)
+                    if (ModularWeapon.ModularHandguardPartsID != string.Empty)
                     {
-                        UIObject = Instantiate(UIPrefab, ModularWeapon.ModularHandguardUIPosition.position, ModularWeapon.ModularHandguardUIPosition.rotation, ModularWeapon.ModularHandguardUIPosition.parent);
+                        UIObject = Instantiate(UIPrefab, ModularWeapon.ModularHandguardUIPointProxy.position, ModularWeapon.ModularHandguardUIPointProxy.rotation, ModularWeapon.ModularHandguardUIPointProxy.parent);
                         _UIScreens.Add(UIObject);
                         UI = UIObject.GetComponent<ModularWorkshopUI>();
                         UI.PartType = ModularWorkshopUI.EPartType.Handguard;
                         UI.ModularWeapon = ModularWeapon;
-                        UI.PartID = ModularWeapon.ModularHandguardPartID;
+                        UI.ModularPartsGroupID = ModularWeapon.ModularHandguardPartsID;
 
                         UI.InitializeArrays();
                         UI.UpdateDisplay();
                     }
-                    if (ModularWeapon.ModularStockPartID != string.Empty)
+                    if (ModularWeapon.ModularStockPartsID != string.Empty)
                     {
-                        UIObject = Instantiate(UIPrefab, ModularWeapon.ModularStockUIPosition.position, ModularWeapon.ModularStockUIPosition.rotation, ModularWeapon.ModularStockUIPosition.parent);
+                        UIObject = Instantiate(UIPrefab, ModularWeapon.ModularStockUIPointProxy.position, ModularWeapon.ModularStockUIPointProxy.rotation, ModularWeapon.ModularStockUIPointProxy.parent);
                         _UIScreens.Add(UIObject);
                         UI = UIObject.GetComponent<ModularWorkshopUI>();
                         UI.PartType = ModularWorkshopUI.EPartType.Stock;
                         UI.ModularWeapon = ModularWeapon;
-                        UI.PartID = ModularWeapon.ModularStockPartID;
+                        UI.ModularPartsGroupID = ModularWeapon.ModularStockPartsID;
 
                         UI.InitializeArrays();
                         UI.UpdateDisplay();
@@ -71,12 +71,12 @@ namespace ModularWorkshop
 
                     foreach (var point in ModularWeapon.ModularWeaponPartsAttachmentPoints)
                     {
-                        UIObject = Instantiate(UIPrefab, point.ModularPartUIPos.position, point.ModularPartUIPos.rotation, point.ModularPartUIPos.parent);
+                        UIObject = Instantiate(UIPrefab, point.ModularPartUIPointProxy.position, point.ModularPartUIPointProxy.rotation, point.ModularPartUIPointProxy.parent);
                         _UIScreens.Add(UIObject);
                         UI = UIObject.GetComponent<ModularWorkshopUI>();
                         UI.PartType = ModularWorkshopUI.EPartType.MainWeaponGeneralAttachmentPoint;
                         UI.ModularWeapon = ModularWeapon;
-                        UI.PartID = point.PartID;
+                        UI.ModularPartsGroupID = point.ModularPartsGroupID;
 
                         UI.InitializeArrays();
                         UI.UpdateDisplay();
@@ -84,12 +84,12 @@ namespace ModularWorkshop
 
                     foreach (var subPoint in ModularWeapon.SubAttachmentPoints)
                     {
-                        UIObject = Instantiate(UIPrefab, subPoint.ModularPartUIPos.position, subPoint.ModularPartUIPos.rotation, subPoint.ModularPartUIPos.parent);
+                        UIObject = Instantiate(UIPrefab, subPoint.ModularPartUIPointProxy.position, subPoint.ModularPartUIPointProxy.rotation, subPoint.ModularPartUIPointProxy.parent);
                         _UIScreens.Add(UIObject);
                         UI = UIObject.GetComponent<ModularWorkshopUI>();
                         UI.PartType = ModularWorkshopUI.EPartType.SubAttachmentPoint;
                         UI.ModularWeapon = ModularWeapon;
-                        UI.PartID = subPoint.PartID;
+                        UI.ModularPartsGroupID = subPoint.ModularPartsGroupID;
 
                         UI.InitializeArrays();
                         UI.UpdateDisplay();
@@ -122,11 +122,11 @@ namespace ModularWorkshop
             GameObject UIPrefab = ModularWeapon.UIPrefab;
             GameObject UIObject;
             ModularWorkshopUI UI;
-            UIObject = Instantiate(UIPrefab, point.ModularPartUIPos.position, point.ModularPartUIPos.rotation, point.ModularPartUIPos.parent);
+            UIObject = Instantiate(UIPrefab, point.ModularPartUIPointProxy.position, point.ModularPartUIPointProxy.rotation, point.ModularPartUIPointProxy.parent);
             _subUIScreens.Add(UIObject);
             UI = UIObject.GetComponent<ModularWorkshopUI>();
             UI.PartType = ModularWorkshopUI.EPartType.SubAttachmentPoint;
-            UI.PartID = point.PartID;
+            UI.ModularPartsGroupID = point.ModularPartsGroupID;
             UI.ModularWeapon = ModularWeapon;
 
             UI.InitializeArrays();

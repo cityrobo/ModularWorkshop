@@ -96,10 +96,15 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ModularBoltActionRifle.cs" />
+    <Compile Include="ModularOpenBoltReceiver.cs" />
+    <Compile Include="ModularHandgun.cs" />
     <Compile Include="ModularFVRFireArm.cs" />
     <Compile Include="IPartFireArmRequirement.cs" />
     <Compile Include="IModularWeapon.cs" />
     <Compile Include="HeatingEffectAddon.cs" />
+    <Compile Include="ModularBarrelExtension.cs" />
+    <Compile Include="ModularStockExtension.cs" />
     <Compile Include="ModularWeaponPartsAttachmentPoint.cs" />
     <Compile Include="ModularBarrel.cs" />
     <Compile Include="ModularClosedBoltWeapon.cs" />

@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 using FistVR;
 using OpenScripts2;
+using JetBrains.Annotations;
 
 namespace ModularWorkshop
 {
     public class ModularBarrel : ModularWeaponPart
     {
         public Transform MuzzlePosition;
+        [HideInInspector]
+        public TransformProxy MuzzlePosProxy;
         public FVRFireArm.MuzzleState DefaultMuzzleState;
         public FVRFireArmMechanicalAccuracyClass DefaultMuzzleDamping;
 
@@ -21,6 +24,10 @@ namespace ModularWorkshop
 
         public bool ChangesFireArmRoundType = false;
         public FireArmRoundType CustomRoundType;
+
+        public bool ChangesRecoilProfile = false;
+        public FVRFireArmRecoilProfile CustomRecoilProfile;
+        public FVRFireArmRecoilProfile CustomRecoilProfileStocked;
 
         public bool ChangesMagazineMountPoint = false;
         public Transform CustomMagMountPoint;
@@ -37,6 +44,8 @@ namespace ModularWorkshop
         public override void Awake()
         {
             base.Awake();
+            MuzzlePosProxy = new(MuzzlePosition);
+            Destroy(MuzzlePosition.gameObject);
 
             if (ChangesMagazineMountPoint)
             {

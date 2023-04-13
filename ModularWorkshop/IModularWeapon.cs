@@ -10,17 +10,17 @@ namespace ModularWorkshop
     public interface IModularWeapon
     {
         public GameObject UIPrefab { get; }
-        public string ModularBarrelPartID { get; }
-        public Transform ModularBarrelPosition { get; }
-        public TransformProxy ModularBarrelUIPosition { get; }
+        public string ModularBarrelPartsID { get; }
+        public Transform ModularBarrelPoint { get; }
+        public TransformProxy ModularBarrelUIPointProxy { get; }
         public Dictionary<string,GameObject> ModularBarrelPrefabsDictionary { get; }
-        public string ModularHandguardPartID { get; }
-        public Transform ModularHandguardPosition { get; }
-        public TransformProxy ModularHandguardUIPosition { get; }
+        public string ModularHandguardPartsID { get; }
+        public Transform ModularHandguardPoint { get; }
+        public TransformProxy ModularHandguardUIPointProxy { get; }
         public Dictionary<string, GameObject> ModularHandguardPrefabsDictionary { get; }
-        public string ModularStockPartID { get; }
-        public Transform ModularStockPosition { get; }
-        public TransformProxy ModularStockUIPosition { get; }
+        public string ModularStockPartsID { get; }
+        public Transform ModularStockPoint { get; }
+        public TransformProxy ModularStockUIPointProxy { get; }
         public Dictionary<string, GameObject> ModularStockPrefabsDictionary { get; }
 
         public string SelectedModularBarrel { get;}
@@ -38,5 +38,7 @@ namespace ModularWorkshop
 
         public ModularWorkshopPlatform WorkshopPlatform { get; set; }
         public List<ModularWeaponPartsAttachmentPoint> SubAttachmentPoints { get; }
+
+        public ModularFVRFireArm GetModularFVRFireArm { get; }
     }
 }

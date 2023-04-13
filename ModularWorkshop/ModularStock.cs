@@ -13,8 +13,8 @@ namespace ModularWorkshop
         public ShotgunMoveableStock CollapsingStock;
         public FVRFoldingStockXAxis FoldingStockX;
         public FVRFoldingStockYAxis FoldingStockY;
-        public bool ChangesPosePosition = false;
 
+        public bool ChangesPosePosition = false;
         public Transform CustomPoseOverride;
         [HideInInspector]
         public TransformProxy CustomPoseOverrideProxy;
@@ -27,11 +27,16 @@ namespace ModularWorkshop
         {
             base.Awake();
 
-            CustomPoseOverrideProxy = new(CustomPoseOverride);
-            CustomPoseOverride_TouchProxy = new(CustomPoseOverride_Touch);
-
-            Destroy(CustomPoseOverride.gameObject);
-            Destroy(CustomPoseOverride_Touch.gameObject);
+            if (CustomPoseOverride != null) 
+            { 
+                CustomPoseOverrideProxy = new(CustomPoseOverride);
+                Destroy(CustomPoseOverride.gameObject);
+            }
+            if (CustomPoseOverride_Touch != null)
+            {
+                CustomPoseOverride_TouchProxy = new(CustomPoseOverride_Touch);
+                Destroy(CustomPoseOverride_Touch.gameObject);
+            }
         }
     }
 }
