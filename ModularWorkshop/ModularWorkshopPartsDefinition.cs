@@ -15,7 +15,7 @@ namespace ModularWorkshop
     {
         [FormerlySerializedAs("PartsID")]
         public string ModularPartsGroupID;
-        [Tooltip("Optional Display name. If left empty, the PartsID will be used as a display name instead.")]
+        [Tooltip("Optional Display name. If left empty, the ModularPartsGroupID will be used as a display name instead.")]
         public string DisplayName;
         public List<GameObject> ModularPrefabs;
 
@@ -24,10 +24,10 @@ namespace ModularWorkshop
             get
             {
                 Dictionary<string, GameObject> keyValuePairs = new();
-                foreach (var item in ModularPrefabs)
+                foreach (var prefab in ModularPrefabs)
                 {
-                    string Name = item.GetComponent<ModularWeaponPart>().Name;
-                    keyValuePairs.Add(Name, item);
+                    string Name = prefab.GetComponent<ModularWeaponPart>().Name;
+                    keyValuePairs.Add(Name, prefab);
                 }
                 return keyValuePairs;
             }

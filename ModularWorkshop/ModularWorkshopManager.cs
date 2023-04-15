@@ -70,12 +70,12 @@ namespace ModularWorkshop
                         {
                             if (partDefinition.DisplayName == string.Empty) partDefinition.DisplayName = partDefinition.ModularPartsGroupID;
                             ModularWorkshopDictionary.Add(partDefinition.ModularPartsGroupID, partDefinition);
-                            Logger.LogInfo($"Loaded ModularWorkshopPartsDefinition {partDefinition.name} with PartsID {partDefinition.ModularPartsGroupID}.");
+                            Logger.LogInfo($"Loaded ModularWorkshopPartsDefinition {partDefinition.name} with ModularPartsGroupID {partDefinition.ModularPartsGroupID}.");
                         }
                         else
                         {
                             partsDefinitionOld.ModularPrefabs.AddRange(partDefinition.ModularPrefabs);
-                            Logger.LogInfo($"Added more parts from ModularWorkshopPartsDefinition {partDefinition.name} to PartsID {partDefinition.ModularPartsGroupID}.");
+                            Logger.LogInfo($"Added more parts from ModularWorkshopPartsDefinition {partDefinition.name} to ModularPartsGroupID {partDefinition.ModularPartsGroupID}.");
                         }
                     }
                 }

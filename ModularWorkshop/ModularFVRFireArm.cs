@@ -205,8 +205,18 @@ namespace ModularWorkshop
 
         public ModularBarrel ConfigureModularBarrel(string selectedPart, FVRFireArm fireArm)
         {
-            ModularBarrelAttachmentPoint.SelectedModularWeaponPart = selectedPart;
+            Debug.Log($"Selected Barrel Name: {selectedPart}");
 
+            for (int i = 0; i < ModularBarrelPrefabsDictionary.Count; i++)
+            {
+                if (ModularBarrelPrefabsDictionary.ElementAt(i).Key == null) Debug.LogError($"ModularBarrelPrefabsDictionary: Key at index {i} is null!");
+                else if (ModularBarrelPrefabsDictionary.ElementAt(i).Key == selectedPart) Debug.Log($"ModularBarrelPrefabsDictionary: Key at index {i} is Selected part with name {ModularBarrelPrefabsDictionary.ElementAt(i).Key}!");
+                else Debug.Log($"ModularBarrelPrefabsDictionary: Key at index {i} is part name {ModularBarrelPrefabsDictionary.ElementAt(i).Key}!");
+                if (ModularBarrelPrefabsDictionary.ElementAt(i).Value == null) Debug.LogError($"ModularBarrelPrefabsDictionary: Value at index {i} is null!");
+                else Debug.LogError($"ModularBarrelPrefabsDictionary: Value at index {i} is Game Object {ModularBarrelPrefabsDictionary.ElementAt(i).Value.name}!");
+            }
+
+            ModularBarrelAttachmentPoint.SelectedModularWeaponPart = selectedPart;
             GameObject modularBarrelPrefab = UnityEngine.Object.Instantiate(ModularBarrelPrefabsDictionary[selectedPart], ModularBarrelAttachmentPoint.ModularPartPoint.position, ModularBarrelAttachmentPoint.ModularPartPoint.rotation, ModularBarrelAttachmentPoint.ModularPartPoint.parent);
 
             ModularBarrel oldPart = ModularBarrelAttachmentPoint.ModularPartPoint.GetComponent<ModularBarrel>();
