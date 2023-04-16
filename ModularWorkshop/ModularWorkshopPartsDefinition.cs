@@ -13,7 +13,6 @@ namespace ModularWorkshop
     [CreateAssetMenu(fileName = "New ModularWorkshopPartsDefinition", menuName = "ModularWorkshop/ModularWorkshopPartsDefinition", order = 0)]
     public class ModularWorkshopPartsDefinition : ScriptableObject
     {
-        [FormerlySerializedAs("PartsID")]
         public string ModularPartsGroupID;
         [Tooltip("Optional Display name. If left empty, the ModularPartsGroupID will be used as a display name instead.")]
         public string DisplayName;

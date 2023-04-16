@@ -28,7 +28,7 @@ namespace ModularWorkshop
 
             foreach (var point in SubAttachmentPoints)
             {
-                point.ModularPartUIPointProxy = new(point.ModularPartUIPoint, transform);
+                point.ModularPartUIPointProxy = new(point.ModularPartUIPoint, transform, true);
             }
         }
 
@@ -39,5 +39,9 @@ namespace ModularWorkshop
                 if (child != null && !_objectsToKeep.Contains(child)) Destroy(child.gameObject);
             }
         }
+
+        public virtual void ConfigurePart() { }
+
+        public virtual void RemovePart() { }
     }
 }

@@ -3,40 +3,46 @@ using System.Collections.Generic;
 using UnityEngine;
 using FistVR;
 using OpenScripts2;
+using System.Linq;
 
 namespace ModularWorkshop
 {
     public class ModularBarrelExtension : ModularWeaponPart
     {
+        [Header("Muzzle Position")]
         public bool ChangesMuzzlePosition = false;
         public Transform MuzzlePosition;
         [HideInInspector]
         public TransformProxy MuzzlePosProxy;
-
+        [Header("Muzzle Damping")]
         public bool ChangesDefaultMuzzleStandAndDamping = false;
         public FVRFireArm.MuzzleState DefaultMuzzleState;
         public FVRFireArmMechanicalAccuracyClass DefaultMuzzleDamping;
-
+        [Header("Accuracy")]
         public bool HasCustomMechanicalAccuracy = false;
         public FVRFireArmMechanicalAccuracyClass CustomMechanicalAccuracy;
-
+        [Header("Muzzle Effects")]
         public bool HasCustomMuzzleEffects = false;
-        public MuzzleEffectSize CustomMuzzleEffectSize;
+        public MuzzleEffectSize CustomDefaultMuzzleEffectSize;
         public MuzzleEffect[] CustomMuzzleEffects;
-
+        public bool KeepRevolverCylinderSmoke = false;
+        [Header("Round Type")]
         public bool ChangesFireArmRoundType = false;
         public FireArmRoundType CustomRoundType;
-
+        [Header("Recoil Profile")]
         public bool ChangesRecoilProfile = false;
         public FVRFireArmRecoilProfile CustomRecoilProfile;
         public FVRFireArmRecoilProfile CustomRecoilProfileStocked;
-
+        [Header("Magazine Mounting")]
         public bool ChangesMagazineMountPoint = false;
         public Transform CustomMagMountPoint;
         public Transform CustomMagEjectPoint;
-
+        [Header("Magazine Type")]
         public bool ChangesMagazineType = false;
         public FireArmMagazineType CustomMagazineType;
+        [Header("Audio Set")]
+        public bool ChangesAudioSet = false;
+        public FVRFirearmAudioSet CustomAudioSet;
 
         [HideInInspector]
         public TransformProxy MagMountPoint;
@@ -50,27 +56,40 @@ namespace ModularWorkshop
         {
             base.Awake();
 
-            if (ChangesMagazineMountPoint)
+            if (ChangesMuzzlePosition)
             {
-                MagMountPoint = new(CustomMagMountPoint);
-                MagEjectPoint = new(CustomMagEjectPoint);
-
-                Destroy(CustomMagMountPoint.gameObject);
-                Destroy(CustomMagEjectPoint.gameObject);
+                MuzzlePosProxy = new(MuzzlePosition, true);
             }
 
-            Transform current = transform;
+            if (ChangesMagazineMountPoint)
+            {
+                MagMountPoint = new(CustomMagMountPoint, true);
+                MagEjectPoint = new(CustomMagEjectPoint, true);
+            }
+        }
+
+        public override void OnDestroy()
+        {
+            base.OnDestroy();
+        }
+
+        public override void ConfigurePart()
+        {
+            base.ConfigurePart();
+
+            // Go up hierarchy until you find both components
+
+            Transform currentTransform = transform;
             do
             {
-                if (_barrel == null) _barrel = current.GetComponentInChildren<ModularBarrel>();
-                if (_firearm == null) _firearm = current.GetComponentInChildren<FVRFireArm>();
-                current = current.parent;
-            } while ((_barrel == null || _firearm == null) && current != null);
+                if (_barrel == null) _barrel = currentTransform.GetComponentInChildren<ModularBarrel>();
+                if (_firearm == null) _firearm = currentTransform.GetComponentInChildren<FVRFireArm>();
+                currentTransform = currentTransform.parent;
+            } while ((_barrel == null || _firearm == null) && currentTransform != null);
 
             if (_firearm != null && _barrel != null)
             {
-                if (ChangesMagazineMountPoint)
-                _firearm.MuzzlePos.GoToTransformProxy(MuzzlePosProxy);
+                if (ChangesMuzzlePosition) _firearm.MuzzlePos.GoToTransformProxy(MuzzlePosProxy);
                 if (ChangesDefaultMuzzleStandAndDamping)
                 {
                     _firearm.DefaultMuzzleState = DefaultMuzzleState;
@@ -79,7 +98,14 @@ namespace ModularWorkshop
 
                 if (HasCustomMuzzleEffects)
                 {
-                    _firearm.DefaultMuzzleEffectSize = CustomMuzzleEffectSize;
+                    if (KeepRevolverCylinderSmoke)
+                    {
+                        MuzzleEffect cylinderSmoke = _firearm.MuzzleEffects.Single(obj => obj.Entry == MuzzleEffectEntry.Smoke_RevolverCylinder);
+
+                        CustomMuzzleEffects = CustomMuzzleEffects.Concat(new MuzzleEffect[] { cylinderSmoke }).ToArray();
+                    }
+
+                    _firearm.DefaultMuzzleEffectSize = CustomDefaultMuzzleEffectSize;
                     _firearm.MuzzleEffects = CustomMuzzleEffects;
                 }
                 if (HasCustomMechanicalAccuracy)
@@ -114,102 +140,139 @@ namespace ModularWorkshop
                 {
                     _firearm.MagazineType = CustomMagazineType;
                 }
+                if (ChangesAudioSet)
+                {
+                    _firearm.AudioClipSet = CustomAudioSet;
+                }
+
+                if (ChangesMuzzlePosition || HasCustomMuzzleEffects) _firearm.UpdateCurrentMuzzle();
             }
-            else 
+            else
             {
                 if (_firearm == null) OpenScripts2_BepInExPlugin.LogWarning(this, "Firearm not found! ModularStockExtension disabled!");
                 if (_barrel == null) OpenScripts2_BepInExPlugin.LogWarning(this, "ModularBarrel not found! ModularStockExtension disabled!");
             }
         }
 
-        public override void OnDestroy()
+        public override void RemovePart()
         {
+            base.RemovePart();
+
             if (_firearm != null && _barrel != null)
             {
                 ModularFVRFireArm modularFireArm = _firearm.GetComponent<IModularWeapon>().GetModularFVRFireArm;
-                _firearm.MuzzlePos.GoToTransformProxy(_barrel.MuzzlePosProxy);
-
-                _firearm.DefaultMuzzleState = _barrel.DefaultMuzzleState;
-                _firearm.DefaultMuzzleDamping = _barrel.DefaultMuzzleDamping;
-
-                if (_barrel.HasCustomMuzzleEffects)
+                if (ChangesMuzzlePosition) _firearm.MuzzlePos.GoToTransformProxy(_barrel.MuzzlePosProxy);
+                if (ChangesDefaultMuzzleStandAndDamping)
                 {
-                    _firearm.DefaultMuzzleEffectSize = _barrel.CustomMuzzleEffectSize;
-                    _firearm.MuzzleEffects = _barrel.CustomMuzzleEffects;
+                    _firearm.DefaultMuzzleState = _barrel.DefaultMuzzleState;
+                    _firearm.DefaultMuzzleDamping = _barrel.DefaultMuzzleDamping;
                 }
-                else
+                if (HasCustomMuzzleEffects)
                 {
-                    _firearm.DefaultMuzzleEffectSize = modularFireArm.OrigMuzzleEffectSize;
-                    _firearm.MuzzleEffects = modularFireArm.OrigMuzzleEffects;
-                }
-                if (_barrel.HasCustomMechanicalAccuracy)
-                {
-                    _firearm.AccuracyClass = _barrel.CustomMechanicalAccuracy;
-                    _firearm.m_internalMechanicalMOA = AM.GetFireArmMechanicalSpread(_firearm.AccuracyClass);
-                }
-                else
-                {
-                    _firearm.AccuracyClass = modularFireArm.OrigMechanicalAccuracyClass;
-                    _firearm.m_internalMechanicalMOA = AM.GetFireArmMechanicalSpread(_firearm.AccuracyClass);
-                }
-                if (_barrel.ChangesFireArmRoundType)
-                {
-                    _firearm.RoundType = _barrel.CustomRoundType;
-                    foreach (var chamber in _firearm.FChambers)
+                    if (_barrel.HasCustomMuzzleEffects)
                     {
-                        chamber.RoundType = _barrel.CustomRoundType;
-                    }
-                }
-                else
-                {
-                    _firearm.RoundType = modularFireArm.OrigRoundType;
-                    foreach (var chamber in _firearm.FChambers)
-                    {
-                        chamber.RoundType = modularFireArm.OrigRoundType;
-                    }
-                }
-                if (_barrel.ChangesRecoilProfile)
-                {
-                    _firearm.RecoilProfile = _barrel.CustomRecoilProfile;
-                    if (_barrel.CustomRecoilProfileStocked != null)
-                    {
-                        _firearm.UsesStockedRecoilProfile = true;
-                        _firearm.RecoilProfileStocked = _barrel.CustomRecoilProfileStocked;
-                    }
-                    else _firearm.UsesStockedRecoilProfile = false;
-                }
-                else
-                {
-                    _firearm.RecoilProfile = modularFireArm.OrigRecoilProfile;
-                    if (modularFireArm.OrigRecoilProfileStocked != null)
-                    {
-                        _firearm.UsesStockedRecoilProfile = true;
-                        _firearm.RecoilProfileStocked = modularFireArm.OrigRecoilProfileStocked;
+                        _firearm.DefaultMuzzleEffectSize = _barrel.CustomMuzzleEffectSize;
+                        _firearm.MuzzleEffects = _barrel.CustomMuzzleEffects;
                     }
                     else
-                        _firearm.UsesStockedRecoilProfile = false;
+                    {
+                        _firearm.DefaultMuzzleEffectSize = modularFireArm.OrigMuzzleEffectSize;
+                        _firearm.MuzzleEffects = modularFireArm.OrigMuzzleEffects;
+                    }
                 }
-                if (_barrel.ChangesMagazineMountPoint)
+                if (HasCustomMechanicalAccuracy)
                 {
-                    _firearm.MagazineMountPos.GoToTransformProxy(_barrel.MagMountPoint);
-                    _firearm.MagazineEjectPos.GoToTransformProxy(_barrel.MagEjectPoint);
+                    if (_barrel.HasCustomMechanicalAccuracy)
+                    {
+                        _firearm.AccuracyClass = _barrel.CustomMechanicalAccuracy;
+                        _firearm.m_internalMechanicalMOA = AM.GetFireArmMechanicalSpread(_firearm.AccuracyClass);
+                    }
+                    else
+                    {
+                        _firearm.AccuracyClass = modularFireArm.OrigMechanicalAccuracyClass;
+                        _firearm.m_internalMechanicalMOA = AM.GetFireArmMechanicalSpread(_firearm.AccuracyClass);
+                    }
                 }
-                else
+                if (ChangesFireArmRoundType)
                 {
-                    _firearm.MagazineMountPos.GoToTransformProxy(modularFireArm.OrigMagMountPos);
-                    _firearm.MagazineEjectPos.GoToTransformProxy(modularFireArm.OrigMagEjectPos);
+                    if (_barrel.ChangesFireArmRoundType)
+                    {
+                        _firearm.RoundType = _barrel.CustomRoundType;
+                        foreach (var chamber in _firearm.FChambers)
+                        {
+                            chamber.RoundType = _barrel.CustomRoundType;
+                        }
+                    }
+                    else
+                    {
+                        _firearm.RoundType = modularFireArm.OrigRoundType;
+                        foreach (var chamber in _firearm.FChambers)
+                        {
+                            chamber.RoundType = modularFireArm.OrigRoundType;
+                        }
+                    }
                 }
-                if (_barrel.ChangesMagazineType)
+                if (ChangesRecoilProfile)
                 {
-                    _firearm.MagazineType = _barrel.CustomMagazineType;
+                    if (_barrel.ChangesRecoilProfile)
+                    {
+                        _firearm.RecoilProfile = _barrel.CustomRecoilProfile;
+                        if (_barrel.CustomRecoilProfileStocked != null)
+                        {
+                            _firearm.UsesStockedRecoilProfile = true;
+                            _firearm.RecoilProfileStocked = _barrel.CustomRecoilProfileStocked;
+                        }
+                        else _firearm.UsesStockedRecoilProfile = false;
+                    }
+                    else
+                    {
+                        _firearm.RecoilProfile = modularFireArm.OrigRecoilProfile;
+                        if (modularFireArm.OrigRecoilProfileStocked != null)
+                        {
+                            _firearm.UsesStockedRecoilProfile = true;
+                            _firearm.RecoilProfileStocked = modularFireArm.OrigRecoilProfileStocked;
+                        }
+                        else
+                            _firearm.UsesStockedRecoilProfile = false;
+                    }
                 }
-                else
+                if (ChangesMagazineMountPoint)
                 {
-                    _firearm.MagazineType = modularFireArm.OrigMagazineType;
+                    if (_barrel.ChangesMagazineMountPoint)
+                    {
+                        _firearm.MagazineMountPos.GoToTransformProxy(_barrel.MagMountPoint);
+                        _firearm.MagazineEjectPos.GoToTransformProxy(_barrel.MagEjectPoint);
+                    }
+                    else
+                    {
+                        _firearm.MagazineMountPos.GoToTransformProxy(modularFireArm.OrigMagMountPos);
+                        _firearm.MagazineEjectPos.GoToTransformProxy(modularFireArm.OrigMagEjectPos);
+                    }
                 }
+                if (ChangesMagazineType)
+                {
+                    if (_barrel.ChangesMagazineType)
+                    {
+                        _firearm.MagazineType = _barrel.CustomMagazineType;
+                    }
+                    else
+                    {
+                        _firearm.MagazineType = modularFireArm.OrigMagazineType;
+                    }
+                }
+                if (ChangesAudioSet)
+                {
+                    if (_barrel.ChangesAudioSet)
+                    {
+                        _firearm.AudioClipSet = _barrel.CustomAudioSet;
+                    }
+                    else
+                    {
+                        _firearm.AudioClipSet = modularFireArm.OrigAudioSet;
+                    }
+                }
+                if (ChangesMuzzlePosition || HasCustomMuzzleEffects) _firearm.UpdateCurrentMuzzle();
             }
-
-            base.OnDestroy();
         }
     }
 }

@@ -11,7 +11,6 @@ namespace ModularWorkshop
     [Serializable]
     public class ModularWeaponPartsAttachmentPoint
     {
-        [FormerlySerializedAs("PartID")]
         public string ModularPartsGroupID;
         public Transform ModularPartPoint;
         public Transform ModularPartUIPoint;

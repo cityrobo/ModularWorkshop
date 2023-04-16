@@ -88,28 +88,16 @@ namespace ModularWorkshop
 
         public void PBButton_Apply()
         {
-            ModularWeaponPart part;
-            switch (PartType)
+            string selectedPart = _partNames[_selectedPart];
+            ModularWeaponPart part = PartType switch
             {
-                case EPartType.Barrel:
-                    part = ModularWeapon.ConfigureModularBarrel(_partNames[_selectedPart]);
-                    break;
-                case EPartType.Handguard:
-                    part = ModularWeapon.ConfigureModularHandguard(_partNames[_selectedPart]);
-                    break;
-                case EPartType.Stock:
-                    part = ModularWeapon.ConfigureModularStock(_partNames[_selectedPart]);
-                    break;
-                case EPartType.MainWeaponGeneralAttachmentPoint:
-                    part = ModularWeapon.ConfigureModularWeaponPart(ModularWeapon.ModularWeaponPartsAttachmentPoints.Single(obj => obj.ModularPartsGroupID == ModularPartsGroupID), _partNames[_selectedPart]);
-                    break;
-                case EPartType.SubAttachmentPoint:
-                    part = ModularWeapon.ConfigureModularWeaponPart(ModularWeapon.SubAttachmentPoints.Single(obj => obj.ModularPartsGroupID == ModularPartsGroupID), _partNames[_selectedPart]);
-                    break;
-                default:
-                    part = null;
-                    break;
-            }
+                EPartType.Barrel => ModularWeapon.ConfigureModularBarrel(selectedPart),
+                EPartType.Handguard => ModularWeapon.ConfigureModularHandguard(selectedPart),
+                EPartType.Stock => ModularWeapon.ConfigureModularStock(selectedPart),
+                EPartType.MainWeaponGeneralAttachmentPoint => ModularWeapon.ConfigureModularWeaponPart(ModularWeapon.ModularWeaponPartsAttachmentPoints.Single(obj => obj.ModularPartsGroupID == ModularPartsGroupID), selectedPart),
+                EPartType.SubAttachmentPoint => ModularWeapon.ConfigureModularWeaponPart(ModularWeapon.SubAttachmentPoints.Single(obj => obj.ModularPartsGroupID == ModularPartsGroupID), selectedPart),
+                _ => null,
+            };
         }
 
         public void PButton_ShowUI()
@@ -144,7 +132,7 @@ namespace ModularWorkshop
         public void PButton_Select(int i)
         {
             _selectedButton = i;
-            _selectedPart = _selectedButton + _pageIndex;
+            _selectedPart = _selectedButton + _pageIndex * PartButtons.Length;
             UpdateDisplay();
             PBButton_Apply();
             SM.PlayCoreSound(FVRPooledAudioType.Generic, ApplySound, transform.position);

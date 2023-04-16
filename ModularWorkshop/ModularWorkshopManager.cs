@@ -66,6 +66,8 @@ namespace ModularWorkshop
                     {
                         s_foundModularPartsDefinitions.Add(partDefinition);
 
+                        //if (partDefinition.ModularPartsGroupID == null) Logger.LogError($"{partDefinition.name} has null ModularPartsGroupID field!");
+
                         if (!ModularWorkshopDictionary.TryGetValue(partDefinition.ModularPartsGroupID, out ModularWorkshopPartsDefinition partsDefinitionOld))
                         {
                             if (partDefinition.DisplayName == string.Empty) partDefinition.DisplayName = partDefinition.ModularPartsGroupID;

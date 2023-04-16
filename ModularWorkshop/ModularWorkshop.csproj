@@ -96,6 +96,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ReflexSightAddon.cs" />
     <Compile Include="ModularBoltActionRifle.cs" />
     <Compile Include="ModularOpenBoltReceiver.cs" />
     <Compile Include="ModularHandgun.cs" />

@@ -52,6 +52,8 @@ namespace ModularWorkshop
         public TransformProxy OrigMagEjectPos;
         [HideInInspector]
         public FireArmMagazineType OrigMagazineType;
+        [HideInInspector]
+        public FVRFirearmAudioSet OrigAudioSet;
 
         // Original Stock Parameters
         [HideInInspector]
@@ -96,6 +98,8 @@ namespace ModularWorkshop
             if (fireArm.MagazineMountPos != null) OrigMagMountPos = new(fireArm.MagazineMountPos);
             if (fireArm.MagazineEjectPos != null) OrigMagEjectPos = new(fireArm.MagazineEjectPos);
             OrigMagazineType = fireArm.MagazineType;
+
+            OrigAudioSet = fireArm.AudioClipSet;
 
             OrigPoseOverride = new(fireArm.PoseOverride);
             OrigPoseOverride_Touch = new(fireArm.PoseOverride_Touch);
@@ -182,6 +186,8 @@ namespace ModularWorkshop
 
             if (oldPart != null)
             {
+                oldPart.RemovePart();
+
                 foreach (var point in oldPart.SubAttachmentPoints)
                 {
                     RemoveSubAttachmentPoint(point, fireArm);
@@ -195,6 +201,8 @@ namespace ModularWorkshop
             UnityEngine.Object.Destroy(modularWeaponPartsAttachmentPoint.ModularPartPoint.gameObject);
             modularWeaponPartsAttachmentPoint.ModularPartPoint = newPart.transform;
 
+            newPart.ConfigurePart();
+
             foreach (var point in newPart.SubAttachmentPoints)
             {
                 AddSubAttachmentPoint(point, fireArm);
@@ -205,16 +213,22 @@ namespace ModularWorkshop
 
         public ModularBarrel ConfigureModularBarrel(string selectedPart, FVRFireArm fireArm)
         {
-            Debug.Log($"Selected Barrel Name: {selectedPart}");
+            //Debug.Log($"Selected Barrel Name: {selectedPart}");
 
-            for (int i = 0; i < ModularBarrelPrefabsDictionary.Count; i++)
-            {
-                if (ModularBarrelPrefabsDictionary.ElementAt(i).Key == null) Debug.LogError($"ModularBarrelPrefabsDictionary: Key at index {i} is null!");
-                else if (ModularBarrelPrefabsDictionary.ElementAt(i).Key == selectedPart) Debug.Log($"ModularBarrelPrefabsDictionary: Key at index {i} is Selected part with name {ModularBarrelPrefabsDictionary.ElementAt(i).Key}!");
-                else Debug.Log($"ModularBarrelPrefabsDictionary: Key at index {i} is part name {ModularBarrelPrefabsDictionary.ElementAt(i).Key}!");
-                if (ModularBarrelPrefabsDictionary.ElementAt(i).Value == null) Debug.LogError($"ModularBarrelPrefabsDictionary: Value at index {i} is null!");
-                else Debug.LogError($"ModularBarrelPrefabsDictionary: Value at index {i} is Game Object {ModularBarrelPrefabsDictionary.ElementAt(i).Value.name}!");
-            }
+            //if (ModularBarrelPrefabsDictionary.Count == 0)
+            //{
+            //    Debug.LogError($"ModularBarrelPrefabsDictionary is empty!");
+            //    ModularWorkshopPartsDefinition definition = ModularWorkshopManager.ModularWorkshopDictionary[ModularBarrelAttachmentPoint.ModularPartsGroupID];
+            //    if (definition.ModularPrefabs.Count == 0) Debug.LogError($"{definition.name} doesn't have any prefabs in it either!");
+            //}
+            //for (int i = 0; i < ModularBarrelPrefabsDictionary.Count; i++)
+            //{
+            //    if (ModularBarrelPrefabsDictionary.ElementAt(i).Key == null) Debug.LogError($"ModularBarrelPrefabsDictionary: Key at index {i} is null!");
+            //    else if (ModularBarrelPrefabsDictionary.ElementAt(i).Key == selectedPart) Debug.LogWarning($"ModularBarrelPrefabsDictionary: Key at index {i} is Selected part with name {ModularBarrelPrefabsDictionary.ElementAt(i).Key}!");
+            //    else Debug.Log($"ModularBarrelPrefabsDictionary: Key at index {i} is part name {ModularBarrelPrefabsDictionary.ElementAt(i).Key}!");
+            //    if (ModularBarrelPrefabsDictionary.ElementAt(i).Value == null) Debug.LogError($"ModularBarrelPrefabsDictionary: Value at index {i} is null!");
+            //    else Debug.Log($"ModularBarrelPrefabsDictionary: Value at index {i} is Game Object {ModularBarrelPrefabsDictionary.ElementAt(i).Value.name}!");
+            //}
 
             ModularBarrelAttachmentPoint.SelectedModularWeaponPart = selectedPart;
             GameObject modularBarrelPrefab = UnityEngine.Object.Instantiate(ModularBarrelPrefabsDictionary[selectedPart], ModularBarrelAttachmentPoint.ModularPartPoint.position, ModularBarrelAttachmentPoint.ModularPartPoint.rotation, ModularBarrelAttachmentPoint.ModularPartPoint.parent);
@@ -229,6 +243,8 @@ namespace ModularWorkshop
 
             if (oldPart != null)
             {
+                oldPart.RemovePart();
+
                 foreach (var point in oldPart.SubAttachmentPoints)
                 {
                     RemoveSubAttachmentPoint(point, fireArm);
@@ -269,9 +285,19 @@ namespace ModularWorkshop
                 {
                     fireArm.MagazineType = OrigMagazineType;
                 }
+                if (oldPart.ChangesAudioSet)
+                {
+                    fireArm.AudioClipSet = OrigAudioSet;
+                }
             }
             if (newPart.HasCustomMuzzleEffects)
             {
+                if (newPart.KeepRevolverCylinderSmoke)
+                {
+                    MuzzleEffect cylinderSmoke = fireArm.MuzzleEffects.Single(obj => obj.Entry == MuzzleEffectEntry.Smoke_RevolverCylinder);
+
+                    newPart.CustomMuzzleEffects = newPart.CustomMuzzleEffects.Concat(new MuzzleEffect[] { cylinderSmoke }).ToArray();
+                }
                 fireArm.DefaultMuzzleEffectSize = newPart.CustomMuzzleEffectSize;
                 fireArm.MuzzleEffects = newPart.CustomMuzzleEffects;
             }
@@ -307,6 +333,10 @@ namespace ModularWorkshop
             {
                 fireArm.MagazineType = newPart.CustomMagazineType;
             }
+            if (newPart.ChangesAudioSet)
+            {
+                fireArm.AudioClipSet = newPart.CustomAudioSet;
+            }
 
             foreach (var point in newPart.SubAttachmentPoints)
             {
@@ -319,6 +349,9 @@ namespace ModularWorkshop
 
             UnityEngine.Object.Destroy(ModularBarrelAttachmentPoint.ModularPartPoint.gameObject);
             ModularBarrelAttachmentPoint.ModularPartPoint = modularBarrelPrefab.transform;
+
+            newPart.ConfigurePart();
+
             return newPart;
         }
         public ModularHandguard ConfigureModularHandguard(string selectedPart, FVRFireArm fireArm)
@@ -330,6 +363,8 @@ namespace ModularWorkshop
 
             if (oldPart != null)
             {
+                oldPart.RemovePart();
+
                 foreach (var point in oldPart.SubAttachmentPoints)
                 {
                     RemoveSubAttachmentPoint(point, fireArm);
@@ -448,6 +483,8 @@ namespace ModularWorkshop
             UnityEngine.Object.Destroy(ModularHandguardAttachmentPoint.ModularPartPoint.gameObject);
             ModularHandguardAttachmentPoint.ModularPartPoint = modularHandguardPrefab.transform;
 
+            newPart.ConfigurePart();
+
             return newPart;
         }
 
@@ -461,6 +498,8 @@ namespace ModularWorkshop
 
             if (oldPart != null)
             {
+                oldPart.RemovePart();
+
                 foreach (var point in oldPart.SubAttachmentPoints)
                 {
                     RemoveSubAttachmentPoint(point, fireArm);
@@ -518,6 +557,8 @@ namespace ModularWorkshop
             UnityEngine.Object.Destroy(ModularStockAttachmentPoint.ModularPartPoint.gameObject);
             ModularStockAttachmentPoint.ModularPartPoint = modularStockPrefab.transform;
 
+            newPart.ConfigurePart();
+
             return newPart;
         }
 
@@ -525,24 +566,20 @@ namespace ModularWorkshop
         {
             if (ModularBarrelAttachmentPoint.ModularPartsGroupID != string.Empty)
             {
-                ModularBarrelAttachmentPoint.ModularPartUIPointProxy = new(ModularBarrelAttachmentPoint.ModularPartUIPoint, fireArm.transform);
-                UnityEngine.Object.Destroy(ModularBarrelAttachmentPoint.ModularPartUIPoint.gameObject);
+                ModularBarrelAttachmentPoint.ModularPartUIPointProxy = new(ModularBarrelAttachmentPoint.ModularPartUIPoint, fireArm.transform, true);
             }
             if (ModularHandguardAttachmentPoint.ModularPartsGroupID != string.Empty)
             {
-                ModularHandguardAttachmentPoint.ModularPartUIPointProxy = new(ModularHandguardAttachmentPoint.ModularPartUIPoint, fireArm.transform);
-                UnityEngine.Object.Destroy(ModularHandguardAttachmentPoint.ModularPartUIPoint.gameObject);
+                ModularHandguardAttachmentPoint.ModularPartUIPointProxy = new(ModularHandguardAttachmentPoint.ModularPartUIPoint, fireArm.transform, true);
             }
             if (ModularStockAttachmentPoint.ModularPartsGroupID != string.Empty)
             {
-                ModularStockAttachmentPoint.ModularPartUIPointProxy = new(ModularStockAttachmentPoint.ModularPartUIPoint, fireArm.transform);
-                UnityEngine.Object.Destroy(ModularStockAttachmentPoint.ModularPartUIPoint.gameObject);
+                ModularStockAttachmentPoint.ModularPartUIPointProxy = new(ModularStockAttachmentPoint.ModularPartUIPoint, fireArm.transform, true);
             }
 
             foreach (var point in ModularWeaponPartsAttachmentPoints)
             {
-                point.ModularPartUIPointProxy = new(point.ModularPartUIPoint, fireArm.transform);
-                UnityEngine.Object.Destroy(point.ModularPartUIPoint.gameObject);
+                point.ModularPartUIPointProxy = new(point.ModularPartUIPoint, fireArm.transform, true);
             }
         }
 

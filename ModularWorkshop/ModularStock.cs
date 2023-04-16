@@ -29,13 +29,11 @@ namespace ModularWorkshop
 
             if (CustomPoseOverride != null) 
             { 
-                CustomPoseOverrideProxy = new(CustomPoseOverride);
-                Destroy(CustomPoseOverride.gameObject);
+                CustomPoseOverrideProxy = new(CustomPoseOverride, true);
             }
             if (CustomPoseOverride_Touch != null)
             {
-                CustomPoseOverride_TouchProxy = new(CustomPoseOverride_Touch);
-                Destroy(CustomPoseOverride_Touch.gameObject);
+                CustomPoseOverride_TouchProxy = new(CustomPoseOverride_Touch, true);
             }
         }
     }

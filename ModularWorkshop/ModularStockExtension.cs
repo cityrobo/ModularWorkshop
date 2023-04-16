@@ -8,10 +8,11 @@ namespace ModularWorkshop
 {
     public class ModularStockExtension : ModularWeaponPart
     {
+        [Header("Stock Behavior")]
         public bool ModifiesStockBehavior;
         public bool ActsLikeStock = true;
         public Transform StockPoint;
-
+        [Header("Pose Position")]
         public bool ChangesPosePosition = false;
         public Transform CustomPoseOverride;
         [HideInInspector]
@@ -28,27 +29,37 @@ namespace ModularWorkshop
         {
             base.Awake();
 
-            Transform current = transform;
+            if (CustomPoseOverride != null)
+            {
+                CustomPoseOverrideProxy = new(CustomPoseOverride, true);
+            }
+            if (CustomPoseOverride_Touch != null)
+            {
+                CustomPoseOverride_TouchProxy = new(CustomPoseOverride_Touch, true);
+            }
+        }
+
+        public override void OnDestroy()
+        {
+            base.OnDestroy();
+        }
+
+        public override void ConfigurePart()
+        {
+            base.ConfigurePart();
+
+            // Go up hierarchy until you find both components
+
+            Transform currentTransform = transform;
             do
             {
-                if (_stock == null) _stock = current.GetComponentInChildren<ModularStock>();
-                if (_firearm == null) _firearm = current.GetComponentInChildren<FVRFireArm>();
-                current = current.parent;
-            } while ((_stock == null || _firearm == null) && current != null);
+                if (_stock == null) _stock = currentTransform.GetComponentInChildren<ModularStock>();
+                if (_firearm == null) _firearm = currentTransform.GetComponentInChildren<FVRFireArm>();
+                currentTransform = currentTransform.parent;
+            } while ((_stock == null || _firearm == null) && currentTransform != null);
 
             if (_firearm != null && _stock != null)
             {
-                if (CustomPoseOverride != null)
-                {
-                    CustomPoseOverrideProxy = new(CustomPoseOverride);
-                    Destroy(CustomPoseOverride.gameObject);
-                }
-                if (CustomPoseOverride_Touch != null)
-                {
-                    CustomPoseOverride_TouchProxy = new(CustomPoseOverride_Touch);
-                    Destroy(CustomPoseOverride_Touch.gameObject);
-                }
-
                 if (ModifiesStockBehavior)
                 {
                     _firearm.HasActiveShoulderStock = ActsLikeStock;
@@ -70,55 +81,60 @@ namespace ModularWorkshop
                     }
                 }
             }
-            else 
+            else
             {
                 if (_firearm == null) OpenScripts2_BepInExPlugin.LogWarning(this, "Firearm not found! ModularStockExtension disabled!");
                 if (_stock == null) OpenScripts2_BepInExPlugin.LogWarning(this, "ModularStock not found! ModularStockExtension disabled!");
             }
         }
 
-        public override void OnDestroy()
+        public override void RemovePart()
         {
+            base.RemovePart();
+
             if (_firearm != null && _stock != null)
             {
                 ModularFVRFireArm modularFireArm = _firearm.GetComponent<IModularWeapon>().GetModularFVRFireArm;
-
-                _firearm.HasActiveShoulderStock = _stock.ActsLikeStock;
-                _firearm.StockPos = _stock.StockPoint;
-
-                if (_stock.ChangesPosePosition)
+                if (ModifiesStockBehavior)
                 {
-                    FVRViveHand hand = GM.CurrentMovementManager.Hands[0];
-                    if (hand.CMode == ControlMode.Oculus || hand.CMode == ControlMode.Index)
-                    {
-                        _firearm.PoseOverride.GoToTransformProxy(_stock.CustomPoseOverride_TouchProxy);
-                        _firearm.PoseOverride_Touch.GoToTransformProxy(_stock.CustomPoseOverride_TouchProxy);
-                        _firearm.m_storedLocalPoseOverrideRot = _firearm.PoseOverride.localRotation;
-                    }
-                    else
-                    {
-                        _firearm.PoseOverride.GoToTransformProxy(_stock.CustomPoseOverrideProxy);
-                        _firearm.m_storedLocalPoseOverrideRot = _firearm.PoseOverride.localRotation;
-                    }
+                    _firearm.HasActiveShoulderStock = _stock.ActsLikeStock;
+                    _firearm.StockPos = _stock.StockPoint;
                 }
-                else
+
+                if (ChangesPosePosition)
                 {
-                    FVRViveHand hand = GM.CurrentMovementManager.Hands[0];
-                    if (hand.CMode == ControlMode.Oculus || hand.CMode == ControlMode.Index)
+                    if (_stock.ChangesPosePosition)
                     {
-                        _firearm.PoseOverride.GoToTransformProxy(modularFireArm.OrigPoseOverride_Touch);
-                        _firearm.PoseOverride_Touch.GoToTransformProxy(modularFireArm.OrigPoseOverride_Touch);
-                        _firearm.m_storedLocalPoseOverrideRot = _firearm.PoseOverride.localRotation;
+                        FVRViveHand hand = GM.CurrentMovementManager.Hands[0];
+                        if (hand.CMode == ControlMode.Oculus || hand.CMode == ControlMode.Index)
+                        {
+                            _firearm.PoseOverride.GoToTransformProxy(_stock.CustomPoseOverride_TouchProxy);
+                            _firearm.PoseOverride_Touch.GoToTransformProxy(_stock.CustomPoseOverride_TouchProxy);
+                            _firearm.m_storedLocalPoseOverrideRot = _firearm.PoseOverride.localRotation;
+                        }
+                        else
+                        {
+                            _firearm.PoseOverride.GoToTransformProxy(_stock.CustomPoseOverrideProxy);
+                            _firearm.m_storedLocalPoseOverrideRot = _firearm.PoseOverride.localRotation;
+                        }
                     }
                     else
                     {
-                        _firearm.PoseOverride.GoToTransformProxy(modularFireArm.OrigPoseOverride);
-                        _firearm.m_storedLocalPoseOverrideRot = _firearm.PoseOverride.localRotation;
+                        FVRViveHand hand = GM.CurrentMovementManager.Hands[0];
+                        if (hand.CMode == ControlMode.Oculus || hand.CMode == ControlMode.Index)
+                        {
+                            _firearm.PoseOverride.GoToTransformProxy(modularFireArm.OrigPoseOverride_Touch);
+                            _firearm.PoseOverride_Touch.GoToTransformProxy(modularFireArm.OrigPoseOverride_Touch);
+                            _firearm.m_storedLocalPoseOverrideRot = _firearm.PoseOverride.localRotation;
+                        }
+                        else
+                        {
+                            _firearm.PoseOverride.GoToTransformProxy(modularFireArm.OrigPoseOverride);
+                            _firearm.m_storedLocalPoseOverrideRot = _firearm.PoseOverride.localRotation;
+                        }
                     }
                 }
             }
-
-            base.OnDestroy();
         }
     }
 }
