@@ -88,9 +88,9 @@ namespace ModularWorkshop
             }
         }
 
-        public override void RemovePart()
+        public override void DisablePart()
         {
-            base.RemovePart();
+            base.DisablePart();
 
             if (_firearm != null && _stock != null)
             {

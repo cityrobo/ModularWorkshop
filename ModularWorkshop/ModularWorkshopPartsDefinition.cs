@@ -26,7 +26,14 @@ namespace ModularWorkshop
                 foreach (var prefab in ModularPrefabs)
                 {
                     string Name = prefab.GetComponent<ModularWeaponPart>().Name;
-                    keyValuePairs.Add(Name, prefab);
+                    try
+                    {
+                        keyValuePairs.Add(Name, prefab);
+                    }
+                    catch (ArgumentException)
+                    {
+                        Debug.LogWarning($"Part with name {Name} already in parts dictionary! Skipping part!");
+                    }
                 }
                 return keyValuePairs;
             }

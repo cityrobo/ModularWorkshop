@@ -5,6 +5,7 @@ using FistVR;
 using System.Linq;
 using OpenScripts2;
 using System.Net.Mail;
+using static RootMotion.FinalIK.IKSolver;
 
 namespace ModularWorkshop
 {
@@ -32,6 +33,9 @@ namespace ModularWorkshop
         private const string c_modularBarrelKey = "ModulBarrel";
         private const string c_modularHandguardKey = "ModulHandguard";
         private const string c_modularStockKey = "ModulStock";
+
+        [HideInInspector]
+        public bool WasUnvaulted = false;
 
         // Original Barrel Parameters
         [HideInInspector]
@@ -105,15 +109,16 @@ namespace ModularWorkshop
             OrigPoseOverride_Touch = new(fireArm.PoseOverride_Touch);
         }
 
-        public void AddSubAttachmentPoint(ModularWeaponPartsAttachmentPoint subPoint, FVRFireArm fireArm)
+        public void AddSubAttachmentPoint(ModularWeaponPartsAttachmentPoint subPoint, FVRFireArm fireArm, Dictionary<string,string> oldSubParts, string selectedPart = "")
         {
             SubAttachmentPoints.Add(subPoint);
-            ConfigureModularWeaponPart(subPoint, subPoint.SelectedModularWeaponPart, fireArm);
+            if (selectedPart == "") selectedPart = subPoint.SelectedModularWeaponPart;
+            ConfigureModularWeaponPart(subPoint, selectedPart, fireArm, oldSubParts);
 
             WorkshopPlatform?.CreateUIForPoint(subPoint);
         }
 
-        public void RemoveSubAttachmentPoint(ModularWeaponPartsAttachmentPoint subPoint, FVRFireArm fireArm)
+        public void RemoveSubAttachmentPoint(ModularWeaponPartsAttachmentPoint subPoint, FVRFireArm fireArm, Dictionary<string,string> oldSubParts)
         {
             SubAttachmentPoints.Remove(subPoint);
 
@@ -135,7 +140,9 @@ namespace ModularWorkshop
 
                 foreach (var subSubPoint in part.SubAttachmentPoints)
                 {
-                    RemoveSubAttachmentPoint(subSubPoint, fireArm);
+                    oldSubParts.Add(subSubPoint.ModularPartsGroupID, subSubPoint.SelectedModularWeaponPart);
+
+                    RemoveSubAttachmentPoint(subSubPoint, fireArm, oldSubParts);
                 }
             }
 
@@ -157,6 +164,8 @@ namespace ModularWorkshop
             {
                 if (f.TryGetValue("Modul" + SubAttachmentPoints.ElementAt(i).ModularPartsGroupID, out selectedPart)) ConfigureModularWeaponPart(SubAttachmentPoints.ElementAt(i), selectedPart, fireArm);
             }
+
+            WasUnvaulted = true;
         }
 
         public Dictionary<string, string> GetFlagDic(Dictionary<string, string> flagDic)
@@ -177,20 +186,24 @@ namespace ModularWorkshop
             return flagDic;
         }
 
-        public ModularWeaponPart ConfigureModularWeaponPart(ModularWeaponPartsAttachmentPoint modularWeaponPartsAttachmentPoint, string selectedPart, FVRFireArm fireArm)
+        public ModularWeaponPart ConfigureModularWeaponPart(ModularWeaponPartsAttachmentPoint modularWeaponPartsAttachmentPoint, string selectedPart, FVRFireArm fireArm, Dictionary<string, string> oldSubParts = null)
         {
             modularWeaponPartsAttachmentPoint.SelectedModularWeaponPart = selectedPart;
             ModularWorkshopManager.ModularWorkshopDictionary.TryGetValue(modularWeaponPartsAttachmentPoint.ModularPartsGroupID, out ModularWorkshopPartsDefinition prefabs);
             GameObject modularWeaponPartPrefab = UnityEngine.Object.Instantiate(prefabs.PartsDictionary[selectedPart], modularWeaponPartsAttachmentPoint.ModularPartPoint.position, modularWeaponPartsAttachmentPoint.ModularPartPoint.rotation, modularWeaponPartsAttachmentPoint.ModularPartPoint.parent);
             ModularWeaponPart oldPart = modularWeaponPartsAttachmentPoint.ModularPartPoint.GetComponent<ModularWeaponPart>();
 
+            if (oldSubParts == null) oldSubParts = new();
+
             if (oldPart != null)
             {
-                oldPart.RemovePart();
+                oldPart.DisablePart();
 
                 foreach (var point in oldPart.SubAttachmentPoints)
                 {
-                    RemoveSubAttachmentPoint(point, fireArm);
+                    oldSubParts.Add(point.ModularPartsGroupID, point.SelectedModularWeaponPart);
+
+                    RemoveSubAttachmentPoint(point, fireArm, oldSubParts);
                 }
             }
 
@@ -205,7 +218,8 @@ namespace ModularWorkshop
 
             foreach (var point in newPart.SubAttachmentPoints)
             {
-                AddSubAttachmentPoint(point, fireArm);
+                if (oldSubParts.TryGetValue(point.ModularPartsGroupID, out string oldSelectedPart) && oldSelectedPart != point.SelectedModularWeaponPart) AddSubAttachmentPoint(point, fireArm, oldSubParts, oldSelectedPart);
+                else AddSubAttachmentPoint(point, fireArm, oldSubParts);
             }
 
             return newPart;
@@ -241,13 +255,17 @@ namespace ModularWorkshop
             fireArm.DefaultMuzzleState = newPart.DefaultMuzzleState;
             fireArm.DefaultMuzzleDamping = newPart.DefaultMuzzleDamping;
 
+            Dictionary<string, string> oldSubParts = new();
+
             if (oldPart != null)
             {
-                oldPart.RemovePart();
+                oldPart.DisablePart();
 
                 foreach (var point in oldPart.SubAttachmentPoints)
                 {
-                    RemoveSubAttachmentPoint(point, fireArm);
+                    oldSubParts.Add(point.ModularPartsGroupID, point.SelectedModularWeaponPart);
+
+                    RemoveSubAttachmentPoint(point, fireArm, oldSubParts);
                 }
                 if (oldPart.HasCustomMuzzleEffects)
                 {
@@ -340,7 +358,8 @@ namespace ModularWorkshop
 
             foreach (var point in newPart.SubAttachmentPoints)
             {
-                AddSubAttachmentPoint(point, fireArm);
+                if (oldSubParts.TryGetValue(point.ModularPartsGroupID, out string oldSelectedPart) && oldSelectedPart != point.SelectedModularWeaponPart) AddSubAttachmentPoint(point, fireArm, oldSubParts, oldSelectedPart);
+                else AddSubAttachmentPoint(point, fireArm, oldSubParts);
             }
 
             fireArm.UpdateCurrentMuzzle();
@@ -361,13 +380,17 @@ namespace ModularWorkshop
             GameObject modularHandguardPrefab = UnityEngine.Object.Instantiate(ModularHandguardPrefabsDictionary[selectedPart], ModularHandguardAttachmentPoint.ModularPartPoint.position, ModularHandguardAttachmentPoint.ModularPartPoint.rotation, ModularHandguardAttachmentPoint.ModularPartPoint.parent);
             ModularHandguard oldPart = ModularHandguardAttachmentPoint.ModularPartPoint.GetComponent<ModularHandguard>();
 
+            Dictionary<string, string> oldSubParts = new();
+
             if (oldPart != null)
             {
-                oldPart.RemovePart();
+                oldPart.DisablePart();
 
                 foreach (var point in oldPart.SubAttachmentPoints)
                 {
-                    RemoveSubAttachmentPoint(point, fireArm);
+                    oldSubParts.Add(point.ModularPartsGroupID, point.SelectedModularWeaponPart);
+
+                    RemoveSubAttachmentPoint(point, fireArm, oldSubParts);
                 }
             }
 
@@ -392,6 +415,13 @@ namespace ModularWorkshop
                                 capsuleCollider.center = newPart.TriggerCenter;
                                 capsuleCollider.radius = newPart.TriggerSize.x;
                                 capsuleCollider.height = newPart.TriggerSize.y;
+                                capsuleCollider.direction = newPart.ColliderAxis switch
+                                {
+                                    OpenScripts2_BasePlugin.Axis.X => 0,
+                                    OpenScripts2_BasePlugin.Axis.Y => 1,
+                                    OpenScripts2_BasePlugin.Axis.Z => 2,
+                                    _ => 0,
+                                };
                                 capsuleCollider.isTrigger = true;
 
                                 UnityEngine.Object.Destroy(grabTrigger);
@@ -427,6 +457,13 @@ namespace ModularWorkshop
                                 c.center = newPart.TriggerCenter;
                                 c.radius = newPart.TriggerSize.x;
                                 c.height = newPart.TriggerSize.y;
+                                c.direction = newPart.ColliderAxis switch
+                                {
+                                    OpenScripts2_BasePlugin.Axis.X => 0,
+                                    OpenScripts2_BasePlugin.Axis.Y => 1,
+                                    OpenScripts2_BasePlugin.Axis.Z => 2,
+                                    _ => 0,
+                                };
                                 break;
                             case ModularHandguard.EColliderType.Box:
                                 BoxCollider boxCollider = grabTrigger.gameObject.AddComponent<BoxCollider>();
@@ -458,6 +495,13 @@ namespace ModularWorkshop
                                 capsuleCollider.center = newPart.TriggerCenter;
                                 capsuleCollider.radius = newPart.TriggerSize.x;
                                 capsuleCollider.height = newPart.TriggerSize.y;
+                                capsuleCollider.direction = newPart.ColliderAxis switch
+                                {
+                                    OpenScripts2_BasePlugin.Axis.X => 0,
+                                    OpenScripts2_BasePlugin.Axis.Y => 1,
+                                    OpenScripts2_BasePlugin.Axis.Z => 2,
+                                    _ => 0,
+                                };
                                 capsuleCollider.isTrigger = true;
 
                                 UnityEngine.Object.Destroy(grabTrigger);
@@ -475,7 +519,8 @@ namespace ModularWorkshop
 
             foreach (var point in newPart.SubAttachmentPoints)
             {
-                AddSubAttachmentPoint(point, fireArm);
+                if (oldSubParts.TryGetValue(point.ModularPartsGroupID, out string oldSelectedPart) && oldSelectedPart != point.SelectedModularWeaponPart) AddSubAttachmentPoint(point, fireArm, oldSubParts, oldSelectedPart);
+                else AddSubAttachmentPoint(point, fireArm, oldSubParts);
             }
 
             UpdateFirearm(oldPart, newPart, fireArm);
@@ -496,13 +541,17 @@ namespace ModularWorkshop
 
             ModularStock oldPart = ModularStockAttachmentPoint.ModularPartPoint.GetComponent<ModularStock>();
 
+            Dictionary<string, string> oldSubParts = new();
+
             if (oldPart != null)
             {
-                oldPart.RemovePart();
+                oldPart.DisablePart();
 
                 foreach (var point in oldPart.SubAttachmentPoints)
                 {
-                    RemoveSubAttachmentPoint(point, fireArm);
+                    oldSubParts.Add(point.ModularPartsGroupID, point.SelectedModularWeaponPart);
+
+                    RemoveSubAttachmentPoint(point, fireArm, oldSubParts);
                 }
 
                 if (oldPart.ChangesPosePosition)
@@ -549,7 +598,8 @@ namespace ModularWorkshop
 
             foreach (var point in newPart.SubAttachmentPoints)
             {
-                AddSubAttachmentPoint(point, fireArm);
+                if (oldSubParts.TryGetValue(point.ModularPartsGroupID, out string oldSelectedPart) && oldSelectedPart != point.SelectedModularWeaponPart) AddSubAttachmentPoint(point, fireArm, oldSubParts, oldSelectedPart);
+                else AddSubAttachmentPoint(point, fireArm, oldSubParts);
             }
 
             UpdateFirearm(oldPart, newPart, fireArm);
@@ -587,7 +637,6 @@ namespace ModularWorkshop
         {
             if (oldPart != null)
             {
-                
                 foreach (var mount in oldPart.AttachmentMounts)
                 {
                     DetachAllAttachments(mount);

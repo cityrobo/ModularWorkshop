@@ -39,6 +39,8 @@ namespace ModularWorkshop
         public ModularWorkshopPlatform WorkshopPlatform { get; set; }
         public List<ModularWeaponPartsAttachmentPoint> SubAttachmentPoints { get; }
 
+        public Dictionary<string, ModularWeaponPartsAttachmentPoint> AllAttachmentPoints { get; }
+
         public ModularFVRFireArm GetModularFVRFireArm { get; }
     }
 }
