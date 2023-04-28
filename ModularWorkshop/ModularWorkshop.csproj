@@ -33,15 +33,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'MeatKit|AnyCPU'">
-    <OutputPath>bin\MeatKit\</OutputPath>
-    <DefineConstants>TRACE;MEATKIT</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-  </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony, Version=2.7.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\HarmonyX.2.7.0\lib\net35\0Harmony.dll</HintPath>
@@ -96,6 +87,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ModularPreattachedAttachments.cs" />
+    <Compile Include="ModularPreattachedForeignAttachments.cs" />
     <Compile Include="ReflexSightAddon.cs" />
     <Compile Include="ModularBoltActionRifle.cs" />
     <Compile Include="ModularOpenBoltReceiver.cs" />
@@ -124,7 +117,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>if $(ConfigurationName) == Debug copy $(TargetPath) $(SolutionDir)Releases\MeatKit\$(TargetName).dll
-if $(ConfigurationName) == Release copy $(TargetPath) $(ProjectDir)$(TargetName).dll</PostBuildEvent>
+    <PostBuildEvent>if $(ConfigurationName) == Release copy $(TargetPath) $(ProjectDir)$(TargetName).dll</PostBuildEvent>
   </PropertyGroup>
 </Project>

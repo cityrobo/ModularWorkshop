@@ -42,6 +42,6 @@ namespace ModularWorkshop
 
         public virtual void ConfigurePart() { }
 
-        public virtual void RemovePart() { }
+        public virtual void DisablePart() { }
     }
 }

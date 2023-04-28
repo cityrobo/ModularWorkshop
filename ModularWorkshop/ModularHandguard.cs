@@ -18,6 +18,8 @@ namespace ModularWorkshop
         public Vector3 TriggerCenter;
         [HideInInspector]
         public Vector3 TriggerSize;
+        [HideInInspector]
+        public OpenScripts2_BasePlugin.Axis ColliderAxis;
 
         public enum EColliderType
         {
@@ -41,6 +43,14 @@ namespace ModularWorkshop
                         TriggerCenter = c.center;
                         TriggerSize = new(c.radius, c.height, 0f);
                         ColliderType = EColliderType.Capsule;
+
+                        ColliderAxis = c.direction switch
+                        {
+                            0 => OpenScripts2_BasePlugin.Axis.X,
+                            1 => OpenScripts2_BasePlugin.Axis.Y,
+                            2 => OpenScripts2_BasePlugin.Axis.Z,
+                            _ => OpenScripts2_BasePlugin.Axis.X,
+                        };
                         break;
                     case SphereCollider c:
                         TriggerCenter = c.center;
