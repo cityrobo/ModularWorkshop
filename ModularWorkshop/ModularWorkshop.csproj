@@ -89,6 +89,7 @@
   <ItemGroup>
     <Compile Include="ModularPreattachedAttachments.cs" />
     <Compile Include="ModularPreattachedForeignAttachments.cs" />
+    <Compile Include="ModularWorkshopSkinsDefinition.cs" />
     <Compile Include="ReflexSightAddon.cs" />
     <Compile Include="ModularBoltActionRifle.cs" />
     <Compile Include="ModularOpenBoltReceiver.cs" />

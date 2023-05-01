@@ -17,11 +17,16 @@ namespace ModularWorkshop
         private static readonly List<ModularWorkshopPartsDefinition> s_foundModularPartsDefinitions = new();
         public static readonly Dictionary<string, ModularWorkshopPartsDefinition> ModularWorkshopDictionary = new();
 
+        private static readonly List<ModularWorkshopSkinsDefinition> s_foundModularSkinsDefinitions = new();
+        public static readonly Dictionary<string, ModularWorkshopSkinsDefinition> ModularWorkshopSkinsDictionary = new();
+
         public static ConfigEntry<int> MaximumNumberOfTries;
         public static ConfigEntry<bool> ReloadDatabase;
 
         private int _lastNumberOfPartsDefinitions = 0;
-        private int _numberOfTries = 0;
+        private int _lastNumberOfSkinsDefinitions = 0;
+        private int _numberOfPartsTries = 0;
+        private int _numberOfSkinTries = 0;
         private bool _loadingDatabase = false;
 
         public ModularWorkshopManager()
@@ -32,7 +37,11 @@ namespace ModularWorkshop
 
         public void Awake()
         {
-            if (!_loadingDatabase) StartCoroutine(UpdateDatabase());
+            if (!_loadingDatabase)
+            {
+                StartCoroutine(UpdatePartsDatabase());
+                StartCoroutine(UpdateSkinDatabase());
+            }
 
             ReloadDatabase.SettingChanged += SettingsChanged;
         }
@@ -46,17 +55,22 @@ namespace ModularWorkshop
         {
             if (ReloadDatabase.Value)
             {
-                if (!_loadingDatabase) StartCoroutine(UpdateDatabase());
+                if (!_loadingDatabase)
+                {
+                    StartCoroutine(UpdatePartsDatabase());
+                    StartCoroutine(UpdateSkinDatabase());
+                }
+
                 ReloadDatabase.Value = false;
             }
         }
 
-        private IEnumerator UpdateDatabase()
+        private IEnumerator UpdatePartsDatabase()
         {
             _loadingDatabase = true;
             s_foundModularPartsDefinitions.Clear();
             ModularWorkshopDictionary.Clear();
-            while (_numberOfTries < MaximumNumberOfTries.Value)
+            while (_numberOfPartsTries < MaximumNumberOfTries.Value)
             {
                 ModularWorkshopPartsDefinition[] partsDefinitions = Resources.FindObjectsOfTypeAll<ModularWorkshopPartsDefinition>();
 
@@ -85,16 +99,66 @@ namespace ModularWorkshop
                 if (_lastNumberOfPartsDefinitions != partsDefinitions.Length)
                 {
                     _lastNumberOfPartsDefinitions = partsDefinitions.Length;
-                    _numberOfTries = 0;
+                    _numberOfPartsTries = 0;
                     Logger.LogInfo($"Loaded {_lastNumberOfPartsDefinitions} ModularWorkshopPartsDefinitions.");
                 }
-                else _numberOfTries++;
+                else _numberOfPartsTries++;
 
                 yield return new WaitForSeconds(1f);
             }
 
             _loadingDatabase = false;
             Logger.LogInfo($"Finishded loading with {_lastNumberOfPartsDefinitions} ModularWorkshopPartsDefinitions total and {ModularWorkshopDictionary.Count} in Dictionary.");
+        }
+        private IEnumerator UpdateSkinDatabase()
+        {
+            _loadingDatabase = true;
+            s_foundModularPartsDefinitions.Clear();
+            ModularWorkshopDictionary.Clear();
+            while (_numberOfSkinTries < MaximumNumberOfTries.Value)
+            {
+                ModularWorkshopSkinsDefinition[] skinsDefinitions = Resources.FindObjectsOfTypeAll<ModularWorkshopSkinsDefinition>();
+
+                foreach (var skinDefinition in skinsDefinitions)
+                {
+                    if (!s_foundModularSkinsDefinitions.Contains(skinDefinition))
+                    {
+                        s_foundModularSkinsDefinitions.Add(skinDefinition);
+
+                        //if (partDefinition.ModularPartsGroupID == null) Logger.LogError($"{partDefinition.name} has null ModularPartsGroupID field!");
+                        string skinPath = Path.Combine(skinDefinition.ModularPartsGroupID, skinDefinition.PartName);
+
+                        if (!ModularWorkshopSkinsDictionary.TryGetValue(skinPath, out ModularWorkshopSkinsDefinition skinsDefinitionOld))
+                        {
+                            foreach (var skin in skinDefinition.SkinDefinitions)
+                            {
+                                if (skin.DisplayName == string.Empty) skin.DisplayName = skin.ModularSkinID;
+                            }
+
+                            ModularWorkshopSkinsDictionary.Add(skinDefinition.ModularPartsGroupID, skinDefinition);
+                            Logger.LogInfo($"Loaded ModularWorkshopSkinsDefinition {skinDefinition.name} with ModularSkin {skinPath}.");
+                        }
+                        else
+                        {
+                            skinsDefinitionOld.SkinDefinitions.AddRange(skinDefinition.SkinDefinitions);
+                            Logger.LogInfo($"Added more parts from ModularWorkshopSkinsDefinition {skinDefinition.name} to ModularSkin {skinPath}.");
+                        }
+                    }
+                }
+
+                if (_lastNumberOfSkinsDefinitions != skinsDefinitions.Length)
+                {
+                    _lastNumberOfSkinsDefinitions = skinsDefinitions.Length;
+                    _numberOfSkinTries = 0;
+                    Logger.LogInfo($"Loaded {_lastNumberOfSkinsDefinitions} ModularWorkshopPartsDefinitions.");
+                }
+                else _numberOfSkinTries++;
+
+                yield return new WaitForSeconds(1f);
+            }
+
+            _loadingDatabase = false;
+            Logger.LogInfo($"Finishded loading with {_lastNumberOfSkinsDefinitions} ModularWorkshopPartsDefinitions total and {ModularWorkshopSkinsDictionary.Count} in Dictionary.");
         }
     }
 }
