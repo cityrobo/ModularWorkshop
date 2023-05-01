@@ -110,7 +110,7 @@ namespace ModularWorkshop
         {
             ClosedBoltWeapon[] weapon = GetComponents<ClosedBoltWeapon>();
             ClosedBoltWeapon toCopy = weapon.Single(c => c != this);
-            toCopy.Bolt.Weapon = this;
+            if (toCopy.Bolt != null) toCopy.Bolt.Weapon = this;
             if (toCopy.Handle != null) toCopy.Handle.Weapon = this;
 
             if (toCopy.Foregrip != null)
@@ -121,6 +121,7 @@ namespace ModularWorkshop
             ClosedBoltMagEjectionTrigger grabTrigger = toCopy.GetComponentInChildren<ClosedBoltMagEjectionTrigger>();
             if (grabTrigger != null) grabTrigger.Receiver = this;
 
+            toCopy.AttachmentMounts = toCopy.AttachmentMounts.Where(mount => mount != null).ToList();
             foreach (var mount in toCopy.AttachmentMounts)
             {
                 mount.MyObject = this;
