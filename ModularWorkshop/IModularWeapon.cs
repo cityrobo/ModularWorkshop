@@ -42,5 +42,7 @@ namespace ModularWorkshop
         public Dictionary<string, ModularWeaponPartsAttachmentPoint> AllAttachmentPoints { get; }
 
         public ModularFVRFireArm GetModularFVRFireArm { get; }
+
+        public void ApplySkin(string ModularPartsGroupID, string SkinName);
     }
 }

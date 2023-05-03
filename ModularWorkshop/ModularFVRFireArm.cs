@@ -6,6 +6,8 @@ using System.Linq;
 using OpenScripts2;
 using System.Net.Mail;
 using static RootMotion.FinalIK.IKSolver;
+using HarmonyLib;
+using System.IO;
 
 namespace ModularWorkshop
 {
@@ -71,17 +73,31 @@ namespace ModularWorkshop
             {
                 Dictionary<string, ModularWeaponPartsAttachmentPoint> keyValuePairs = new();
 
-                keyValuePairs.Add(ModularBarrelAttachmentPoint.ModularPartsGroupID, ModularBarrelAttachmentPoint);
-                keyValuePairs.Add(ModularHandguardAttachmentPoint.ModularPartsGroupID, ModularHandguardAttachmentPoint);
-                keyValuePairs.Add(ModularStockAttachmentPoint.ModularPartsGroupID, ModularStockAttachmentPoint);
+                if (ModularBarrelAttachmentPoint.ModularPartsGroupID != string.Empty) keyValuePairs.Add(ModularBarrelAttachmentPoint.ModularPartsGroupID, ModularBarrelAttachmentPoint);
+                if (ModularHandguardAttachmentPoint.ModularPartsGroupID != string.Empty) keyValuePairs.Add(ModularHandguardAttachmentPoint.ModularPartsGroupID, ModularHandguardAttachmentPoint);
+                if (ModularStockAttachmentPoint.ModularPartsGroupID != string.Empty) keyValuePairs.Add(ModularStockAttachmentPoint.ModularPartsGroupID, ModularStockAttachmentPoint);
 
                 foreach (var point in ModularWeaponPartsAttachmentPoints)
                 {
-                    keyValuePairs.Add(point.ModularPartsGroupID, point);
+                    try
+                    {
+                        keyValuePairs.Add(point.ModularPartsGroupID, point);
+                    }
+                    catch (Exception)
+                    {
+                        Debug.LogError($"{point.ModularPartsGroupID} already in dictionary!");
+                    }
                 }
                 foreach (var subPoint in SubAttachmentPoints)
                 {
-                    keyValuePairs.Add(subPoint.ModularPartsGroupID, subPoint);
+                    try
+                    {
+                        keyValuePairs.Add(subPoint.ModularPartsGroupID, subPoint);
+                    }
+                    catch (Exception)
+                    {
+                        Debug.LogError($"{subPoint.ModularPartsGroupID} already in dictionary!");
+                    }
                 }
 
                 return keyValuePairs;
@@ -109,11 +125,10 @@ namespace ModularWorkshop
             OrigPoseOverride_Touch = new(fireArm.PoseOverride_Touch);
         }
 
-        public void AddSubAttachmentPoint(ModularWeaponPartsAttachmentPoint subPoint, FVRFireArm fireArm, Dictionary<string,string> oldSubParts, string selectedPart = "")
+        public void AddSubAttachmentPoint(ModularWeaponPartsAttachmentPoint subPoint, FVRFireArm fireArm, Dictionary<string,string> oldSubParts, Dictionary<string, string> oldSkins, string selectedPart)
         {
             SubAttachmentPoints.Add(subPoint);
-            if (selectedPart == "") selectedPart = subPoint.SelectedModularWeaponPart;
-            ConfigureModularWeaponPart(subPoint, selectedPart, fireArm, oldSubParts);
+            ConfigureModularWeaponPart(subPoint, selectedPart, fireArm, oldSubParts, oldSkins);
 
             WorkshopPlatform?.CreateUIForPoint(subPoint);
         }
@@ -152,6 +167,7 @@ namespace ModularWorkshop
         public void ConfigureFromFlagDic(Dictionary<string, string> f, FVRFireArm fireArm)
         {
             string selectedPart;
+            string selectedSkin;
             if (f.TryGetValue(c_modularBarrelKey, out selectedPart)) ConfigureModularBarrel(selectedPart, fireArm);
             if (f.TryGetValue(c_modularHandguardKey, out selectedPart)) ConfigureModularHandguard(selectedPart, fireArm);
             if (f.TryGetValue(c_modularStockKey, out selectedPart)) ConfigureModularStock(selectedPart, fireArm);
@@ -163,6 +179,12 @@ namespace ModularWorkshop
             for (int i = 0; i < SubAttachmentPoints.Count; i++)
             {
                 if (f.TryGetValue("Modul" + SubAttachmentPoints.ElementAt(i).ModularPartsGroupID, out selectedPart)) ConfigureModularWeaponPart(SubAttachmentPoints.ElementAt(i), selectedPart, fireArm);
+            }
+            foreach (var anyPoint in AllAttachmentPoints.Values)
+            {
+                string key = anyPoint.ModularPartsGroupID + "/" + anyPoint.SelectedModularWeaponPart;
+
+                if (f.TryGetValue(key, out selectedSkin)) anyPoint.ApplySkin(selectedSkin);
             }
 
             WasUnvaulted = true;
@@ -183,32 +205,47 @@ namespace ModularWorkshop
                 if (ModularWorkshopManager.ModularWorkshopDictionary.TryGetValue(subPoint.ModularPartsGroupID, out partDefinition) && partDefinition.ModularPrefabs.Count > 0) flagDic.Add("Modul" + subPoint.ModularPartsGroupID, subPoint.SelectedModularWeaponPart);
             }
 
+            foreach (var anyPoint in AllAttachmentPoints.Values)
+            {
+                string key = anyPoint.ModularPartsGroupID + "/" + anyPoint.SelectedModularWeaponPart;
+                string value = anyPoint.CurrentSkin;
+                flagDic.Add(key, value);
+            }
+
             return flagDic;
         }
 
-        public ModularWeaponPart ConfigureModularWeaponPart(ModularWeaponPartsAttachmentPoint modularWeaponPartsAttachmentPoint, string selectedPart, FVRFireArm fireArm, Dictionary<string, string> oldSubParts = null)
+        public ModularWeaponPart ConfigureModularWeaponPart(ModularWeaponPartsAttachmentPoint modularWeaponPartsAttachmentPoint, string selectedPart, FVRFireArm fireArm, Dictionary<string, string> oldSubParts = null, Dictionary<string, string> oldSkins = null)
         {
-            modularWeaponPartsAttachmentPoint.SelectedModularWeaponPart = selectedPart;
-            ModularWorkshopManager.ModularWorkshopDictionary.TryGetValue(modularWeaponPartsAttachmentPoint.ModularPartsGroupID, out ModularWorkshopPartsDefinition prefabs);
-            GameObject modularWeaponPartPrefab = UnityEngine.Object.Instantiate(prefabs.PartsDictionary[selectedPart], modularWeaponPartsAttachmentPoint.ModularPartPoint.position, modularWeaponPartsAttachmentPoint.ModularPartPoint.rotation, modularWeaponPartsAttachmentPoint.ModularPartPoint.parent);
-            ModularWeaponPart oldPart = modularWeaponPartsAttachmentPoint.ModularPartPoint.GetComponent<ModularWeaponPart>();
+            ModularWorkshopManager.ModularWorkshopDictionary.TryGetValue(modularWeaponPartsAttachmentPoint.ModularPartsGroupID, out ModularWorkshopPartsDefinition partsDefinition);
+            if (!partsDefinition.PartsDictionary.ContainsKey(selectedPart))
+            {
+                OpenScripts2_BepInExPlugin.LogError(fireArm, $"Parts group \"{modularWeaponPartsAttachmentPoint.ModularPartsGroupID}\" does not contain part with name \"{selectedPart}\"");
+                return null;
+            }
+            GameObject modularWeaponPartPrefab = UnityEngine.Object.Instantiate(partsDefinition.PartsDictionary[selectedPart], modularWeaponPartsAttachmentPoint.ModularPartPoint.position, modularWeaponPartsAttachmentPoint.ModularPartPoint.rotation, modularWeaponPartsAttachmentPoint.ModularPartPoint.parent);
+            ModularWeaponPart oldPart = modularWeaponPartsAttachmentPoint.ModularPartPoint.GetComponentInChildren<ModularWeaponPart>();
 
             if (oldSubParts == null) oldSubParts = new();
+            if (oldSkins == null) oldSkins = new();
 
             if (oldPart != null)
             {
                 oldPart.DisablePart();
 
+                if (!oldSkins.ContainsKey(modularWeaponPartsAttachmentPoint.ModularPartsGroupID)) oldSkins.Add(modularWeaponPartsAttachmentPoint.ModularPartsGroupID, modularWeaponPartsAttachmentPoint.CurrentSkin);
+
                 foreach (var point in oldPart.SubAttachmentPoints)
                 {
                     oldSubParts.Add(point.ModularPartsGroupID, point.SelectedModularWeaponPart);
+                    oldSkins.Add(point.ModularPartsGroupID, point.CurrentSkin);
 
                     RemoveSubAttachmentPoint(point, fireArm, oldSubParts);
                 }
             }
 
             ModularWeaponPart newPart = modularWeaponPartPrefab.GetComponent<ModularWeaponPart>();
-
+            modularWeaponPartsAttachmentPoint.SelectedModularWeaponPart = selectedPart;
             UpdateFirearm(oldPart, newPart, fireArm);
 
             UnityEngine.Object.Destroy(modularWeaponPartsAttachmentPoint.ModularPartPoint.gameObject);
@@ -216,11 +253,21 @@ namespace ModularWorkshop
 
             newPart.ConfigurePart();
 
+            if (ModularWorkshopManager.ModularWorkshopSkinsDictionary.TryGetValue(modularWeaponPartsAttachmentPoint.SkinPath, out ModularWorkshopSkinsDefinition definition))
+            {
+                if (oldSkins.TryGetValue(modularWeaponPartsAttachmentPoint.ModularPartsGroupID, out string skinName))
+                {
+                    if (definition.SkinDictionary.ContainsKey(skinName)) modularWeaponPartsAttachmentPoint.ApplySkin(skinName);
+                }
+            } 
+
             foreach (var point in newPart.SubAttachmentPoints)
             {
-                if (oldSubParts.TryGetValue(point.ModularPartsGroupID, out string oldSelectedPart) && oldSelectedPart != point.SelectedModularWeaponPart) AddSubAttachmentPoint(point, fireArm, oldSubParts, oldSelectedPart);
-                else AddSubAttachmentPoint(point, fireArm, oldSubParts);
+                if (oldSubParts.TryGetValue(point.ModularPartsGroupID, out string oldSelectedPart)) AddSubAttachmentPoint(point, fireArm, oldSubParts, oldSkins, oldSelectedPart);
+                else AddSubAttachmentPoint(point, fireArm, oldSubParts, oldSkins, point.SelectedModularWeaponPart);
             }
+
+            modularWeaponPartsAttachmentPoint.CheckForDefaultSkin();
 
             return newPart;
         }
@@ -244,10 +291,17 @@ namespace ModularWorkshop
             //    else Debug.Log($"ModularBarrelPrefabsDictionary: Value at index {i} is Game Object {ModularBarrelPrefabsDictionary.ElementAt(i).Value.name}!");
             //}
 
-            ModularBarrelAttachmentPoint.SelectedModularWeaponPart = selectedPart;
+            
+
+            if (!ModularBarrelPrefabsDictionary.ContainsKey(selectedPart))
+            {
+                OpenScripts2_BepInExPlugin.LogError(fireArm, $"Parts group \"{ModularBarrelAttachmentPoint.ModularPartsGroupID}\" does not contain part with name \"{selectedPart}\"");
+                return null;
+            }
+
             GameObject modularBarrelPrefab = UnityEngine.Object.Instantiate(ModularBarrelPrefabsDictionary[selectedPart], ModularBarrelAttachmentPoint.ModularPartPoint.position, ModularBarrelAttachmentPoint.ModularPartPoint.rotation, ModularBarrelAttachmentPoint.ModularPartPoint.parent);
 
-            ModularBarrel oldPart = ModularBarrelAttachmentPoint.ModularPartPoint.GetComponent<ModularBarrel>();
+            ModularBarrel oldPart = ModularBarrelAttachmentPoint.ModularPartPoint.GetComponentInChildren<ModularBarrel>();
             ModularBarrel newPart = modularBarrelPrefab.GetComponent<ModularBarrel>();
 
             fireArm.MuzzlePos.GoToTransformProxy(newPart.MuzzlePosProxy);
@@ -256,14 +310,18 @@ namespace ModularWorkshop
             fireArm.DefaultMuzzleDamping = newPart.DefaultMuzzleDamping;
 
             Dictionary<string, string> oldSubParts = new();
+            Dictionary<string, string> oldSkins = new();
 
             if (oldPart != null)
             {
                 oldPart.DisablePart();
 
+                if (!oldSkins.ContainsKey(ModularBarrelAttachmentPoint.ModularPartsGroupID)) oldSkins.Add(ModularBarrelAttachmentPoint.ModularPartsGroupID, ModularBarrelAttachmentPoint.CurrentSkin);
+
                 foreach (var point in oldPart.SubAttachmentPoints)
                 {
                     oldSubParts.Add(point.ModularPartsGroupID, point.SelectedModularWeaponPart);
+                    oldSkins.Add(point.ModularPartsGroupID, point.CurrentSkin);
 
                     RemoveSubAttachmentPoint(point, fireArm, oldSubParts);
                 }
@@ -308,6 +366,10 @@ namespace ModularWorkshop
                     fireArm.AudioClipSet = OrigAudioSet;
                 }
             }
+
+            ModularBarrelAttachmentPoint.SelectedModularWeaponPart = selectedPart;
+
+
             if (newPart.HasCustomMuzzleEffects)
             {
                 if (newPart.KeepRevolverCylinderSmoke)
@@ -356,10 +418,18 @@ namespace ModularWorkshop
                 fireArm.AudioClipSet = newPart.CustomAudioSet;
             }
 
+            if (ModularWorkshopManager.ModularWorkshopSkinsDictionary.TryGetValue(ModularBarrelAttachmentPoint.SkinPath, out ModularWorkshopSkinsDefinition definition))
+            {
+                if (oldSkins.TryGetValue(ModularBarrelAttachmentPoint.ModularPartsGroupID, out string skinName))
+                {
+                    if (definition.SkinDictionary.ContainsKey(skinName)) ModularBarrelAttachmentPoint.ApplySkin(skinName);
+                }
+            }
+
             foreach (var point in newPart.SubAttachmentPoints)
             {
-                if (oldSubParts.TryGetValue(point.ModularPartsGroupID, out string oldSelectedPart) && oldSelectedPart != point.SelectedModularWeaponPart) AddSubAttachmentPoint(point, fireArm, oldSubParts, oldSelectedPart);
-                else AddSubAttachmentPoint(point, fireArm, oldSubParts);
+                if (oldSubParts.TryGetValue(point.ModularPartsGroupID, out string oldSelectedPart) && oldSelectedPart != point.SelectedModularWeaponPart) AddSubAttachmentPoint(point, fireArm, oldSubParts, oldSkins, oldSelectedPart);
+                else AddSubAttachmentPoint(point, fireArm, oldSubParts, oldSkins, point.SelectedModularWeaponPart);
             }
 
             fireArm.UpdateCurrentMuzzle();
@@ -371,29 +441,42 @@ namespace ModularWorkshop
 
             newPart.ConfigurePart();
 
+            ModularBarrelAttachmentPoint.CheckForDefaultSkin();
+
             return newPart;
         }
         public ModularHandguard ConfigureModularHandguard(string selectedPart, FVRFireArm fireArm)
         {
-            ModularHandguardAttachmentPoint.SelectedModularWeaponPart = selectedPart;
+            
+
+            if (!ModularHandguardPrefabsDictionary.ContainsKey(selectedPart))
+            {
+                OpenScripts2_BepInExPlugin.LogError(fireArm, $"Parts group \"{ModularHandguardAttachmentPoint.ModularPartsGroupID}\" does not contain part with name \"{selectedPart}\"");
+                return null;
+            }
 
             GameObject modularHandguardPrefab = UnityEngine.Object.Instantiate(ModularHandguardPrefabsDictionary[selectedPart], ModularHandguardAttachmentPoint.ModularPartPoint.position, ModularHandguardAttachmentPoint.ModularPartPoint.rotation, ModularHandguardAttachmentPoint.ModularPartPoint.parent);
-            ModularHandguard oldPart = ModularHandguardAttachmentPoint.ModularPartPoint.GetComponent<ModularHandguard>();
+            ModularHandguard oldPart = ModularHandguardAttachmentPoint.ModularPartPoint.GetComponentInChildren<ModularHandguard>();
 
             Dictionary<string, string> oldSubParts = new();
+            Dictionary<string, string> oldSkins = new();
 
             if (oldPart != null)
             {
                 oldPart.DisablePart();
 
+                if (!oldSkins.ContainsKey(ModularHandguardAttachmentPoint.ModularPartsGroupID)) oldSkins.Add(ModularHandguardAttachmentPoint.ModularPartsGroupID, ModularHandguardAttachmentPoint.CurrentSkin);
+
                 foreach (var point in oldPart.SubAttachmentPoints)
                 {
                     oldSubParts.Add(point.ModularPartsGroupID, point.SelectedModularWeaponPart);
+                    oldSkins.Add(point.ModularPartsGroupID, point.CurrentSkin);
 
                     RemoveSubAttachmentPoint(point, fireArm, oldSubParts);
                 }
             }
 
+            ModularHandguardAttachmentPoint.SelectedModularWeaponPart = selectedPart;
             ModularHandguard newPart = modularHandguardPrefab.GetComponent<ModularHandguard>();
 
             fireArm.Foregrip.gameObject.SetActive(newPart.ActsLikeForeGrip);
@@ -517,10 +600,18 @@ namespace ModularWorkshop
                 }
             }
 
+            if (ModularWorkshopManager.ModularWorkshopSkinsDictionary.TryGetValue(ModularBarrelAttachmentPoint.SkinPath, out ModularWorkshopSkinsDefinition definition))
+            {
+                if (oldSkins.TryGetValue(ModularHandguardAttachmentPoint.ModularPartsGroupID, out string skinName))
+                {
+                    if (definition.SkinDictionary.ContainsKey(skinName)) ModularHandguardAttachmentPoint.ApplySkin(skinName);
+                }
+            }
+
             foreach (var point in newPart.SubAttachmentPoints)
             {
-                if (oldSubParts.TryGetValue(point.ModularPartsGroupID, out string oldSelectedPart) && oldSelectedPart != point.SelectedModularWeaponPart) AddSubAttachmentPoint(point, fireArm, oldSubParts, oldSelectedPart);
-                else AddSubAttachmentPoint(point, fireArm, oldSubParts);
+                if (oldSubParts.TryGetValue(point.ModularPartsGroupID, out string oldSelectedPart) && oldSelectedPart != point.SelectedModularWeaponPart) AddSubAttachmentPoint(point, fireArm, oldSubParts, oldSkins, oldSelectedPart);
+                else AddSubAttachmentPoint(point, fireArm, oldSubParts, oldSkins, point.SelectedModularWeaponPart);
             }
 
             UpdateFirearm(oldPart, newPart, fireArm);
@@ -530,26 +621,37 @@ namespace ModularWorkshop
 
             newPart.ConfigurePart();
 
+            ModularHandguardAttachmentPoint.CheckForDefaultSkin();
+
             return newPart;
         }
 
         public ModularStock ConfigureModularStock(string selectedPart, FVRFireArm fireArm)
         {
-            ModularStockAttachmentPoint.SelectedModularWeaponPart = selectedPart;
+            
+
+            if (!ModularStockPrefabsDictionary.ContainsKey(selectedPart))
+            {
+                OpenScripts2_BepInExPlugin.LogError(fireArm, $"Parts group \"{ModularStockAttachmentPoint.ModularPartsGroupID}\" does not contain part with name \"{selectedPart}\"");
+                return null;
+            }
 
             GameObject modularStockPrefab = UnityEngine.Object.Instantiate(ModularStockPrefabsDictionary[selectedPart], ModularStockAttachmentPoint.ModularPartPoint.position, ModularStockAttachmentPoint.ModularPartPoint.rotation, ModularStockAttachmentPoint.ModularPartPoint.parent);
 
-            ModularStock oldPart = ModularStockAttachmentPoint.ModularPartPoint.GetComponent<ModularStock>();
+            ModularStock oldPart = ModularStockAttachmentPoint.ModularPartPoint.GetComponentInChildren<ModularStock>();
 
             Dictionary<string, string> oldSubParts = new();
+            Dictionary<string, string> oldSkins = new();
 
             if (oldPart != null)
             {
                 oldPart.DisablePart();
+                if (!oldSkins.ContainsKey(ModularStockAttachmentPoint.ModularPartsGroupID)) oldSkins.Add(ModularStockAttachmentPoint.ModularPartsGroupID, ModularStockAttachmentPoint.CurrentSkin);
 
                 foreach (var point in oldPart.SubAttachmentPoints)
                 {
                     oldSubParts.Add(point.ModularPartsGroupID, point.SelectedModularWeaponPart);
+                    oldSkins.Add(point.ModularPartsGroupID, point.CurrentSkin);
 
                     RemoveSubAttachmentPoint(point, fireArm, oldSubParts);
                 }
@@ -570,7 +672,7 @@ namespace ModularWorkshop
                     }
                 }
             }
-
+            ModularStockAttachmentPoint.SelectedModularWeaponPart = selectedPart;
             ModularStock newPart = modularStockPrefab.GetComponent<ModularStock>();
 
             fireArm.HasActiveShoulderStock = newPart.ActsLikeStock;
@@ -596,10 +698,18 @@ namespace ModularWorkshop
                 }
             }
 
+            if (ModularWorkshopManager.ModularWorkshopSkinsDictionary.TryGetValue(ModularBarrelAttachmentPoint.SkinPath, out ModularWorkshopSkinsDefinition definition))
+            {
+                if (oldSkins.TryGetValue(ModularStockAttachmentPoint.ModularPartsGroupID, out string skinName))
+                {
+                    if (definition.SkinDictionary.ContainsKey(skinName)) ModularStockAttachmentPoint.ApplySkin(skinName);
+                }
+            }
+
             foreach (var point in newPart.SubAttachmentPoints)
             {
-                if (oldSubParts.TryGetValue(point.ModularPartsGroupID, out string oldSelectedPart) && oldSelectedPart != point.SelectedModularWeaponPart) AddSubAttachmentPoint(point, fireArm, oldSubParts, oldSelectedPart);
-                else AddSubAttachmentPoint(point, fireArm, oldSubParts);
+                if (oldSubParts.TryGetValue(point.ModularPartsGroupID, out string oldSelectedPart) && oldSelectedPart != point.SelectedModularWeaponPart) AddSubAttachmentPoint(point, fireArm, oldSubParts, oldSkins, oldSelectedPart);
+                else AddSubAttachmentPoint(point, fireArm, oldSubParts, oldSkins, point.SelectedModularWeaponPart);
             }
 
             UpdateFirearm(oldPart, newPart, fireArm);
@@ -608,6 +718,8 @@ namespace ModularWorkshop
             ModularStockAttachmentPoint.ModularPartPoint = modularStockPrefab.transform;
 
             newPart.ConfigurePart();
+
+            ModularStockAttachmentPoint.CheckForDefaultSkin();
 
             return newPart;
         }
@@ -639,10 +751,11 @@ namespace ModularWorkshop
             {
                 foreach (var mount in oldPart.AttachmentMounts)
                 {
-                    DetachAllAttachments(mount);
+                    DetachAllAttachmentsFromMount(mount);
 
                     fireArm.AttachmentMounts.Remove(mount);
                 }
+                fireArm.Slots = fireArm.Slots.Where(s => !oldPart.SubQuickBeltSlots.Contains(s)).ToArray();
             }
             fireArm.AttachmentMounts.AddRange(newPart.AttachmentMounts);
             foreach (var mount in newPart.AttachmentMounts)
@@ -650,6 +763,8 @@ namespace ModularWorkshop
                 mount.Parent = fireArm;
                 mount.MyObject = fireArm;
             }
+
+            fireArm.Slots.AddRangeToArray(newPart.SubQuickBeltSlots);
 
             fireArm.m_colliders = fireArm.GetComponentsInChildren<Collider>(true);
 
@@ -662,14 +777,14 @@ namespace ModularWorkshop
             }
         }
 
-        private void DetachAllAttachments(FVRFireArmAttachmentMount mount)
+        private void DetachAllAttachmentsFromMount(FVRFireArmAttachmentMount mount)
         {
             FVRFireArmAttachment[] attachments = mount.AttachmentsList.ToArray();
             foreach (var attachment in attachments)
             {
                 foreach (var subMount in attachment.AttachmentMounts)
                 {
-                    DetachAllAttachments(subMount);
+                    DetachAllAttachmentsFromMount(subMount);
                 }
                 attachment.SetAllCollidersToLayer(false, "Default");
                 attachment.DetachFromMount();

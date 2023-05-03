@@ -126,22 +126,22 @@ namespace ModularWorkshop
                         s_foundModularSkinsDefinitions.Add(skinDefinition);
 
                         //if (partDefinition.ModularPartsGroupID == null) Logger.LogError($"{partDefinition.name} has null ModularPartsGroupID field!");
-                        string skinPath = Path.Combine(skinDefinition.ModularPartsGroupID, skinDefinition.PartName);
+                        string skinPath = skinDefinition.ModularPartsGroupID + "/" + skinDefinition.PartName;
 
-                        if (!ModularWorkshopSkinsDictionary.TryGetValue(skinPath, out ModularWorkshopSkinsDefinition skinsDefinitionOld))
+                        if (ModularWorkshopSkinsDictionary.TryGetValue(skinPath, out ModularWorkshopSkinsDefinition skinsDefinitionOld))
+                        {
+                            skinsDefinitionOld.SkinDefinitions.AddRange(skinDefinition.SkinDefinitions);
+                            Logger.LogInfo($"Added more parts from ModularWorkshopSkinsDefinition {skinDefinition.name} to ModularSkin {skinPath}.");
+                        }
+                        else
                         {
                             foreach (var skin in skinDefinition.SkinDefinitions)
                             {
                                 if (skin.DisplayName == string.Empty) skin.DisplayName = skin.ModularSkinID;
                             }
 
-                            ModularWorkshopSkinsDictionary.Add(skinDefinition.ModularPartsGroupID, skinDefinition);
+                            ModularWorkshopSkinsDictionary.Add(skinPath, skinDefinition);
                             Logger.LogInfo($"Loaded ModularWorkshopSkinsDefinition {skinDefinition.name} with ModularSkin {skinPath}.");
-                        }
-                        else
-                        {
-                            skinsDefinitionOld.SkinDefinitions.AddRange(skinDefinition.SkinDefinitions);
-                            Logger.LogInfo($"Added more parts from ModularWorkshopSkinsDefinition {skinDefinition.name} to ModularSkin {skinPath}.");
                         }
                     }
                 }

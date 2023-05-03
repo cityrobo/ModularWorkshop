@@ -107,6 +107,11 @@ namespace ModularWorkshop
             ModularFVRFireArm.ConvertTransformsToProxies(this);
         }
 
+        public void ApplySkin(string ModularPartsGroupID, string SkinName)
+        {
+            AllAttachmentPoints[ModularPartsGroupID].ApplySkin(SkinName);
+        }
+
         [ContextMenu("Copy Existing Firearm Component")]
         public void CopyFirearm()
         {
