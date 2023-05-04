@@ -118,6 +118,8 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>if $(ConfigurationName) == Release copy $(TargetPath) $(ProjectDir)$(TargetName).dll</PostBuildEvent>
+    <PostBuildEvent>if $(ConfigurationName) == Release copy $(TargetPath) $(ProjectDir)$(TargetName).dll
+if $(ConfigurationName) == Release copy $(TargetDir)ModularWorkshop.pdb $(ProjectDir)ModularWorkshop.pdb
+if $(ConfigurationName) == Release $(ProjectDir)pdb2mdb.exe $(ProjectDir)ModularWorkshop.dll</PostBuildEvent>
   </PropertyGroup>
 </Project>
