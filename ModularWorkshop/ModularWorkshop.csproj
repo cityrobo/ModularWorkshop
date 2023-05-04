@@ -87,30 +87,30 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ModularPreattachedAttachments.cs" />
-    <Compile Include="ModularPreattachedForeignAttachments.cs" />
-    <Compile Include="ModularWorkshopSkinsDefinition.cs" />
-    <Compile Include="ReflexSightAddon.cs" />
-    <Compile Include="ModularBoltActionRifle.cs" />
-    <Compile Include="ModularOpenBoltReceiver.cs" />
-    <Compile Include="ModularHandgun.cs" />
-    <Compile Include="ModularFVRFireArm.cs" />
-    <Compile Include="IPartFireArmRequirement.cs" />
-    <Compile Include="IModularWeapon.cs" />
-    <Compile Include="HeatingEffectAddon.cs" />
-    <Compile Include="ModularBarrelExtension.cs" />
-    <Compile Include="ModularStockExtension.cs" />
-    <Compile Include="ModularWeaponPartsAttachmentPoint.cs" />
-    <Compile Include="ModularBarrel.cs" />
-    <Compile Include="ModularClosedBoltWeapon.cs" />
-    <Compile Include="ModularHandguard.cs" />
-    <Compile Include="ModularRevolver.cs" />
-    <Compile Include="ModularStock.cs" />
-    <Compile Include="ModularWeaponPart.cs" />
-    <Compile Include="ModularWorkshopManager.cs" />
-    <Compile Include="ModularWorkshopPartsDefinition.cs" />
-    <Compile Include="ModularWorkshopPlatform.cs" />
-    <Compile Include="ModularWorkshopUI.cs" />
+    <Compile Include="src\ModularPreattachedAttachments.cs" />
+    <Compile Include="src\ModularPreattachedForeignAttachments.cs" />
+    <Compile Include="src\ModularWorkshopSkinsDefinition.cs" />
+    <Compile Include="src\ReflexSightAddon.cs" />
+    <Compile Include="src\ModularBoltActionRifle.cs" />
+    <Compile Include="src\ModularOpenBoltReceiver.cs" />
+    <Compile Include="src\ModularHandgun.cs" />
+    <Compile Include="src\ModularFVRFireArm.cs" />
+    <Compile Include="src\IPartFireArmRequirement.cs" />
+    <Compile Include="src\IModularWeapon.cs" />
+    <Compile Include="src\HeatingEffectAddon.cs" />
+    <Compile Include="src\ModularBarrelExtension.cs" />
+    <Compile Include="src\ModularStockExtension.cs" />
+    <Compile Include="src\ModularWeaponPartsAttachmentPoint.cs" />
+    <Compile Include="src\ModularBarrel.cs" />
+    <Compile Include="src\ModularClosedBoltWeapon.cs" />
+    <Compile Include="src\ModularHandguard.cs" />
+    <Compile Include="src\ModularRevolver.cs" />
+    <Compile Include="src\ModularStock.cs" />
+    <Compile Include="src\ModularWeaponPart.cs" />
+    <Compile Include="src\ModularWorkshopManager.cs" />
+    <Compile Include="src\ModularWorkshopPartsDefinition.cs" />
+    <Compile Include="src\ModularWorkshopPlatform.cs" />
+    <Compile Include="src\ModularWorkshopUI.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

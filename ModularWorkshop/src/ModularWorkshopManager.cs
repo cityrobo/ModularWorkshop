@@ -131,7 +131,7 @@ namespace ModularWorkshop
                         if (ModularWorkshopSkinsDictionary.TryGetValue(skinPath, out ModularWorkshopSkinsDefinition skinsDefinitionOld))
                         {
                             skinsDefinitionOld.SkinDefinitions.AddRange(skinDefinition.SkinDefinitions);
-                            Logger.LogInfo($"Added more parts from ModularWorkshopSkinsDefinition {skinDefinition.name} to ModularSkin {skinPath}.");
+                            Logger.LogInfo($"Added more skins from ModularWorkshopSkinsDefinition {skinDefinition.name} to ModularSkin {skinPath}.");
                         }
                         else
                         {
@@ -150,7 +150,7 @@ namespace ModularWorkshop
                 {
                     _lastNumberOfSkinsDefinitions = skinsDefinitions.Length;
                     _numberOfSkinTries = 0;
-                    Logger.LogInfo($"Loaded {_lastNumberOfSkinsDefinitions} ModularWorkshopPartsDefinitions.");
+                    Logger.LogInfo($"Loaded {_lastNumberOfSkinsDefinitions} ModularWorkshopSkinsDefinition.");
                 }
                 else _numberOfSkinTries++;
 
@@ -158,7 +158,7 @@ namespace ModularWorkshop
             }
 
             _loadingDatabase = false;
-            Logger.LogInfo($"Finishded loading with {_lastNumberOfSkinsDefinitions} ModularWorkshopPartsDefinitions total and {ModularWorkshopSkinsDictionary.Count} in Dictionary.");
+            Logger.LogInfo($"Finishded loading with {_lastNumberOfSkinsDefinitions} ModularWorkshopSkinsDefinition total and {ModularWorkshopSkinsDictionary.Count} in Dictionary.");
         }
     }
 }

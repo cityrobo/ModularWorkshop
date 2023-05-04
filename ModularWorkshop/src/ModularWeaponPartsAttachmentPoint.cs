@@ -22,13 +22,21 @@ namespace ModularWorkshop
 
         public string SkinPath => ModularPartsGroupID + "/" + SelectedModularWeaponPart;
 
-        public string CurrentSkin => ModularPartPoint.GetComponent<ModularWeaponPart>().SelectedModularWeaponPartSkinID;
+        public string CurrentSkin 
+        {
+            get 
+            {
+                ModularWeaponPart part = ModularPartPoint.GetComponentInChildren<ModularWeaponPart>();
+                if (part != null) return part.SelectedModularWeaponPartSkinID;
+                else return string.Empty;
+            }
+        }
 
         public void CheckForDefaultSkin()
         {
-            ModularWeaponPart part = ModularPartPoint.GetComponent<ModularWeaponPart>();
+            ModularWeaponPart part = ModularPartPoint.GetComponentInChildren<ModularWeaponPart>();
 
-            if (part.SelectedModularWeaponPartSkinID == "Default" && ModularWorkshopManager.ModularWorkshopSkinsDictionary.TryGetValue(SkinPath, out ModularWorkshopSkinsDefinition skinsDefinition))
+            if (part != null && part.SelectedModularWeaponPartSkinID == "Default" && ModularWorkshopManager.ModularWorkshopSkinsDictionary.TryGetValue(SkinPath, out ModularWorkshopSkinsDefinition skinsDefinition))
             {
                 if (!skinsDefinition.SkinDictionary.ContainsKey("Default"))
                 {
@@ -58,7 +66,7 @@ namespace ModularWorkshop
                     skinsDefinition.SkinDefinitions.Insert(0, skinDefinition);
                 }
             }
-            else if (part.SelectedModularWeaponPartSkinID == "Default")
+            else if (part != null && part.SelectedModularWeaponPartSkinID == "Default")
             {
                 // Create SkinDefinition for Default Skin
                 SkinDefinition skinDefinition = new()
@@ -83,13 +91,12 @@ namespace ModularWorkshop
                 skinDefinition.DifferentSkinnedMeshPieces = skinPieces;
 
                 // Create new SkinsDefinition and add it to the ModularWorkshopManager
-                skinsDefinition = new()
-                {
-                    name = this.ModularPartsGroupID + "/" + SelectedModularWeaponPart,
-                    ModularPartsGroupID = this.ModularPartsGroupID,
-                    PartName = SelectedModularWeaponPart,
-                    SkinDefinitions = new() { skinDefinition }
-                };
+                skinsDefinition = ScriptableObject.CreateInstance<ModularWorkshopSkinsDefinition>();
+
+                skinsDefinition.name = ModularPartsGroupID + "/" + SelectedModularWeaponPart;
+                skinsDefinition.ModularPartsGroupID = ModularPartsGroupID;
+                skinsDefinition.PartName = SelectedModularWeaponPart;
+                skinsDefinition.SkinDefinitions = new() { skinDefinition };
 
                 ModularWorkshopManager.ModularWorkshopSkinsDictionary.Add(SkinPath, skinsDefinition);
             }

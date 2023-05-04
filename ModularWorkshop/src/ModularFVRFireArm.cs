@@ -217,12 +217,15 @@ namespace ModularWorkshop
 
         public ModularWeaponPart ConfigureModularWeaponPart(ModularWeaponPartsAttachmentPoint modularWeaponPartsAttachmentPoint, string selectedPart, FVRFireArm fireArm, Dictionary<string, string> oldSubParts = null, Dictionary<string, string> oldSkins = null)
         {
-            ModularWorkshopManager.ModularWorkshopDictionary.TryGetValue(modularWeaponPartsAttachmentPoint.ModularPartsGroupID, out ModularWorkshopPartsDefinition partsDefinition);
-            if (!partsDefinition.PartsDictionary.ContainsKey(selectedPart))
+            if (ModularWorkshopManager.ModularWorkshopDictionary.TryGetValue(modularWeaponPartsAttachmentPoint.ModularPartsGroupID, out ModularWorkshopPartsDefinition partsDefinition))
             {
-                OpenScripts2_BepInExPlugin.LogError(fireArm, $"Parts group \"{modularWeaponPartsAttachmentPoint.ModularPartsGroupID}\" does not contain part with name \"{selectedPart}\"");
-                return null;
+                if (!partsDefinition.PartsDictionary.ContainsKey(selectedPart))
+                {
+                    OpenScripts2_BepInExPlugin.LogError(fireArm, $"Parts group \"{modularWeaponPartsAttachmentPoint.ModularPartsGroupID}\" does not contain part with name \"{selectedPart}\"");
+                    return null;
+                }
             }
+            else OpenScripts2_BepInExPlugin.LogError(fireArm, $"Parts group \"{modularWeaponPartsAttachmentPoint.ModularPartsGroupID}\" not found in ModularWorkshopManager dictionary!");
             GameObject modularWeaponPartPrefab = UnityEngine.Object.Instantiate(partsDefinition.PartsDictionary[selectedPart], modularWeaponPartsAttachmentPoint.ModularPartPoint.position, modularWeaponPartsAttachmentPoint.ModularPartPoint.rotation, modularWeaponPartsAttachmentPoint.ModularPartPoint.parent);
             ModularWeaponPart oldPart = modularWeaponPartsAttachmentPoint.ModularPartPoint.GetComponentInChildren<ModularWeaponPart>();
 
