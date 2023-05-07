@@ -13,25 +13,30 @@ namespace ModularWorkshop
     [CreateAssetMenu(fileName = "New ModularWorkshopSkinsDefinition", menuName = "ModularWorkshop/ModularWorkshopSkinsDefinition", order = 0)]
     public class ModularWorkshopSkinsDefinition : ScriptableObject
     {
+        [Tooltip("ModularPartsGroupID the skinned part is under.")]
         public string ModularPartsGroupID;
-        [Tooltip("Optional Display name. If left empty, the ModularPartsGroupID will be used as a display name instead.")]
+        [Tooltip("Name of the Part the SkinsDefinition is meant for.")]
         public string PartName;
+        [Tooltip("List of the different skins of the part.")]
         public List<SkinDefinition> SkinDefinitions;
 
         [Serializable]
         public class SkinDefinition
         {
+            [Tooltip("Internal ID of the skin. If used across multiple parts in the same ModularPartsGroupID allows for the next selected part to take on the same skin as the one before.")]
             public string ModularSkinID;
-            [Tooltip("Optional Display name. If left empty, the ModularSkinID will be used as a display name instead.")]
+            [Tooltip("Optional display name. If left empty, the ModularSkinID will be used as a display name instead.")]
             public string DisplayName;
+            [Tooltip("Icon of the skin that can be shown next to the skin button on the UI panel.")]
             public Sprite Icon;
-            [Tooltip("These are in order of the mesh renderes how they get found by the \"Display Mesh Order\" context menu option on the Modular Weapon Part.")]
+            [Tooltip("These are in order of the mesh renderes how they get found by the \"Display Mesh Order\" context menu option on the Modular Weapon Part. You need one for each mesh on the part!")]
             public MeshSkin[] DifferentSkinnedMeshPieces;
         }
 
         [Serializable]
         public class MeshSkin
         {
+            [Tooltip("All of the materials used on the one Mesh Renderer piece.")]
             public Material[] Materials;
         }
 

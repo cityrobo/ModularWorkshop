@@ -76,9 +76,11 @@ namespace ModularWorkshop
         private int _skinPageIndex;
 
         private string[] _skinNames;
+        private string[] _skinDisplayNames;
         private Dictionary<string, ModularWorkshopSkinsDefinition.SkinDefinition> _skinDictionary;
         private Sprite[] _skinSprites;
 
+        private bool _skinOnlyMode = false;
 
         public void Awake()
         {
@@ -115,6 +117,7 @@ namespace ModularWorkshop
                 EPartType.SubAttachmentPoint => ModularWeapon.ConfigureModularWeaponPart(ModularWeapon.SubAttachmentPoints.Single(obj => obj.ModularPartsGroupID == ModularPartsGroupID), selectedPart),
                 _ => null,
             };
+            SM.PlayCoreSound(FVRPooledAudioType.Generic, ApplySound, transform.position);
         }
 
         public void PButton_ShowUI()
@@ -164,7 +167,6 @@ namespace ModularWorkshop
             }
 
             UpdateDisplay();
-            SM.PlayCoreSound(FVRPooledAudioType.Generic, ApplySound, transform.position);
         }
 
         public void PButton_ShowSkins()
@@ -175,11 +177,11 @@ namespace ModularWorkshop
             _skinDictionary = ModularWorkshopManager.ModularWorkshopSkinsDictionary[ModularPartsGroupID + "/" + partName].SkinDictionary;
             _skinNames = _skinDictionary.Keys.ToArray();
             _skinSprites = _skinDictionary.Values.Select(s => s.Icon).ToArray();
+            _skinDisplayNames = _skinDictionary.Values.Select(s => s.DisplayName).ToArray();
             string skinName = ModularWeapon.AllAttachmentPoints[ModularPartsGroupID].CurrentSkin;
             _selectedSkin = Array.IndexOf(_skinNames, skinName);
             _skinPageIndex = Mathf.FloorToInt(_selectedSkin / PartButtons.Length);
             _selectedButton = _selectedSkin - _skinPageIndex * PartButtons.Length;
-
             UpdateDisplay();
             Beep();
         }
@@ -187,9 +189,7 @@ namespace ModularWorkshop
         public void PButton_HideSkins()
         {
             _isShowingSkins = false;
-
             _selectedButton = _selectedPart - _pageIndex * PartButtons.Length;
-
             UpdateDisplay();
             Beep();
         }
@@ -235,6 +235,23 @@ namespace ModularWorkshop
             _pageIndex = Mathf.FloorToInt(_selectedPart / PartButtons.Length);
             if (_pageIndex < 0) _pageIndex = 0;
             _selectedButton = _selectedPart - _pageIndex * PartButtons.Length;
+
+            if (_partDictionary.Count <= 1)
+            {
+                _skinOnlyMode = true;
+
+                _isShowingSkins = true;
+
+                string partName = _partNames[_selectedPart];
+                _skinDictionary = ModularWorkshopManager.ModularWorkshopSkinsDictionary[ModularPartsGroupID + "/" + partName].SkinDictionary;
+                _skinNames = _skinDictionary.Keys.ToArray();
+                _skinSprites = _skinDictionary.Values.Select(s => s.Icon).ToArray();
+                _skinDisplayNames = _skinDictionary.Values.Select(s => s.DisplayName).ToArray();
+                string skinName = ModularWeapon.AllAttachmentPoints[ModularPartsGroupID].CurrentSkin;
+                _selectedSkin = Array.IndexOf(_skinNames, skinName);
+                _skinPageIndex = Mathf.FloorToInt(_selectedSkin / PartButtons.Length);
+                _selectedButton = _selectedSkin - _skinPageIndex * PartButtons.Length;
+            }
         }
 
         public void UpdateDisplay()
@@ -271,8 +288,8 @@ namespace ModularWorkshop
                         if (i + PartButtons.Length * _skinPageIndex < _skinDictionary.Count)
                         {
                             PartButtons[i].SetActive(true);
-                            
-                            PartTexts[i].text = _skinNames[i + PartButtons.Length * _skinPageIndex];
+
+                            PartTexts[i].text = _skinDisplayNames[i + PartButtons.Length * _skinPageIndex];
                             PartImages[i].sprite = _skinSprites[i + PartButtons.Length * _skinPageIndex];
                         }
                         else
@@ -282,22 +299,26 @@ namespace ModularWorkshop
                     }
                 }
 
+                if (!_isShowingSkins && _pageIndex == 0) BackButton.SetActive(false);
+                else if (_isShowingSkins && _skinPageIndex == 0) BackButton.SetActive(false);
+                else if (!_skinOnlyMode) BackButton.SetActive(true);
 
-                if (_pageIndex == 0) BackButton.SetActive(false);
-                else BackButton.SetActive(true);
-
-                if (_partDictionary.Count > PartButtons.Length * (1 + _pageIndex)) NextButton.SetActive(true);
+                if (!_isShowingSkins && _partDictionary.Count > PartButtons.Length * (1 + _pageIndex)) NextButton.SetActive(true);
+                else if (_isShowingSkins && _skinDictionary.Count > PartButtons.Length * (1 + _skinPageIndex)) NextButton.SetActive(true);
                 else NextButton.SetActive(false);
 
                 ButtonSet.SetSelectedButton(_selectedButton);
 
                 string currentPartName = _partNames[_selectedPart];
 
-                if (!_isShowingSkins && ModularWorkshopManager.ModularWorkshopSkinsDictionary.TryGetValue(ModularPartsGroupID + "/" + currentPartName, out ModularWorkshopSkinsDefinition definition) && definition.SkinDictionary.Count > 1) ShowSkinsButton.SetActive(true);
+                if (!_isShowingSkins && ModularWorkshopManager.ModularWorkshopSkinsDictionary.TryGetValue(ModularPartsGroupID + "/" + currentPartName, out ModularWorkshopSkinsDefinition definition) && definition.SkinDictionary.Count > 1)
+                {
+                    ShowSkinsButton.SetActive(true);
+                }
                 else ShowSkinsButton.SetActive(false);
 
-                if (!_isShowingSkins) HideSkinsButton.SetActive(false);
-                else HideSkinsButton.SetActive(true);
+                if (_isShowingSkins) HideSkinsButton.SetActive(true);
+                else HideSkinsButton.SetActive(false);
 
                 if (PageIndex != null)
                 {

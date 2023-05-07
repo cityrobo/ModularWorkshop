@@ -100,6 +100,10 @@ namespace ModularWorkshop
 
                 ModularWorkshopManager.ModularWorkshopSkinsDictionary.Add(SkinPath, skinsDefinition);
             }
+            else if (part != null && part.SelectedModularWeaponPartSkinID != "Default" && !ModularWorkshopManager.ModularWorkshopSkinsDictionary.ContainsKey(SkinPath))
+            {
+                Debug.LogWarning($"No SkinsDefinition found for skin path {SkinPath}, but part {part.Name} set to skin name {part.SelectedModularWeaponPartSkinID}. Naming error?");
+            }
         }
 
         public void ApplySkin(string skinName)
@@ -107,9 +111,9 @@ namespace ModularWorkshop
             ModularWeaponPart part = ModularPartPoint.GetComponent<ModularWeaponPart>();
             if (ModularWorkshopManager.ModularWorkshopSkinsDictionary.TryGetValue(SkinPath, out ModularWorkshopSkinsDefinition definition)) {
                 if (definition.SkinDictionary.TryGetValue(skinName, out SkinDefinition skinDefinition)) part.ApplySkin(skinDefinition);
-                else Debug.LogError($"Skin with name {skinName} not found in SkinDefinition {definition.name}!");
+                else Debug.LogError($"Skin with name {skinName} not found in SkinsDefinition {definition.name}!");
             }
-            else Debug.LogError($"No SkinsDefinion found for {SkinPath}!");
+            else Debug.LogError($"No SkinsDefinition found for {SkinPath}!");
         }
     }
 }

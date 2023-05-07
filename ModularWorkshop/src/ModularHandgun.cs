@@ -115,7 +115,8 @@ namespace ModularWorkshop
         {
             Handgun[] weapon = GetComponents<Handgun>();
             Handgun toCopy = weapon.Single(c => c != this);
-            toCopy.Slide.Handgun = this;
+            if (toCopy.Slide != null) toCopy.Slide.Handgun = this;
+            if (toCopy.Chamber != null) toCopy.Chamber.Firearm = this;
 
             if (toCopy.Foregrip != null)
             {
@@ -124,6 +125,8 @@ namespace ModularWorkshop
 
             HandgunMagReleaseTrigger grabTrigger = toCopy.GetComponentInChildren<HandgunMagReleaseTrigger>();
             if (grabTrigger != null) grabTrigger.Handgun = this;
+            FVRFireArmReloadTriggerWell magWell = toCopy.GetComponentInChildren<FVRFireArmReloadTriggerWell>();
+            if (magWell != null) magWell.FireArm = this;
 
             foreach (var mount in toCopy.AttachmentMounts)
             {

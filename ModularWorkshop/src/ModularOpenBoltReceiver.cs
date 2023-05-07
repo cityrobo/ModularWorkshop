@@ -115,7 +115,8 @@ namespace ModularWorkshop
         {
             OpenBoltReceiver[] weapon = GetComponents<OpenBoltReceiver>();
             OpenBoltReceiver toCopy = weapon.Single(c => c != this);
-            toCopy.Bolt.Receiver = this;
+            if (toCopy.Bolt != null) toCopy.Bolt.Receiver = this;
+            if (toCopy.Chamber != null) toCopy.Chamber.Firearm = this;
 
             OpenBoltChargingHandle handle = toCopy.GetComponentInChildren<OpenBoltChargingHandle>();
             if (handle != null) handle.Receiver = this;
@@ -127,6 +128,8 @@ namespace ModularWorkshop
 
             OpenBoltMagReleaseTrigger grabTrigger = toCopy.GetComponentInChildren<OpenBoltMagReleaseTrigger>();
             if (grabTrigger != null) grabTrigger.Receiver = this;
+            FVRFireArmReloadTriggerWell magWell = toCopy.GetComponentInChildren<FVRFireArmReloadTriggerWell>();
+            if (magWell != null) magWell.FireArm = this;
 
             foreach (var mount in toCopy.AttachmentMounts)
             {

@@ -115,14 +115,18 @@ namespace ModularWorkshop
         {
             BoltActionRifle[] weapons = GetComponents<BoltActionRifle>();
             BoltActionRifle toCopy = weapons.Single(c => c != this);
-            toCopy.BoltHandle.Rifle = this;
+            if (toCopy.BoltHandle != null) toCopy.BoltHandle.Rifle = this;
+            if (toCopy.Chamber != null) toCopy.Chamber.Firearm = this;
             
             if (toCopy.Foregrip != null)
             {
                 toCopy.Foregrip.GetComponent<FVRAlternateGrip>().PrimaryObject = this;
             }
+
             BoltActionMagEjectionTrigger grabTrigger = toCopy.GetComponentInChildren<BoltActionMagEjectionTrigger>();
             if (grabTrigger != null) grabTrigger.Rifle = this;
+            FVRFireArmReloadTriggerWell magWell = toCopy.GetComponentInChildren<FVRFireArmReloadTriggerWell>();
+            if (magWell != null) magWell.FireArm = this;
 
             foreach (var mount in toCopy.AttachmentMounts)
             {

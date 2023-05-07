@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using FistVR;
+using System.Linq;
 
 namespace ModularWorkshop
 {
@@ -20,13 +21,16 @@ namespace ModularWorkshop
         [Tooltip("Must be left at Default if the part doesn't have multiple skins.")]
         public string SelectedModularWeaponPartSkinID = "Default";
 
+        [Header("Optional")]
+        public GameObject PhysContainer;
+
         private Transform[] _childObjects;
 
         protected List<Transform> _objectsToKeep = new();
 
         public virtual void Awake()
         {
-            MeshRenderers = GetComponentsInChildren<MeshRenderer>();
+            MeshRenderers = GetComponentsInChildren<MeshRenderer>().Where(m => m.enabled).ToArray();
 
             _childObjects = this.GetComponentsInDirectChildren<Transform>(true);
 
@@ -55,18 +59,25 @@ namespace ModularWorkshop
 
         public void ApplySkin(ModularWorkshopSkinsDefinition.SkinDefinition skinDefinition)
         {
-            for (int i = 0; i < MeshRenderers.Length; i++)
+            try
             {
-                MeshRenderers[i].materials = skinDefinition.DifferentSkinnedMeshPieces[i].Materials;
-            }
+                for (int i = 0; i < MeshRenderers.Length; i++)
+                {
+                    MeshRenderers[i].materials = skinDefinition.DifferentSkinnedMeshPieces[i].Materials;
+                }
 
-            SelectedModularWeaponPartSkinID = skinDefinition.ModularSkinID;
+                SelectedModularWeaponPartSkinID = skinDefinition.ModularSkinID;
+            }
+            catch (Exception)
+            {
+                Debug.LogError($"Number of DifferentSkinnedMeshPieces in SkinDefinition {skinDefinition.ModularSkinID} does not match number of meshes on ModularWeaponPart {Name}! ({MeshRenderers.Length} vs {skinDefinition.DifferentSkinnedMeshPieces.Length})");
+            }
         }
 
         [ContextMenu("Display Mesh Order")]
         public void DisplayMeshOrder()
         {
-            MeshRenderer[] meshes = GetComponentsInChildren<MeshRenderer>();
+            MeshRenderer[] meshes = GetComponentsInChildren<MeshRenderer>().Where(m => m.enabled).ToArray();
 
             for (int i = 0; i < meshes.Length; i++)
             {
