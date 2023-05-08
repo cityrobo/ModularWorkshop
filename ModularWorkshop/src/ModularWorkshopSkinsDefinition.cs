@@ -29,7 +29,7 @@ namespace ModularWorkshop
             public string DisplayName;
             [Tooltip("Icon of the skin that can be shown next to the skin button on the UI panel.")]
             public Sprite Icon;
-            [Tooltip("These are in order of the mesh renderes how they get found by the \"Display Mesh Order\" context menu option on the Modular Weapon Part. You need one for each mesh on the part!")]
+            [Tooltip("These are in order of the mesh renderes how they get found by the \"Display Mesh Order\" or \"Fill Mesh Renderers\" context menu option on the Modular Weapon Part, or the \"Populate Receiver Mesh Renderer List\" option on the firearm if you wanna skin a receiver. You need one for each mesh on the part!")]
             public MeshSkin[] DifferentSkinnedMeshPieces;
         }
 

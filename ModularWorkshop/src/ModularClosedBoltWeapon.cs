@@ -138,5 +138,11 @@ namespace ModularWorkshop
 
             this.CopyComponent(toCopy);
         }
+
+        [ContextMenu("Populate Receiver Mesh Renderer List")]
+        public void PopulateReceiverMeshList()
+        {
+            ModularFVRFireArm.GetReceiverMeshRenderers(this);
+        }
     }
 }

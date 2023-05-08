@@ -15,14 +15,15 @@ namespace ModularWorkshop
         public ModularWeaponPartsAttachmentPoint[] SubAttachmentPoints;
         public FVRQuickBeltSlot[] SubQuickBeltSlots;
 
-        [HideInInspector]
+        [Tooltip("Fill out with context menu if you wanna know the order of meshes for skins.")]
         public MeshRenderer[] MeshRenderers;
 
         [Tooltip("Must be left at Default if the part doesn't have multiple skins.")]
         public string SelectedModularWeaponPartSkinID = "Default";
 
         [Header("Optional")]
-        public GameObject PhysContainer;
+        [Tooltip("Contains all physics colliders of the part. Use for even better performance by flattening out the hierarchy.")]
+        public Transform PhysContainer;
 
         private Transform[] _childObjects;
 
@@ -30,18 +31,29 @@ namespace ModularWorkshop
 
         public virtual void Awake()
         {
-            MeshRenderers = GetComponentsInChildren<MeshRenderer>().Where(m => m.enabled).ToArray();
+            if (MeshRenderers == null || MeshRenderers.Length == 0) MeshRenderers = GetComponentsInChildren<MeshRenderer>().Where(m => m.enabled).ToArray();
+
+            foreach (var point in SubAttachmentPoints)
+            {
+                point.ModularPartUIPoint.SetParent(transform);
+                point.ModularPartUIPointProxy = new(point.ModularPartUIPoint, true);
+            }
+
+            if (PhysContainer != null)
+            {
+                foreach (Transform child in PhysContainer)
+                {
+                    child.SetParent(transform);
+                }
+
+                Destroy(PhysContainer.gameObject);
+            }
 
             _childObjects = this.GetComponentsInDirectChildren<Transform>(true);
 
             foreach (Transform child in _childObjects)
             {
                 child.SetParent(transform.parent);
-            }
-
-            foreach (var point in SubAttachmentPoints)
-            {
-                point.ModularPartUIPointProxy = new(point.ModularPartUIPoint, transform, true);
             }
         }
 
@@ -83,6 +95,12 @@ namespace ModularWorkshop
             {
                 Debug.Log($"MeshRenderer on GameObject {meshes[i].gameObject.name} has been assigned with index {i}.");
             }
+        }
+
+        [ContextMenu("Fill out Mesh Renderers")]
+        public void FillMeshRenderes()
+        {
+            MeshRenderers = GetComponentsInChildren<MeshRenderer>().Where(m => m.enabled).ToArray();
         }
     }
 }

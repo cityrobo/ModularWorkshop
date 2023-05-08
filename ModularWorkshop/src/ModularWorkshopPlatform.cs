@@ -32,6 +32,20 @@ namespace ModularWorkshop
                     GameObject UIPrefab = ModularWeapon.UIPrefab;
                     GameObject UIObject;
                     ModularWorkshopUI UI;
+
+                    // Receiver Skin UI
+                    if (ModularWeapon.GetModularFVRFireArm.ReceiverSkinUIPointProxy != null)
+                    {
+                        UIObject = Instantiate(UIPrefab, ModularWeapon.GetModularFVRFireArm.ReceiverSkinUIPointProxy.position, ModularWeapon.GetModularFVRFireArm.ReceiverSkinUIPointProxy.rotation, ModularWeapon.GetModularFVRFireArm.ReceiverSkinUIPointProxy.parent);
+                        _UIScreens.Add(UIObject);
+                        UI = UIObject.GetComponent<ModularWorkshopUI>();
+                        UI.ModularWeapon = ModularWeapon;
+
+                        UI.SetupReceiverSkinOnlyMode();
+                        UI.UpdateDisplay();
+                    }
+
+                    // Modular Barrel UI
                     if (ModularWeapon.ModularBarrelPartsID != string.Empty)
                     {
                         UIObject = Instantiate(UIPrefab, ModularWeapon.ModularBarrelUIPointProxy.position, ModularWeapon.ModularBarrelUIPointProxy.rotation, ModularWeapon.ModularBarrelUIPointProxy.parent);
@@ -44,6 +58,7 @@ namespace ModularWorkshop
                         UI.InitializeArrays();
                         UI.UpdateDisplay();
                     }
+                    // Modular Handguard UI
                     if (ModularWeapon.ModularHandguardPartsID != string.Empty)
                     {
                         UIObject = Instantiate(UIPrefab, ModularWeapon.ModularHandguardUIPointProxy.position, ModularWeapon.ModularHandguardUIPointProxy.rotation, ModularWeapon.ModularHandguardUIPointProxy.parent);
@@ -56,6 +71,7 @@ namespace ModularWorkshop
                         UI.InitializeArrays();
                         UI.UpdateDisplay();
                     }
+                    // Modular Stock UI
                     if (ModularWeapon.ModularStockPartsID != string.Empty)
                     {
                         UIObject = Instantiate(UIPrefab, ModularWeapon.ModularStockUIPointProxy.position, ModularWeapon.ModularStockUIPointProxy.rotation, ModularWeapon.ModularStockUIPointProxy.parent);
@@ -68,7 +84,7 @@ namespace ModularWorkshop
                         UI.InitializeArrays();
                         UI.UpdateDisplay();
                     }
-
+                    // Modular Parts Points UI
                     foreach (var point in ModularWeapon.ModularWeaponPartsAttachmentPoints)
                     {
                         UIObject = Instantiate(UIPrefab, point.ModularPartUIPointProxy.position, point.ModularPartUIPointProxy.rotation, point.ModularPartUIPointProxy.parent);
@@ -81,7 +97,7 @@ namespace ModularWorkshop
                         UI.InitializeArrays();
                         UI.UpdateDisplay();
                     }
-
+                    // Sub Attachment Points UI
                     foreach (var subPoint in ModularWeapon.SubAttachmentPoints)
                     {
                         UIObject = Instantiate(UIPrefab, subPoint.ModularPartUIPointProxy.position, subPoint.ModularPartUIPointProxy.rotation, subPoint.ModularPartUIPointProxy.parent);

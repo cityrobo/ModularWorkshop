@@ -81,6 +81,7 @@ namespace ModularWorkshop
         private Sprite[] _skinSprites;
 
         private bool _skinOnlyMode = false;
+        private bool _receiverSkinMode = false;
 
         public void Awake()
         {
@@ -196,7 +197,8 @@ namespace ModularWorkshop
 
         public void PBButton_ApplySkin()
         {
-            ModularWeapon.ApplySkin(ModularPartsGroupID, _skinNames[_selectedSkin]);
+            if (!_receiverSkinMode) ModularWeapon.ApplySkin(ModularPartsGroupID, _skinNames[_selectedSkin]);
+            else ModularWeapon.GetModularFVRFireArm.ApplyReceiverSkin(_skinNames[_selectedSkin]);
             SM.PlayCoreSound(FVRPooledAudioType.Generic, ApplySkinSound, transform.position);
         }
 
@@ -254,9 +256,28 @@ namespace ModularWorkshop
             }
         }
 
+        public void SetupReceiverSkinOnlyMode()
+        {
+            _skinOnlyMode = true;
+            _receiverSkinMode = true;
+            _isShowingSkins = true;
+
+            string skinPath = ModularWeapon.GetModularFVRFireArm.SkinPath;
+
+            _skinDictionary = ModularWorkshopManager.ModularWorkshopSkinsDictionary[skinPath].SkinDictionary;
+            _skinNames = _skinDictionary.Keys.ToArray();
+            _skinSprites = _skinDictionary.Values.Select(s => s.Icon).ToArray();
+            _skinDisplayNames = _skinDictionary.Values.Select(s => s.DisplayName).ToArray();
+            string skinName = ModularWeapon.GetModularFVRFireArm.CurrentSelectedReceiverSkinID;
+            _selectedSkin = Array.IndexOf(_skinNames, skinName);
+            _skinPageIndex = Mathf.FloorToInt(_selectedSkin / PartButtons.Length);
+            _selectedButton = _selectedSkin - _skinPageIndex * PartButtons.Length;
+        }
+
         public void UpdateDisplay()
         {
-            if (DisplayNameText != null) DisplayNameText.text = ModularWorkshopManager.ModularWorkshopDictionary[ModularPartsGroupID].DisplayName;
+            if (DisplayNameText != null && !_skinOnlyMode) DisplayNameText.text = ModularWorkshopManager.ModularWorkshopDictionary[ModularPartsGroupID].DisplayName;
+            else if (DisplayNameText != null && _skinOnlyMode) DisplayNameText.text = "Receiver Skins";
 
             if (_isShowingUI)
             {
@@ -301,7 +322,7 @@ namespace ModularWorkshop
 
                 if (!_isShowingSkins && _pageIndex == 0) BackButton.SetActive(false);
                 else if (_isShowingSkins && _skinPageIndex == 0) BackButton.SetActive(false);
-                else if (!_skinOnlyMode) BackButton.SetActive(true);
+                else BackButton.SetActive(true);
 
                 if (!_isShowingSkins && _partDictionary.Count > PartButtons.Length * (1 + _pageIndex)) NextButton.SetActive(true);
                 else if (_isShowingSkins && _skinDictionary.Count > PartButtons.Length * (1 + _skinPageIndex)) NextButton.SetActive(true);
@@ -309,15 +330,17 @@ namespace ModularWorkshop
 
                 ButtonSet.SetSelectedButton(_selectedButton);
 
-                string currentPartName = _partNames[_selectedPart];
-
-                if (!_isShowingSkins && ModularWorkshopManager.ModularWorkshopSkinsDictionary.TryGetValue(ModularPartsGroupID + "/" + currentPartName, out ModularWorkshopSkinsDefinition definition) && definition.SkinDictionary.Count > 1)
+                if (!_skinOnlyMode)
                 {
-                    ShowSkinsButton.SetActive(true);
+                    string currentPartName = _partNames[_selectedPart];
+                    if (!_isShowingSkins && ModularWorkshopManager.ModularWorkshopSkinsDictionary.TryGetValue(ModularPartsGroupID + "/" + currentPartName, out ModularWorkshopSkinsDefinition definition) && definition.SkinDictionary.Count > 1)
+                    {
+                        ShowSkinsButton.SetActive(true);
+                    }
+                    else ShowSkinsButton.SetActive(false);
                 }
-                else ShowSkinsButton.SetActive(false);
 
-                if (_isShowingSkins) HideSkinsButton.SetActive(true);
+                if (_isShowingSkins && !_skinOnlyMode) HideSkinsButton.SetActive(true);
                 else HideSkinsButton.SetActive(false);
 
                 if (PageIndex != null)
@@ -330,10 +353,16 @@ namespace ModularWorkshop
             else
             {
                 MainCanvas.SetActive(false);
-                ShowButton.SetActive(true);
+                if (!_skinOnlyMode) ShowButton.SetActive(true);
+                else if (_skinOnlyMode && _skinDictionary.Count > 1)
+                {
+                    ShowButton.SetActive(true);
+                }
+                else ShowButton.SetActive(false);
                 HideButton.SetActive(false);
 
-                ShowButtonText.text = ModularWorkshopManager.ModularWorkshopDictionary[ModularPartsGroupID].DisplayName;
+                if (!_skinOnlyMode) ShowButtonText.text = ModularWorkshopManager.ModularWorkshopDictionary[ModularPartsGroupID].DisplayName;
+                else ShowButtonText.text = "Receiver Skin";
             }
         }
     }

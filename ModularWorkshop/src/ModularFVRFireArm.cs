@@ -5,6 +5,7 @@ using FistVR;
 using System.Linq;
 using OpenScripts2;
 using HarmonyLib;
+using static ModularWorkshop.ModularWorkshopSkinsDefinition;
 
 namespace ModularWorkshop
 {
@@ -19,7 +20,25 @@ namespace ModularWorkshop
         public ModularWeaponPartsAttachmentPoint ModularStockAttachmentPoint;
 
         public ModularWeaponPartsAttachmentPoint[] ModularWeaponPartsAttachmentPoints;
-        public ModularWeaponPartsAttachmentPoint[] GetModularWeaponPartsAttachmentPoints => ModularWeaponPartsAttachmentPoints;
+
+        [Header("Receiver Skins")]
+        [Tooltip("This is a combination of ModularPartsGroupID and PartName of a Skins definition, with a \"/\" in between. A requirement of the system. You should choose ModularPartsGroupID and PartName so that it doesn't conflict with anything else. Formatting Example: \"ModularPartsGroupID/PartName\". I would personally recommend something like \"ReceiverName/Receiver\" as a standard.")]
+        public string SkinPath;
+        public Transform ReceiverSkinUIPoint;
+        [HideInInspector]
+        public TransformProxy ReceiverSkinUIPointProxy;
+        public string CurrentSelectedReceiverSkinID = "Default";
+
+        [Tooltip("Can be populated with the context menu on the gun.")]
+        public MeshRenderer[] ReceiverMeshRenderers;
+
+        public ModularWorkshopSkinsDefinition ReceiverSkinsDefinition => ModularWorkshopManager.ModularWorkshopSkinsDictionary[SkinPath];
+
+        [Header("Optional")]
+        [Tooltip("Contains all physics colliders of the part. Use for even better performance by flattening out the hierarchy.")]
+        public Transform PhysContainer;
+
+        // Dictionaries
         public Dictionary<string, GameObject> ModularBarrelPrefabsDictionary => ModularWorkshopManager.ModularWorkshopDictionary[ModularBarrelAttachmentPoint.ModularPartsGroupID].PartsDictionary;
         public Dictionary<string, GameObject> ModularHandguardPrefabsDictionary => ModularWorkshopManager.ModularWorkshopDictionary[ModularHandguardAttachmentPoint.ModularPartsGroupID].PartsDictionary;
         public Dictionary<string, GameObject> ModularStockPrefabsDictionary => ModularWorkshopManager.ModularWorkshopDictionary[ModularStockAttachmentPoint.ModularPartsGroupID].PartsDictionary;
@@ -120,6 +139,34 @@ namespace ModularWorkshop
 
             OrigPoseOverride = new(fireArm.PoseOverride);
             OrigPoseOverride_Touch = new(fireArm.PoseOverride_Touch);
+
+            if (SkinPath == string.Empty) SkinPath = fireArm.gameObject.name.Replace("(Clone)","") + "/" + "Receiver";
+            if (ReceiverMeshRenderers == null || ReceiverMeshRenderers.Length == 0) GetReceiverMeshRenderers(fireArm);
+            CheckForDefaultReceiverSkin(fireArm);
+
+            ApplyReceiverSkin(CurrentSelectedReceiverSkinID);
+
+            if (PhysContainer != null)
+            {
+                foreach (Transform child in PhysContainer)
+                {
+                    child.SetParent(fireArm.transform);
+                }
+
+                UnityEngine.Object.Destroy(PhysContainer.gameObject);
+            }
+        }
+
+        public void GetReceiverMeshRenderers(FVRFireArm fireArm)
+        {
+            List<MeshRenderer> partMeshRenderers = new();
+
+            foreach (var part in fireArm.GetComponentsInChildren<ModularWeaponPart>())
+            {
+                partMeshRenderers.AddRange(part.GetComponentsInChildren<MeshRenderer>().Where(m => m.enabled));
+            }
+
+            ReceiverMeshRenderers = fireArm.GetComponentsInChildren<MeshRenderer>().Where(m => m.enabled).Where(m => !partMeshRenderers.Contains(m)).ToArray();
         }
 
         public void AddSubAttachmentPoint(ModularWeaponPartsAttachmentPoint subPoint, FVRFireArm fireArm, Dictionary<string,string> oldSubParts, Dictionary<string, string> oldSkins, string selectedPart)
@@ -177,6 +224,9 @@ namespace ModularWorkshop
             {
                 if (f.TryGetValue("Modul" + SubAttachmentPoints.ElementAt(i).ModularPartsGroupID, out selectedPart)) ConfigureModularWeaponPart(SubAttachmentPoints.ElementAt(i), selectedPart, fireArm);
             }
+
+            if (f.TryGetValue(SkinPath, out selectedSkin)) ApplyReceiverSkin(selectedSkin); 
+
             foreach (var anyPoint in AllAttachmentPoints.Values)
             {
                 string key = anyPoint.ModularPartsGroupID + "/" + anyPoint.SelectedModularWeaponPart;
@@ -201,6 +251,8 @@ namespace ModularWorkshop
             {
                 if (ModularWorkshopManager.ModularWorkshopDictionary.TryGetValue(subPoint.ModularPartsGroupID, out partDefinition) && partDefinition.ModularPrefabs.Count > 0) flagDic.Add("Modul" + subPoint.ModularPartsGroupID, subPoint.SelectedModularWeaponPart);
             }
+
+            flagDic.Add(SkinPath, CurrentSelectedReceiverSkinID);
 
             foreach (var anyPoint in AllAttachmentPoints.Values)
             {
@@ -726,6 +778,93 @@ namespace ModularWorkshop
             return newPart;
         }
 
+        // Receiver Skins
+        public void ApplyReceiverSkin(string skinName)
+        {
+            CurrentSelectedReceiverSkinID = skinName;
+            SkinDefinition skinDefinition = ReceiverSkinsDefinition.SkinDictionary[skinName];
+
+            for (int i = 0; i < ReceiverMeshRenderers.Length; i++)
+            {
+                ReceiverMeshRenderers[i].materials = skinDefinition.DifferentSkinnedMeshPieces[i].Materials;
+            }
+        }
+
+        public void CheckForDefaultReceiverSkin(FVRFireArm fireArm)
+        {
+            if (CurrentSelectedReceiverSkinID == "Default" && ModularWorkshopManager.ModularWorkshopSkinsDictionary.TryGetValue(SkinPath, out ModularWorkshopSkinsDefinition skinsDefinition))
+            {
+                if (!skinsDefinition.SkinDictionary.ContainsKey("Default"))
+                {
+                    // Create SkinDefinition for Default Skin
+                    SkinDefinition skinDefinition = new()
+                    {
+                        ModularSkinID = "Default",
+                        DisplayName = "Default",
+                        Icon = MiscUtilities.CreateEmptySprite()
+                    };
+
+                    // Create Array with the length of the MeshRenders on the part and fill it with their materials
+                    MeshSkin[] skinPieces = new MeshSkin[ReceiverMeshRenderers.Length];
+
+                    for (int i = 0; i < ReceiverMeshRenderers.Length; i++)
+                    {
+                        MeshSkin skinPiece = new()
+                        {
+                            Materials = ReceiverMeshRenderers[i].sharedMaterials
+                        };
+
+                        skinPieces[i] = skinPiece;
+                    }
+                    skinDefinition.DifferentSkinnedMeshPieces = skinPieces;
+
+                    // Add new SkinDefinition to the found SkinsDefinition in the ModularWorkshopManager
+                    skinsDefinition.SkinDefinitions.Insert(0, skinDefinition);
+                }
+            }
+            else if (CurrentSelectedReceiverSkinID == "Default")
+            {
+                // Create SkinDefinition for Default Skin
+                SkinDefinition skinDefinition = new()
+                {
+                    ModularSkinID = "Default",
+                    DisplayName = "Default",
+                    Icon = MiscUtilities.CreateEmptySprite()
+                };
+
+                // Create Array with the length of the MeshRenders on the part and fill it with their materials
+                MeshSkin[] skinPieces = new MeshSkin[ReceiverMeshRenderers.Length];
+
+                for (int i = 0; i < ReceiverMeshRenderers.Length; i++)
+                {
+                    MeshSkin skinPiece = new()
+                    {
+                        Materials = ReceiverMeshRenderers[i].sharedMaterials
+                    };
+
+                    skinPieces[i] = skinPiece;
+                }
+                skinDefinition.DifferentSkinnedMeshPieces = skinPieces;
+
+                // Create new SkinsDefinition and add it to the ModularWorkshopManager
+                skinsDefinition = ScriptableObject.CreateInstance<ModularWorkshopSkinsDefinition>();
+
+                string[] separatedPath = SkinPath.Split('/');
+
+                skinsDefinition.name = separatedPath[0] + "/" + separatedPath[1];
+                skinsDefinition.ModularPartsGroupID = separatedPath[0];
+                skinsDefinition.PartName = separatedPath[1];
+                skinsDefinition.SkinDefinitions = new() { skinDefinition };
+
+                ModularWorkshopManager.ModularWorkshopSkinsDictionary.Add(SkinPath, skinsDefinition);
+            }
+            else if (CurrentSelectedReceiverSkinID != "Default" && !ModularWorkshopManager.ModularWorkshopSkinsDictionary.ContainsKey(SkinPath))
+            {
+                Debug.LogWarning($"No SkinsDefinition found for receiver skin path {SkinPath}, but part receiver {fireArm.gameObject.name} set to skin name {CurrentSelectedReceiverSkinID}. Naming error?");
+            }
+        }
+
+        // Utility Methods
         public void ConvertTransformsToProxies(FVRFireArm fireArm)
         {
             if (ModularBarrelAttachmentPoint.ModularPartsGroupID != string.Empty)
@@ -744,6 +883,17 @@ namespace ModularWorkshop
             foreach (var point in ModularWeaponPartsAttachmentPoints)
             {
                 point.ModularPartUIPointProxy = new(point.ModularPartUIPoint, fireArm.transform, true);
+            }
+
+            if (ReceiverSkinUIPoint != null) ReceiverSkinUIPointProxy = new(ReceiverSkinUIPoint, true);
+            else
+            {
+                GameObject uiPoint = new GameObject("temp");
+                uiPoint.transform.SetParent(fireArm.transform);
+                uiPoint.transform.position = fireArm.transform.position + -fireArm.transform.right * 0.1f;
+                uiPoint.transform.rotation = fireArm.transform.rotation * Quaternion.Euler(new Vector3(0f, 90f, 0f));
+
+                ReceiverSkinUIPointProxy = new(uiPoint.transform, true);
             }
         }
 

@@ -119,6 +119,17 @@ namespace ModularWorkshop
             Revolver toCopy = attachments.Single(c => c != this);
             toCopy.Cylinder.Revolver = this;
 
+            if (toCopy.Foregrip != null)
+            {
+                toCopy.Foregrip.GetComponent<FVRAlternateGrip>().PrimaryObject = this;
+            }
+
+            RevolverEjector ejector = toCopy.GetComponentInChildren<RevolverEjector>();
+            if (ejector != null) ejector.Magnum = this;
+
+            FVRFireArmReloadTriggerWell magWell = toCopy.GetComponentInChildren<FVRFireArmReloadTriggerWell>();
+            if (magWell != null) magWell.FireArm = this;
+
             foreach (var mount in toCopy.AttachmentMounts)
             {
                 mount.MyObject = this;
@@ -150,6 +161,12 @@ namespace ModularWorkshop
             {
                 finfo.SetValue(this, finfo.GetValue(reference));
             }
+        }
+
+        [ContextMenu("Populate Receiver Mesh Renderer List")]
+        public void PopulateReceiverMeshList()
+        {
+            ModularFVRFireArm.GetReceiverMeshRenderers(this);
         }
     }
 }
