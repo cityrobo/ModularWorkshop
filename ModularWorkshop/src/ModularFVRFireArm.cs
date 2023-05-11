@@ -32,7 +32,18 @@ namespace ModularWorkshop
         [Tooltip("Can be populated with the context menu on the gun.")]
         public MeshRenderer[] ReceiverMeshRenderers;
 
-        public ModularWorkshopSkinsDefinition ReceiverSkinsDefinition => ModularWorkshopManager.ModularWorkshopSkinsDictionary[SkinPath];
+        public ModularWorkshopSkinsDefinition ReceiverSkinsDefinition 
+        { 
+            get 
+            {
+                if (ModularWorkshopManager.ModularWorkshopSkinsDictionary.TryGetValue(SkinPath, out ModularWorkshopSkinsDefinition skinsDefinition)) return skinsDefinition;
+                else
+                {
+                    Debug.LogError($"No SkinsDefinition found for {SkinPath}!");
+                    return null;
+                }
+            }
+        }
 
         [Header("Optional")]
         [Tooltip("Contains all physics colliders of the part. Use for even better performance by flattening out the hierarchy.")]
@@ -54,6 +65,8 @@ namespace ModularWorkshop
 
         [HideInInspector]
         public bool WasUnvaulted = false;
+        [HideInInspector]
+        public FVRFireArm FireArm;
 
         // Original Barrel Parameters
         [HideInInspector]
@@ -122,6 +135,8 @@ namespace ModularWorkshop
 
         public void Awake(FVRFireArm fireArm)
         {
+            FireArm = fireArm;
+
             OrigMuzzleEffectSize = fireArm.DefaultMuzzleEffectSize;
             OrigMuzzleEffects = fireArm.MuzzleEffects;
             OrigMechanicalAccuracyClass = fireArm.AccuracyClass;
@@ -317,7 +332,30 @@ namespace ModularWorkshop
             {
                 if (oldSkins.TryGetValue(modularWeaponPartsAttachmentPoint.ModularPartsGroupID, out string skinName))
                 {
-                    if (definition.SkinDictionary.ContainsKey(skinName)) modularWeaponPartsAttachmentPoint.ApplySkin(skinName);
+                    //Debug.Log($"Old Skin on attachment point: {skinName}");
+                    if (definition.SkinDictionary.ContainsKey(skinName))
+                    {
+                        //Debug.Log($"Old Skin {skinName} found in SkinDictionary!");
+                        modularWeaponPartsAttachmentPoint.ApplySkin(skinName);
+                    }
+                    else if (modularWeaponPartsAttachmentPoint.PreviousSkins.TryGetValue(selectedPart, out skinName))
+                    {
+                        //Debug.Log($"Previous Skin found! {selectedPart}: {skinName}");
+                        if (definition.SkinDictionary.ContainsKey(skinName))
+                        {
+                            //Debug.Log($"Previous Skin {skinName} found in SkinDictionary!");
+                            modularWeaponPartsAttachmentPoint.ApplySkin(skinName);
+                        }
+                    }
+                }
+                else if (modularWeaponPartsAttachmentPoint.PreviousSkins.TryGetValue(selectedPart, out skinName))
+                {
+                    //Debug.Log($"Previous Skin found! {selectedPart}: {skinName}");
+                    if (definition.SkinDictionary.ContainsKey(skinName))
+                    {
+                        //Debug.Log($"Previous Skin {skinName} found in SkinDictionary!");
+                        modularWeaponPartsAttachmentPoint.ApplySkin(skinName);
+                    }
                 }
             } 
 
@@ -490,6 +528,14 @@ namespace ModularWorkshop
             if (ModularWorkshopManager.ModularWorkshopSkinsDictionary.TryGetValue(ModularBarrelAttachmentPoint.SkinPath, out ModularWorkshopSkinsDefinition definition))
             {
                 if (oldSkins.TryGetValue(ModularBarrelAttachmentPoint.ModularPartsGroupID, out string skinName))
+                {
+                    if (definition.SkinDictionary.ContainsKey(skinName)) ModularBarrelAttachmentPoint.ApplySkin(skinName);
+                    else if (ModularBarrelAttachmentPoint.PreviousSkins.TryGetValue(selectedPart, out skinName))
+                    {
+                        if (definition.SkinDictionary.ContainsKey(skinName)) ModularBarrelAttachmentPoint.ApplySkin(skinName);
+                    }
+                }
+                else if (ModularBarrelAttachmentPoint.PreviousSkins.TryGetValue(selectedPart, out skinName))
                 {
                     if (definition.SkinDictionary.ContainsKey(skinName)) ModularBarrelAttachmentPoint.ApplySkin(skinName);
                 }
@@ -670,6 +716,14 @@ namespace ModularWorkshop
                 if (oldSkins.TryGetValue(ModularHandguardAttachmentPoint.ModularPartsGroupID, out string skinName))
                 {
                     if (definition.SkinDictionary.ContainsKey(skinName)) ModularHandguardAttachmentPoint.ApplySkin(skinName);
+                    else if (ModularHandguardAttachmentPoint.PreviousSkins.TryGetValue(selectedPart, out skinName))
+                    {
+                        if (definition.SkinDictionary.ContainsKey(skinName)) ModularHandguardAttachmentPoint.ApplySkin(skinName);
+                    }
+                }
+                else if (ModularHandguardAttachmentPoint.PreviousSkins.TryGetValue(selectedPart, out skinName))
+                {
+                    if (definition.SkinDictionary.ContainsKey(skinName)) ModularHandguardAttachmentPoint.ApplySkin(skinName);
                 }
             }
 
@@ -766,6 +820,14 @@ namespace ModularWorkshop
                 if (oldSkins.TryGetValue(ModularStockAttachmentPoint.ModularPartsGroupID, out string skinName))
                 {
                     if (definition.SkinDictionary.ContainsKey(skinName)) ModularStockAttachmentPoint.ApplySkin(skinName);
+                    else if (ModularStockAttachmentPoint.PreviousSkins.TryGetValue(selectedPart, out skinName))
+                    {
+                        if (definition.SkinDictionary.ContainsKey(skinName)) ModularStockAttachmentPoint.ApplySkin(skinName);
+                    }
+                }
+                else if (ModularStockAttachmentPoint.PreviousSkins.TryGetValue(selectedPart, out skinName))
+                {
+                    if (definition.SkinDictionary.ContainsKey(skinName)) ModularStockAttachmentPoint.ApplySkin(skinName);
                 }
             }
 
@@ -782,12 +844,21 @@ namespace ModularWorkshop
         public void ApplyReceiverSkin(string skinName)
         {
             CurrentSelectedReceiverSkinID = skinName;
-            SkinDefinition skinDefinition = ReceiverSkinsDefinition.SkinDictionary[skinName];
-
-            for (int i = 0; i < ReceiverMeshRenderers.Length; i++)
+            if (ReceiverSkinsDefinition.SkinDictionary.TryGetValue(skinName, out SkinDefinition skinDefinition))
             {
-                ReceiverMeshRenderers[i].materials = skinDefinition.DifferentSkinnedMeshPieces[i].Materials;
+                try
+                {
+                    for (int i = 0; i < ReceiverMeshRenderers.Length; i++)
+                    {
+                        ReceiverMeshRenderers[i].materials = skinDefinition.DifferentSkinnedMeshPieces[i].Materials;
+                    }
+                }
+                catch (Exception)
+                {
+                    Debug.LogError($"Number of DifferentSkinnedMeshPieces in SkinDefinition {skinDefinition.ModularSkinID} does not match number of meshes on Receiver! ({ReceiverMeshRenderers.Length} vs {skinDefinition.DifferentSkinnedMeshPieces.Length})");
+                }
             }
+            else Debug.LogError($"Skin with name {skinName} not found in SkinsDefinition {ReceiverSkinsDefinition.name}!");
         }
 
         public void CheckForDefaultReceiverSkin(FVRFireArm fireArm)

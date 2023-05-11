@@ -91,6 +91,7 @@
     <Compile Include="src\ModularPreattachedForeignAttachments.cs" />
     <Compile Include="src\ModularWorkshopSkinsDefinition.cs" />
     <Compile Include="src\FirearmModificationAddon.cs" />
+    <Compile Include="src\ScopeAddon.cs" />
     <Compile Include="src\ReflexSightAddon.cs" />
     <Compile Include="src\ModularBoltActionRifle.cs" />
     <Compile Include="src\ModularOpenBoltReceiver.cs" />

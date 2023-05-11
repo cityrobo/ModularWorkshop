@@ -7,6 +7,7 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 using OpenScripts2;
+using static RootMotion.FinalIK.IKSolver;
 
 namespace ModularWorkshop
 {
@@ -37,6 +38,7 @@ namespace ModularWorkshop
                     if (ModularWeapon.GetModularFVRFireArm.ReceiverSkinUIPointProxy != null)
                     {
                         UIObject = Instantiate(UIPrefab, ModularWeapon.GetModularFVRFireArm.ReceiverSkinUIPointProxy.position, ModularWeapon.GetModularFVRFireArm.ReceiverSkinUIPointProxy.rotation, ModularWeapon.GetModularFVRFireArm.ReceiverSkinUIPointProxy.parent);
+                        UIObject.transform.localScale = ModularWeapon.GetModularFVRFireArm.ReceiverSkinUIPointProxy.localScale.MultiplyComponentWise(UIObject.transform.localScale);
                         _UIScreens.Add(UIObject);
                         UI = UIObject.GetComponent<ModularWorkshopUI>();
                         UI.ModularWeapon = ModularWeapon;
@@ -49,6 +51,7 @@ namespace ModularWorkshop
                     if (ModularWeapon.ModularBarrelPartsID != string.Empty)
                     {
                         UIObject = Instantiate(UIPrefab, ModularWeapon.ModularBarrelUIPointProxy.position, ModularWeapon.ModularBarrelUIPointProxy.rotation, ModularWeapon.ModularBarrelUIPointProxy.parent);
+                        UIObject.transform.localScale = ModularWeapon.ModularBarrelUIPointProxy.localScale.MultiplyComponentWise(UIObject.transform.localScale);
                         _UIScreens.Add(UIObject);
                         UI = UIObject.GetComponent<ModularWorkshopUI>();
                         UI.PartType = ModularWorkshopUI.EPartType.Barrel;
@@ -62,6 +65,7 @@ namespace ModularWorkshop
                     if (ModularWeapon.ModularHandguardPartsID != string.Empty)
                     {
                         UIObject = Instantiate(UIPrefab, ModularWeapon.ModularHandguardUIPointProxy.position, ModularWeapon.ModularHandguardUIPointProxy.rotation, ModularWeapon.ModularHandguardUIPointProxy.parent);
+                        UIObject.transform.localScale = ModularWeapon.ModularHandguardUIPointProxy.localScale.MultiplyComponentWise(UIObject.transform.localScale);
                         _UIScreens.Add(UIObject);
                         UI = UIObject.GetComponent<ModularWorkshopUI>();
                         UI.PartType = ModularWorkshopUI.EPartType.Handguard;
@@ -75,6 +79,7 @@ namespace ModularWorkshop
                     if (ModularWeapon.ModularStockPartsID != string.Empty)
                     {
                         UIObject = Instantiate(UIPrefab, ModularWeapon.ModularStockUIPointProxy.position, ModularWeapon.ModularStockUIPointProxy.rotation, ModularWeapon.ModularStockUIPointProxy.parent);
+                        UIObject.transform.localScale = ModularWeapon.ModularStockUIPointProxy.localScale.MultiplyComponentWise(UIObject.transform.localScale);
                         _UIScreens.Add(UIObject);
                         UI = UIObject.GetComponent<ModularWorkshopUI>();
                         UI.PartType = ModularWorkshopUI.EPartType.Stock;
@@ -88,6 +93,7 @@ namespace ModularWorkshop
                     foreach (var point in ModularWeapon.ModularWeaponPartsAttachmentPoints)
                     {
                         UIObject = Instantiate(UIPrefab, point.ModularPartUIPointProxy.position, point.ModularPartUIPointProxy.rotation, point.ModularPartUIPointProxy.parent);
+                        UIObject.transform.localScale = point.ModularPartUIPointProxy.localScale.MultiplyComponentWise(UIObject.transform.localScale);
                         _UIScreens.Add(UIObject);
                         UI = UIObject.GetComponent<ModularWorkshopUI>();
                         UI.PartType = ModularWorkshopUI.EPartType.MainWeaponGeneralAttachmentPoint;
@@ -101,6 +107,7 @@ namespace ModularWorkshop
                     foreach (var subPoint in ModularWeapon.SubAttachmentPoints)
                     {
                         UIObject = Instantiate(UIPrefab, subPoint.ModularPartUIPointProxy.position, subPoint.ModularPartUIPointProxy.rotation, subPoint.ModularPartUIPointProxy.parent);
+                        UIObject.transform.localScale = subPoint.ModularPartUIPointProxy.localScale.MultiplyComponentWise(UIObject.transform.localScale);
                         _UIScreens.Add(UIObject);
                         UI = UIObject.GetComponent<ModularWorkshopUI>();
                         UI.PartType = ModularWorkshopUI.EPartType.SubAttachmentPoint;
@@ -139,6 +146,7 @@ namespace ModularWorkshop
             GameObject UIObject;
             ModularWorkshopUI UI;
             UIObject = Instantiate(UIPrefab, point.ModularPartUIPointProxy.position, point.ModularPartUIPointProxy.rotation, point.ModularPartUIPointProxy.parent);
+            UIObject.transform.localScale = point.ModularPartUIPointProxy.localScale.MultiplyComponentWise(UIObject.transform.localScale);
             _subUIScreens.Add(UIObject);
             UI = UIObject.GetComponent<ModularWorkshopUI>();
             UI.PartType = ModularWorkshopUI.EPartType.SubAttachmentPoint;

@@ -353,11 +353,8 @@ namespace ModularWorkshop
             else
             {
                 MainCanvas.SetActive(false);
-                if (!_skinOnlyMode) ShowButton.SetActive(true);
-                else if (_skinOnlyMode && _skinDictionary.Count > 1)
-                {
-                    ShowButton.SetActive(true);
-                }
+                if (!_skinOnlyMode && _partDictionary.Count > 1) ShowButton.SetActive(true);
+                else if (_skinOnlyMode && _skinDictionary.Count > 1) ShowButton.SetActive(true);
                 else ShowButton.SetActive(false);
                 HideButton.SetActive(false);
 

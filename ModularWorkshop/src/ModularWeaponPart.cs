@@ -24,6 +24,7 @@ namespace ModularWorkshop
         [Header("Optional")]
         [Tooltip("Contains all physics colliders of the part. Use for even better performance by flattening out the hierarchy.")]
         public Transform PhysContainer;
+        public bool ParentToFirearm = false;
 
         private Transform[] _childObjects;
 
@@ -50,10 +51,17 @@ namespace ModularWorkshop
             }
 
             _childObjects = this.GetComponentsInDirectChildren<Transform>(true);
+            Transform firearmParent = null;
+            if (ParentToFirearm)
+            {
+                FVRFireArm fireArm = GetComponentInParent<FVRFireArm>();
+                if (fireArm != null) firearmParent = fireArm.transform;
+            }
 
             foreach (Transform child in _childObjects)
             {
-                child.SetParent(transform.parent);
+                if (!ParentToFirearm) child.SetParent(transform.parent);
+                else if (ParentToFirearm && firearmParent != null) child.SetParent(firearmParent);
             }
         }
 

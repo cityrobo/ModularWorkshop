@@ -28,6 +28,7 @@ namespace ModularWorkshop
 		}
 
         public GameObject ModularWeapon;
+		[Tooltip("If left empty it will use the firearms own AttachmentMounts.")]
         public string ModularPartsGroupID;
         public int MountIndex = 0;
         public ForeignAttachmentSet[] ForeignAttachmentSets;
@@ -50,7 +51,7 @@ namespace ModularWorkshop
 		private IEnumerator AttachAllToMount()
 		{
 			yield return null;
-            FVRFireArmAttachmentMount AttachmentMount = _modularWeapon.AllAttachmentPoints[ModularPartsGroupID].ModularPartPoint.GetComponent<ModularWeaponPart>().AttachmentMounts[MountIndex];
+            FVRFireArmAttachmentMount AttachmentMount = ModularPartsGroupID != string.Empty ? _modularWeapon.AllAttachmentPoints[ModularPartsGroupID].ModularPartPoint.GetComponent<ModularWeaponPart>().AttachmentMounts[MountIndex] : _modularWeapon.GetModularFVRFireArm.FireArm.AttachmentMounts[MountIndex];
             foreach (var spawnedAttachment in _spawnedAttachments)
 			{
                 spawnedAttachment.SetParentage(AttachmentMount.transform);

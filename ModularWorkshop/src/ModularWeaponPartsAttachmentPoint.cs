@@ -32,6 +32,8 @@ namespace ModularWorkshop
             }
         }
 
+        public Dictionary<string, string> PreviousSkins = new();
+
         public void CheckForDefaultSkin()
         {
             ModularWeaponPart part = ModularPartPoint.GetComponentInChildren<ModularWeaponPart>();
@@ -102,7 +104,7 @@ namespace ModularWorkshop
             }
             else if (part != null && part.SelectedModularWeaponPartSkinID != "Default" && !ModularWorkshopManager.ModularWorkshopSkinsDictionary.ContainsKey(SkinPath))
             {
-                Debug.LogWarning($"No SkinsDefinition found for skin path {SkinPath}, but part {part.Name} set to skin name {part.SelectedModularWeaponPartSkinID}. Naming error?");
+                Debug.LogWarning($"No SkinsDefinition found for skin path \"{SkinPath}\", but part \"{part.Name}\" set to skin name \"{part.SelectedModularWeaponPartSkinID}\". Naming error?");
             }
         }
 
@@ -110,10 +112,16 @@ namespace ModularWorkshop
         {
             ModularWeaponPart part = ModularPartPoint.GetComponent<ModularWeaponPart>();
             if (ModularWorkshopManager.ModularWorkshopSkinsDictionary.TryGetValue(SkinPath, out ModularWorkshopSkinsDefinition definition)) {
-                if (definition.SkinDictionary.TryGetValue(skinName, out SkinDefinition skinDefinition)) part.ApplySkin(skinDefinition);
-                else Debug.LogError($"Skin with name {skinName} not found in SkinsDefinition {definition.name}!");
+                if (definition.SkinDictionary.TryGetValue(skinName, out SkinDefinition skinDefinition))
+                {
+                    part.ApplySkin(skinDefinition);
+
+                    if (PreviousSkins.ContainsKey(part.Name)) PreviousSkins[part.Name] = skinName;
+                    else PreviousSkins.Add(part.Name, skinName);
+                }
+                else Debug.LogError($"Skin with name \"{skinName}\" not found in SkinsDefinition \"{definition.name}\"!");
             }
-            else Debug.LogError($"No SkinsDefinition found for {SkinPath}!");
+            else Debug.LogError($"No SkinsDefinition found for \"{SkinPath}\"!");
         }
     }
 }

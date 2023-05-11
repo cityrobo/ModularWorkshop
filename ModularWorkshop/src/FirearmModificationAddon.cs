@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using FistVR;
 using OpenScripts2;
-using Valve.Newtonsoft.Json.Linq;
+using System.Linq;
 
 namespace ModularWorkshop
 {
@@ -22,6 +22,9 @@ namespace ModularWorkshop
         private bool _origBoltReleaseState;
         public E_ModificationMode MagazineReleaseButton;
         private bool _origMagReleaseState;
+        public bool ChangesAdvancedMagGrabTriggerMode;
+        public UniversalAdvancedMagazineGrabTrigger.E_InputType RequiredMagGrabInput;
+        private UniversalAdvancedMagazineGrabTrigger.E_InputType _origMagGrabInputType;
 
         public bool ChangesTriggerThresholds;
         public float TriggerThreshold;
@@ -29,10 +32,13 @@ namespace ModularWorkshop
         public float TriggerReset;
         private float _origTriggerReset;
 
-        [Tooltip("For Handguns this changes the Safety object")]
+        [Header("Fire Selectors")]
+        [Tooltip("Also called Safety on some weapons.")]
         public Transform FireSelector;
         [Tooltip("For Handguns this changes the FireSelector object")]
         public Transform FireSelector2;
+        [Header("Magazine Release")]
+        public Transform MagazineRelease;
 
         [Header("Bolt")]
         public Transform BoltRotatingPiece;
@@ -50,6 +56,10 @@ namespace ModularWorkshop
         public Vector3 BoltHandleRotatingPartLeftEulers = Vector3.zero;
         public Vector3 BoltHandleRotatingPartNeutralEulers = Vector3.zero;
         public Vector3 BoltHandleRotatingPartRightEulers = Vector3.zero;
+
+        [Header("Trigger")]
+        public Transform Trigger;
+
         [Header("DustCover")]
         [Tooltip("GameObject with DustCover components on it. One for ClosedBolt, the other for OpenBolt weapons! Needs both to work on both weapon types. If that is not required, use one or the other.")]
         public GameObject DustCover;
@@ -57,6 +67,15 @@ namespace ModularWorkshop
         [Header("AltGrip/CarryHandle")]
         public FVRAlternateGrip AltGrip;
         public CarryHandleWaggle CarryHandle;
+
+        [Header("Fire Rate Adjustments")]
+        public bool AdjustsFireRate;
+        public float BoltSpeed_Forward;
+        private float _origSpeed_Forward;
+        public float BoltSpeed_Rearward;
+        private float _origSpeed_Rearward;
+        public float BoltSpringStiffness;
+        private float _origSpringStiffness;
 
         private FVRFireArm _firearm;
         public FVRFireArm FireArm
@@ -68,10 +87,13 @@ namespace ModularWorkshop
                     _firearm = value;
 
                     if (BoltReleaseButton != E_ModificationMode.Ignore) ModifyBoltRelease(ModeToBool(BoltReleaseButton));
-                    if (MagazineReleaseButton != E_ModificationMode.Ignore) ModifyMagRelease(ModeToBool(MagazineReleaseButton));
+                    if (MagazineReleaseButton != E_ModificationMode.Ignore) ModifyMagReleaseButton(ModeToBool(MagazineReleaseButton));
+                    if (ChangesAdvancedMagGrabTriggerMode) ModifyMagGrabTrigger(true);
                     if (ChangesTriggerThresholds) ModifyTriggerThresholds(true);
+                    if (Trigger != null) ModifyTrigger(true);
                     if (FireSelector != null) ModifyFireSelector(true);
                     if (FireSelector2 != null) ModifyFireSelector2(true);
+                    if (MagazineRelease != null) ModifyMagazineRelease(true);
 
                     if (BoltRotatingPiece != null) ModifyBoltRotatingPiece(true);
                     if (BoltZRotPiece != null) ModifyBoltZRotPiece(true);
@@ -83,14 +105,19 @@ namespace ModularWorkshop
                     if (AltGrip != null) AddAltGrip(true);
 
                     if (CarryHandle != null) AddCarryHandle(true);
+
+                    if (AdjustsFireRate) ModifyFireRate(true);
                 }
                 else
                 {
                     if (BoltReleaseButton != E_ModificationMode.Ignore) UndoBoltRelease();
-                    if (MagazineReleaseButton != E_ModificationMode.Ignore) UndoMagRelease();
+                    if (MagazineReleaseButton != E_ModificationMode.Ignore) UndoMagReleaseButton();
+                    if (ChangesAdvancedMagGrabTriggerMode) ModifyMagGrabTrigger(false);
                     if (ChangesTriggerThresholds) ModifyTriggerThresholds(false);
+                    if (Trigger != null) ModifyTrigger(false);
                     if (FireSelector != null) ModifyFireSelector(false);
                     if (FireSelector2 != null) ModifyFireSelector2(false);
+                    if (MagazineRelease != null) ModifyMagazineRelease(false);
 
                     if (BoltRotatingPiece != null) ModifyBoltRotatingPiece(false);
                     if (BoltZRotPiece != null) ModifyBoltZRotPiece(false);
@@ -102,6 +129,8 @@ namespace ModularWorkshop
                     if (AltGrip != null) AddAltGrip(false);
 
                     if (CarryHandle != null) AddCarryHandle(false);
+
+                    if (AdjustsFireRate) ModifyFireRate(false);
                 }
             }
         }
@@ -147,7 +176,7 @@ namespace ModularWorkshop
         }
 
         // Mag Release
-        private void ModifyMagRelease(bool mode)
+        private void ModifyMagReleaseButton(bool mode)
         {
             switch (_firearm)
             {
@@ -170,7 +199,7 @@ namespace ModularWorkshop
             }
         }
 
-        private void UndoMagRelease()
+        private void UndoMagReleaseButton()
         {
             switch (_firearm)
             {
@@ -189,7 +218,22 @@ namespace ModularWorkshop
             }
         }
 
-        // Trigger
+        // MagGrabTrigger
+        private void ModifyMagGrabTrigger(bool activate)
+        {
+            UniversalAdvancedMagazineGrabTrigger magGrabTrigger = _firearm.transform.root.GetComponentsInChildren<UniversalAdvancedMagazineGrabTrigger>().Single(g => !g.IsSecondarySlotGrab);
+            if (activate)
+            {
+                _origMagGrabInputType = magGrabTrigger.RequiredInput;
+                magGrabTrigger.RequiredInput = RequiredMagGrabInput;
+            }
+            else
+            {
+                magGrabTrigger.RequiredInput = _origMagGrabInputType;
+            }
+        }
+
+        // Trigger Thresholds
         private void ModifyTriggerThresholds(bool activate)
         {
             if (activate)
@@ -261,6 +305,94 @@ namespace ModularWorkshop
             }
         }
 
+        // Trigger Object
+        private void ModifyTrigger(bool activate)
+        {
+            if (activate)
+            {
+                switch (_firearm)
+                {
+                    case ClosedBoltWeapon w:
+                        w.Trigger = Trigger;
+                        break;
+                    case Handgun w:
+                        w.Trigger = Trigger;
+                        break;
+                    case OpenBoltReceiver w:
+                        w.Trigger = Trigger;
+                        break;
+                    case BoltActionRifle w:
+                        w.Trigger_Display = Trigger;
+                        break;
+                    case TubeFedShotgun w:
+                        w.Trigger = Trigger;
+                        break;
+                    case Revolver w:
+                        w.Trigger = Trigger;
+                        break;
+                }
+            }
+            else
+            {
+                switch (_firearm)
+                {
+                    case ClosedBoltWeapon w:
+                        w.Trigger = null;
+                        break;
+                    case Handgun w:
+                        w.Trigger = null;
+                        break;
+                    case OpenBoltReceiver w:
+                        w.Trigger = null;
+                        break;
+                    case BoltActionRifle w:
+                        w.Trigger_Display = null;
+                        break;
+                    case TubeFedShotgun w:
+                        w.Trigger = null;
+                        break;
+                    case Revolver w:
+                        w.Trigger = null;
+                        break;
+                }
+            }
+        }
+
+        // Magazine Release Object
+        private void ModifyMagazineRelease(bool activate)
+        {
+            if (activate) 
+            { 
+                switch (_firearm)
+                {
+                    case ClosedBoltWeapon w:
+                        w.MagazineReleaseButton = MagazineRelease;
+                        break;
+                    case Handgun w:
+                        w.MagazineReleaseButton = MagazineRelease;
+                        break;
+                    case Revolver w:
+                        w.CylinderReleaseButton = MagazineRelease;
+                        break;
+                }
+            }
+            else
+            {
+                switch (_firearm)
+                {
+                    case ClosedBoltWeapon w:
+                        w.MagazineReleaseButton = null;
+                        break;
+                    case Handgun w:
+                        w.MagazineReleaseButton = null;
+                        break;
+                    case Revolver w:
+                        w.CylinderReleaseButton = null;
+                        break;
+                }
+            }
+        }
+
         // Fire Selector
         private void ModifyFireSelector(bool activate)
         {
@@ -274,6 +406,15 @@ namespace ModularWorkshop
                     case Handgun w:
                         w.Safety = FireSelector;
                         break;
+                    case OpenBoltReceiver w:
+                        w.FireSelectorSwitch = FireSelector;
+                        break;
+                    case BoltActionRifle w:
+                        w.FireSelector_Display = FireSelector;
+                        break;
+                    case TubeFedShotgun w:
+                        w.Safety = FireSelector;
+                        break;
                 }
             }
             else
@@ -285,6 +426,15 @@ namespace ModularWorkshop
                         break;
                     case Handgun w:
                         w.Safety = null;
+                        break;
+                    case OpenBoltReceiver w:
+                        w.FireSelectorSwitch = null;
+                        break;
+                    case BoltActionRifle w:
+                        w.FireSelector_Display = null;
+                        break;
+                    case TubeFedShotgun w:
+                        w.Safety = FireSelector;
                         break;
                 }
             }
@@ -303,6 +453,12 @@ namespace ModularWorkshop
                     case Handgun w:
                         w.FireSelector = FireSelector2;
                         break;
+                    case OpenBoltReceiver w:
+                        w.FireSelectorSwitch2 = FireSelector2;
+                        break;
+                    case BoltActionRifle w:
+                        w.FireSelector_Display_Secondary = FireSelector2;
+                        break;
                 }
             }
             else
@@ -314,6 +470,12 @@ namespace ModularWorkshop
                         break;
                     case Handgun w:
                         w.FireSelector = null;
+                        break;
+                    case OpenBoltReceiver w:
+                        w.FireSelectorSwitch2 = null;
+                        break;
+                    case BoltActionRifle w:
+                        w.FireSelector_Display_Secondary = null;
                         break;
                 }
             }
@@ -475,6 +637,75 @@ namespace ModularWorkshop
             else
             {
 
+            }
+        }
+
+        // Modify Fire Rate
+        public void ModifyFireRate(bool activate)
+        {
+            if (activate)
+            {
+                switch (_firearm)
+                {
+                    case ClosedBoltWeapon w:
+                        _origSpeed_Forward = w.Bolt.Speed_Forward;
+                        w.Bolt.Speed_Forward = BoltSpeed_Forward;
+                        _origSpeed_Rearward = w.Bolt.Speed_Rearward;
+                        w.Bolt.Speed_Rearward = BoltSpeed_Rearward;
+                        _origSpringStiffness = w.Bolt.SpringStiffness;
+                        w.Bolt.SpringStiffness = BoltSpringStiffness;
+                        break;
+                    case Handgun w:
+                        _origSpeed_Forward = w.Slide.Speed_Forward;
+                        w.Slide.Speed_Forward = BoltSpeed_Forward;
+                        _origSpeed_Rearward = w.Slide.Speed_Rearward;
+                        w.Slide.Speed_Rearward = BoltSpeed_Rearward;
+                        _origSpringStiffness = w.Slide.SpringStiffness;
+                        w.Slide.SpringStiffness = BoltSpringStiffness;
+                        break;
+                    case OpenBoltReceiver w:
+                        _origSpeed_Forward = w.Bolt.BoltSpeed_Forward;
+                        w.Bolt.BoltSpeed_Forward = BoltSpeed_Forward;
+                        _origSpeed_Rearward = w.Bolt.BoltSpeed_Rearward;
+                        w.Bolt.BoltSpeed_Rearward = BoltSpeed_Rearward;
+                        _origSpringStiffness = w.Bolt.BoltSpringStiffness;
+                        w.Bolt.BoltSpringStiffness = BoltSpringStiffness;
+                        break;
+                    case TubeFedShotgun w:
+                        _origSpeed_Forward = w.Bolt.Speed_Forward;
+                        w.Bolt.Speed_Forward = BoltSpeed_Forward;
+                        _origSpeed_Rearward = w.Bolt.Speed_Rearward;
+                        w.Bolt.Speed_Rearward = BoltSpeed_Rearward;
+                        _origSpringStiffness = w.Bolt.SpringStiffness;
+                        w.Bolt.SpringStiffness = BoltSpringStiffness;
+                        break;
+                }
+            }
+            else
+            {
+                switch (_firearm)
+                {
+                    case ClosedBoltWeapon w:
+                        w.Bolt.Speed_Forward = _origSpeed_Forward;
+                        w.Bolt.Speed_Rearward = _origSpeed_Rearward;
+                        w.Bolt.SpringStiffness = _origSpringStiffness;
+                        break;
+                    case Handgun w:
+                        w.Slide.Speed_Forward = _origSpeed_Forward;
+                        w.Slide.Speed_Rearward = _origSpeed_Rearward;
+                        w.Slide.SpringStiffness = _origSpringStiffness;
+                        break;
+                    case OpenBoltReceiver w:
+                        w.Bolt.BoltSpeed_Forward = _origSpeed_Forward;
+                        w.Bolt.BoltSpeed_Rearward = _origSpeed_Rearward;
+                        w.Bolt.BoltSpringStiffness = _origSpringStiffness;
+                        break;
+                    case TubeFedShotgun w:
+                        w.Bolt.Speed_Forward = _origSpeed_Forward;
+                        w.Bolt.Speed_Rearward = _origSpeed_Rearward;
+                        w.Bolt.SpringStiffness = _origSpringStiffness;
+                        break;
+                }
             }
         }
 

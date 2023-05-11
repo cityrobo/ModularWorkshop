@@ -8,7 +8,8 @@ namespace ModularWorkshop
 	public class ModularPreattachedAttachments : OpenScripts2_BasePlugin
 	{
 		public GameObject ModularWeapon;
-		public string ModularPartsGroupID;
+        [Tooltip("If left empty it will use the firearms own AttachmentMounts.")]
+        public string ModularPartsGroupID;
 		public int MountIndex = 0;
 		public FVRFireArmAttachment[] Attachments;
 
@@ -31,7 +32,7 @@ namespace ModularWorkshop
 		public IEnumerator AttachAllToMount()
 		{
 			yield return null;
-			FVRFireArmAttachmentMount AttachmentMount = _modularWeapon.AllAttachmentPoints[ModularPartsGroupID].ModularPartPoint.GetComponent<ModularWeaponPart>().AttachmentMounts[MountIndex];
+			FVRFireArmAttachmentMount AttachmentMount = ModularPartsGroupID != string.Empty ? _modularWeapon.AllAttachmentPoints[ModularPartsGroupID].ModularPartPoint.GetComponent<ModularWeaponPart>().AttachmentMounts[MountIndex] : _modularWeapon.GetModularFVRFireArm.FireArm.AttachmentMounts[MountIndex];
 			foreach (var attachment in Attachments)
 			{
 				attachment.SetParentage(AttachmentMount.transform);
