@@ -711,7 +711,7 @@ namespace ModularWorkshop
 
             ModularHandguardAttachmentPoint.CheckForDefaultSkin();
 
-            if (ModularWorkshopManager.ModularWorkshopSkinsDictionary.TryGetValue(ModularBarrelAttachmentPoint.SkinPath, out ModularWorkshopSkinsDefinition definition))
+            if (ModularWorkshopManager.ModularWorkshopSkinsDictionary.TryGetValue(ModularHandguardAttachmentPoint.SkinPath, out ModularWorkshopSkinsDefinition definition))
             {
                 if (oldSkins.TryGetValue(ModularHandguardAttachmentPoint.ModularPartsGroupID, out string skinName))
                 {
