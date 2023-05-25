@@ -7,6 +7,8 @@ using BepInEx.Configuration;
 using FistVR;
 using UnityEngine;
 using Valve.VR;
+using HarmonyLib;
+using System.Linq;
 
 namespace ModularWorkshop
 {
@@ -27,7 +29,8 @@ namespace ModularWorkshop
         private int _lastNumberOfSkinsDefinitions = 0;
         private int _numberOfPartsTries = 0;
         private int _numberOfSkinTries = 0;
-        private bool _loadingDatabase = false;
+        private bool _loadingPartDatabase = false;
+        private bool _loadingSkinDatabase = false;
 
         public ModularWorkshopManager()
         {
@@ -37,25 +40,27 @@ namespace ModularWorkshop
 
         public void Awake()
         {
-            if (!_loadingDatabase)
+            if (!_loadingPartDatabase && !_loadingSkinDatabase)
             {
                 StartCoroutine(UpdatePartsDatabase());
                 StartCoroutine(UpdateSkinDatabase());
             }
 
             ReloadDatabase.SettingChanged += SettingsChanged;
+
+            Harmony.CreateAndPatchAll(typeof(ReceiverSkinSystem));
         }
 
         public void OnDestroy()
         {
-
+            ReloadDatabase.SettingChanged -= SettingsChanged;
         }
 
         private void SettingsChanged(object sender, EventArgs e)
         {
             if (ReloadDatabase.Value)
             {
-                if (!_loadingDatabase)
+                if (!_loadingPartDatabase && !_loadingSkinDatabase)
                 {
                     StartCoroutine(UpdatePartsDatabase());
                     StartCoroutine(UpdateSkinDatabase());
@@ -67,7 +72,7 @@ namespace ModularWorkshop
 
         private IEnumerator UpdatePartsDatabase()
         {
-            _loadingDatabase = true;
+            _loadingPartDatabase = true;
             s_foundModularPartsDefinitions.Clear();
             ModularWorkshopDictionary.Clear();
             while (_numberOfPartsTries < MaximumNumberOfTries.Value)
@@ -107,17 +112,17 @@ namespace ModularWorkshop
                 yield return new WaitForSeconds(1f);
             }
 
-            _loadingDatabase = false;
+            _loadingPartDatabase = false;
             Logger.LogInfo($"Finishded loading with {_lastNumberOfPartsDefinitions} ModularWorkshopPartsDefinitions total and {ModularWorkshopDictionary.Count} in Dictionary.");
         }
         private IEnumerator UpdateSkinDatabase()
         {
-            _loadingDatabase = true;
+            _loadingSkinDatabase = true;
             s_foundModularPartsDefinitions.Clear();
             ModularWorkshopDictionary.Clear();
             while (_numberOfSkinTries < MaximumNumberOfTries.Value)
             {
-                ModularWorkshopSkinsDefinition[] skinsDefinitions = Resources.FindObjectsOfTypeAll<ModularWorkshopSkinsDefinition>();
+                ModularWorkshopSkinsDefinition[] skinsDefinitions = Resources.FindObjectsOfTypeAll<ModularWorkshopSkinsDefinition>().Where(d => !d.AutomaticallyCreated).ToArray();
 
                 foreach (var skinDefinition in skinsDefinitions)
                 {
@@ -157,8 +162,8 @@ namespace ModularWorkshop
                 yield return new WaitForSeconds(1f);
             }
 
-            _loadingDatabase = false;
-            Logger.LogInfo($"Finishded loading with {_lastNumberOfSkinsDefinitions} ModularWorkshopSkinsDefinition total and {ModularWorkshopSkinsDictionary.Count} in Dictionary.");
+            _loadingSkinDatabase = false;
+            Logger.LogInfo($"Finishded loading with {_lastNumberOfSkinsDefinitions} ModularWorkshopSkinsDefinition total and {ModularWorkshopSkinsDictionary.Values.Where(d=>!d.AutomaticallyCreated).Count()} in Dictionary.");
         }
     }
 }

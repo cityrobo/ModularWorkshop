@@ -11,6 +11,8 @@ namespace ModularWorkshop
     {
         [Header("Modular Configuration")]
         public ModularFVRFireArm ModularFVRFireArm;
+
+        public bool AllowExternalBoltReleaseButtonModification = true;
         public GameObject UIPrefab => ModularFVRFireArm.UIPrefab;
         public string ModularBarrelPartsID => ModularFVRFireArm.ModularBarrelAttachmentPoint.ModularPartsGroupID;
         public Transform ModularBarrelPoint => ModularFVRFireArm.ModularBarrelAttachmentPoint.ModularPartPoint;

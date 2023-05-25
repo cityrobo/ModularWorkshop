@@ -46,6 +46,8 @@ namespace ModularWorkshop
 
         [HideInInspector]
         public IModularWeapon ModularWeapon;
+        [HideInInspector]
+        public ReceiverSkinSystem SkinSystem;
 
         public enum EPartType
         {
@@ -82,6 +84,7 @@ namespace ModularWorkshop
 
         private bool _skinOnlyMode = false;
         private bool _receiverSkinMode = false;
+        private bool _receiverSkinSystemMode = false;
 
         public void Awake()
         {
@@ -198,7 +201,8 @@ namespace ModularWorkshop
         public void PBButton_ApplySkin()
         {
             if (!_receiverSkinMode) ModularWeapon.ApplySkin(ModularPartsGroupID, _skinNames[_selectedSkin]);
-            else ModularWeapon.GetModularFVRFireArm.ApplyReceiverSkin(_skinNames[_selectedSkin]);
+            else if (_receiverSkinMode && !_receiverSkinSystemMode) ModularWeapon.GetModularFVRFireArm.ApplyReceiverSkin(_skinNames[_selectedSkin]);
+            else if (_receiverSkinMode && _receiverSkinSystemMode) SkinSystem.ApplyReceiverSkin(_skinNames[_selectedSkin]);
             SM.PlayCoreSound(FVRPooledAudioType.Generic, ApplySkinSound, transform.position);
         }
 
@@ -256,22 +260,39 @@ namespace ModularWorkshop
             }
         }
 
-        public void SetupReceiverSkinOnlyMode()
+        public void SetupReceiverSkinOnlyMode(bool receiverSkinSystemMode = false)
         {
             _skinOnlyMode = true;
             _receiverSkinMode = true;
             _isShowingSkins = true;
+            _receiverSkinSystemMode = receiverSkinSystemMode;
 
-            string skinPath = ModularWeapon.GetModularFVRFireArm.SkinPath;
+            if (!_receiverSkinSystemMode)
+            {
+                string skinPath = ModularWeapon.GetModularFVRFireArm.SkinPath;
 
-            _skinDictionary = ModularWorkshopManager.ModularWorkshopSkinsDictionary[skinPath].SkinDictionary;
-            _skinNames = _skinDictionary.Keys.ToArray();
-            _skinSprites = _skinDictionary.Values.Select(s => s.Icon).ToArray();
-            _skinDisplayNames = _skinDictionary.Values.Select(s => s.DisplayName).ToArray();
-            string skinName = ModularWeapon.GetModularFVRFireArm.CurrentSelectedReceiverSkinID;
-            _selectedSkin = Array.IndexOf(_skinNames, skinName);
-            _skinPageIndex = Mathf.FloorToInt(_selectedSkin / PartButtons.Length);
-            _selectedButton = _selectedSkin - _skinPageIndex * PartButtons.Length;
+                _skinDictionary = ModularWorkshopManager.ModularWorkshopSkinsDictionary[skinPath].SkinDictionary;
+                _skinNames = _skinDictionary.Keys.ToArray();
+                _skinSprites = _skinDictionary.Values.Select(s => s.Icon).ToArray();
+                _skinDisplayNames = _skinDictionary.Values.Select(s => s.DisplayName).ToArray();
+                string skinName = ModularWeapon.GetModularFVRFireArm.CurrentSelectedReceiverSkinID;
+                _selectedSkin = Array.IndexOf(_skinNames, skinName);
+                _skinPageIndex = Mathf.FloorToInt(_selectedSkin / PartButtons.Length);
+                _selectedButton = _selectedSkin - _skinPageIndex * PartButtons.Length;
+            }
+            else
+            {
+                string skinPath = SkinSystem.SkinPath;
+
+                _skinDictionary = ModularWorkshopManager.ModularWorkshopSkinsDictionary[skinPath].SkinDictionary;
+                _skinNames = _skinDictionary.Keys.ToArray();
+                _skinSprites = _skinDictionary.Values.Select(s => s.Icon).ToArray();
+                _skinDisplayNames = _skinDictionary.Values.Select(s => s.DisplayName).ToArray();
+                string skinName = SkinSystem.CurrentSelectedReceiverSkinID;
+                _selectedSkin = Array.IndexOf(_skinNames, skinName);
+                _skinPageIndex = Mathf.FloorToInt(_selectedSkin / PartButtons.Length);
+                _selectedButton = _selectedSkin - _skinPageIndex * PartButtons.Length;
+            }
         }
 
         public void UpdateDisplay()

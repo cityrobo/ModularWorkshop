@@ -16,8 +16,13 @@ namespace ModularWorkshop
         public FVRQuickBeltSlot QuickBeltSlot;
         [HideInInspector]
         public IModularWeapon ModularWeapon;
+        [HideInInspector]
+        public ReceiverSkinSystem SkinSystem;
+
+        public Transform AlignmentDirection;
 
         private IModularWeapon _lastModularWeapon;
+        private ReceiverSkinSystem _lastSkinSystem;
 
         private List<GameObject> _UIScreens = new();
         private List<GameObject> _subUIScreens = new();
@@ -27,6 +32,7 @@ namespace ModularWorkshop
             if (QuickBeltSlot.HeldObject != null)
             {
                 ModularWeapon = QuickBeltSlot.HeldObject as IModularWeapon;
+                SkinSystem = QuickBeltSlot.HeldObject.GetComponent<ReceiverSkinSystem>();
 
                 if (ModularWeapon != null && _lastModularWeapon != ModularWeapon)
                 {
@@ -119,6 +125,25 @@ namespace ModularWorkshop
                     }
                     ModularWeapon.WorkshopPlatform = this;
                 }
+                else if (SkinSystem != null && _lastSkinSystem != SkinSystem)
+                {
+                    GameObject UIPrefab = SkinSystem.UIPrefab;
+                    GameObject UIObject;
+                    ModularWorkshopUI UI;
+
+                    // Receiver Skin System UI
+                    if (SkinSystem.ReceiverSkinUIPointProxy != null)
+                    {
+                        UIObject = Instantiate(UIPrefab, SkinSystem.ReceiverSkinUIPointProxy.position, SkinSystem.ReceiverSkinUIPointProxy.rotation, SkinSystem.ReceiverSkinUIPointProxy.parent);
+                        UIObject.transform.localScale = SkinSystem.ReceiverSkinUIPointProxy.localScale.MultiplyComponentWise(UIObject.transform.localScale);
+                        _UIScreens.Add(UIObject);
+                        UI = UIObject.GetComponent<ModularWorkshopUI>();
+                        UI.SkinSystem = SkinSystem;
+
+                        UI.SetupReceiverSkinOnlyMode(true);
+                        UI.UpdateDisplay();
+                    }
+                }
             }
             else if (QuickBeltSlot.HeldObject == null && _lastModularWeapon != null)
             {
@@ -136,8 +161,41 @@ namespace ModularWorkshop
                 ModularWeapon.WorkshopPlatform = null;
                 ModularWeapon = null;
             }
+            else if (QuickBeltSlot.HeldObject == null && _lastSkinSystem != null)
+            {
+                for (int i = 0; i < _UIScreens.Count; i++)
+                {
+                    Destroy(_UIScreens[i]);
+                }
+                for (int i = 0; i < _subUIScreens.Count; i++)
+                {
+                    if (_subUIScreens[i] != null) Destroy(_subUIScreens[i]);
+                }
+
+                _UIScreens.Clear();
+                _lastSkinSystem = null;
+                SkinSystem = null;
+            }
 
             _lastModularWeapon = ModularWeapon;
+            _lastSkinSystem = SkinSystem;
+
+            if (QuickBeltSlot.CurObject != null && AlignmentDirection != null) AlignQBSlot();
+        }
+
+        private void AlignQBSlot()
+        {
+            Quaternion newRot;
+            if (QuickBeltSlot.CurObject.QBPoseOverride != null)
+            {
+                newRot = AlignmentDirection.rotation * QuickBeltSlot.CurObject.QBPoseOverride.localRotation;
+            }
+            else
+            {
+                newRot = AlignmentDirection.rotation;
+            }
+
+            if ( newRot != QuickBeltSlot.PoseOverride.rotation) QuickBeltSlot.PoseOverride.rotation = newRot;
         }
 
         public void CreateUIForPoint(ModularWeaponPartsAttachmentPoint point)

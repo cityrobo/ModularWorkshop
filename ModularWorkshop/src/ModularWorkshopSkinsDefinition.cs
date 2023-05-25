@@ -19,6 +19,8 @@ namespace ModularWorkshop
         public string PartName;
         [Tooltip("List of the different skins of the part.")]
         public List<SkinDefinition> SkinDefinitions;
+        [HideInInspector]
+        public bool AutomaticallyCreated = false;
 
         [Serializable]
         public class SkinDefinition

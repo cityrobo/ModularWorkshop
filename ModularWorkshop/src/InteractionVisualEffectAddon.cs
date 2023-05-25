@@ -15,14 +15,14 @@ namespace ModularWorkshop
         { 
             set 
             {
-                foreach (var HeatingEffect in InteractionVisualEffects)
+                foreach (var VisualEffect in InteractionVisualEffects)
                 {
-                    HeatingEffect.ObjectToMonitor = value;
+                    VisualEffect.ObjectToMonitor = value;
                 }
 
-                foreach (var HeatingEffect in GetComponents<InteractionVisualEffect>())
+                foreach (var VisualEffect in GetComponents<InteractionVisualEffect>())
                 {
-                    HeatingEffect.ObjectToMonitor = value;
+                    VisualEffect.ObjectToMonitor = value;
                 }
             } 
         }

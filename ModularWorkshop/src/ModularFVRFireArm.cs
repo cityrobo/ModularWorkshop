@@ -172,18 +172,6 @@ namespace ModularWorkshop
             }
         }
 
-        public void GetReceiverMeshRenderers(FVRFireArm fireArm)
-        {
-            List<MeshRenderer> partMeshRenderers = new();
-
-            foreach (var part in fireArm.GetComponentsInChildren<ModularWeaponPart>())
-            {
-                partMeshRenderers.AddRange(part.GetComponentsInChildren<MeshRenderer>().Where(m => m.enabled));
-            }
-
-            ReceiverMeshRenderers = fireArm.GetComponentsInChildren<MeshRenderer>().Where(m => m.enabled).Where(m => !partMeshRenderers.Contains(m)).ToArray();
-        }
-
         public void AddSubAttachmentPoint(ModularWeaponPartsAttachmentPoint subPoint, FVRFireArm fireArm, Dictionary<string,string> oldSubParts, Dictionary<string, string> oldSkins, string selectedPart)
         {
             SubAttachmentPoints.Add(subPoint);
@@ -926,6 +914,7 @@ namespace ModularWorkshop
                 skinsDefinition.ModularPartsGroupID = separatedPath[0];
                 skinsDefinition.PartName = separatedPath[1];
                 skinsDefinition.SkinDefinitions = new() { skinDefinition };
+                skinsDefinition.AutomaticallyCreated = true;
 
                 ModularWorkshopManager.ModularWorkshopSkinsDictionary.Add(SkinPath, skinsDefinition);
             }
@@ -933,6 +922,29 @@ namespace ModularWorkshop
             {
                 Debug.LogWarning($"No SkinsDefinition found for receiver skin path {SkinPath}, but part receiver {fireArm.gameObject.name} set to skin name {CurrentSelectedReceiverSkinID}. Naming error?");
             }
+        }
+        public void GetReceiverMeshRenderers(FVRFireArm fireArm)
+        {
+            List<MeshRenderer> ignoredMeshRenderers = new();
+
+            foreach (var part in fireArm.GetComponentsInChildren<ModularWeaponPart>())
+            {
+                ignoredMeshRenderers.AddRange(part.GetComponentsInChildren<MeshRenderer>().Where(m => m.enabled));
+            }
+            foreach (var part in fireArm.GetComponentsInChildren<FVRFireArmAttachment>())
+            {
+                ignoredMeshRenderers.AddRange(part.GetComponentsInChildren<MeshRenderer>().Where(m => m.enabled));
+            }
+            foreach (var part in fireArm.GetComponentsInChildren<FVRFireArmChamber>())
+            {
+                ignoredMeshRenderers.AddRange(part.GetComponentsInChildren<MeshRenderer>().Where(m => m.enabled));
+            }
+            foreach (var part in fireArm.GetComponentsInChildren<FVRFirearmMovingProxyRound>())
+            {
+                ignoredMeshRenderers.AddRange(part.GetComponentsInChildren<MeshRenderer>().Where(m => m.enabled));
+            }
+
+            ReceiverMeshRenderers = fireArm.GetComponentsInChildren<MeshRenderer>().Where(m => m.enabled).Where(m => !ignoredMeshRenderers.Contains(m)).ToArray();
         }
 
         // Utility Methods

@@ -38,6 +38,7 @@ namespace ModularWorkshop
         [Tooltip("For Handguns this changes the FireSelector object")]
         public Transform FireSelector2;
         [Header("Magazine Release")]
+        [Tooltip("Affects the cylinder release lever on revolvers")]
         public Transform MagazineRelease;
 
         [Header("Bolt")]
@@ -108,7 +109,7 @@ namespace ModularWorkshop
 
                     if (AdjustsFireRate) ModifyFireRate(true);
                 }
-                else
+                else if (value == null && _firearm != null)
                 {
                     if (BoltReleaseButton != E_ModificationMode.Ignore) UndoBoltRelease();
                     if (MagazineReleaseButton != E_ModificationMode.Ignore) UndoMagReleaseButton();
@@ -144,9 +145,12 @@ namespace ModularWorkshop
         {
             switch (_firearm) 
             {
-                case ClosedBoltWeapon w:
-                    _origBoltReleaseState = w.HasBoltReleaseButton;
-                    w.HasBoltReleaseButton = mode;
+                case ModularClosedBoltWeapon w:
+                    if (w.AllowExternalBoltReleaseButtonModification)
+                    {
+                        _origBoltReleaseState = w.HasBoltReleaseButton;
+                        w.HasBoltReleaseButton = mode;
+                    }
                     break;
                 case Handgun w:
                     _origBoltReleaseState = w.HasSlideRelease;
@@ -163,8 +167,8 @@ namespace ModularWorkshop
         {
             switch (_firearm)
             {
-                case ClosedBoltWeapon w:
-                    w.HasBoltReleaseButton = _origBoltReleaseState;
+                case ModularClosedBoltWeapon w:
+                    if (w.AllowExternalBoltReleaseButtonModification) w.HasBoltReleaseButton = _origBoltReleaseState;
                     break;
                 case Handgun w:
                     w.HasSlideRelease = _origBoltReleaseState;
@@ -225,11 +229,11 @@ namespace ModularWorkshop
             if (activate)
             {
                 _origMagGrabInputType = magGrabTrigger.RequiredInput;
-                magGrabTrigger.RequiredInput = RequiredMagGrabInput;
+                magGrabTrigger.SetRequiredInput(RequiredMagGrabInput);
             }
             else
             {
-                magGrabTrigger.RequiredInput = _origMagGrabInputType;
+                magGrabTrigger.SetRequiredInput(_origMagGrabInputType);
             }
         }
 

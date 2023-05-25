@@ -99,6 +99,7 @@ namespace ModularWorkshop
                 skinsDefinition.ModularPartsGroupID = ModularPartsGroupID;
                 skinsDefinition.PartName = SelectedModularWeaponPart;
                 skinsDefinition.SkinDefinitions = new() { skinDefinition };
+                skinsDefinition.AutomaticallyCreated = true;
 
                 ModularWorkshopManager.ModularWorkshopSkinsDictionary.Add(SkinPath, skinsDefinition);
             }

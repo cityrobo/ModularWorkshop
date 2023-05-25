@@ -87,6 +87,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="src\FireModeAddon.cs" />
+    <Compile Include="src\InteractionVisualEffectAddon.cs" />
+    <Compile Include="src\ReceiverSkinSystem.cs" />
     <Compile Include="src\ModularPreattachedAttachments.cs" />
     <Compile Include="src\ModularPreattachedForeignAttachments.cs" />
     <Compile Include="src\ModularWorkshopSkinsDefinition.cs" />
