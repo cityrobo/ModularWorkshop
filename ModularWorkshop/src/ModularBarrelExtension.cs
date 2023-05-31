@@ -73,19 +73,12 @@ namespace ModularWorkshop
             base.OnDestroy();
         }
 
-        public override void ConfigurePart()
+        public override void EnablePart()
         {
-            base.ConfigurePart();
+            base.EnablePart();
 
-            // Go up hierarchy until you find both components
-
-            Transform currentTransform = transform;
-            do
-            {
-                if (_barrel == null) _barrel = currentTransform.GetComponentInChildren<ModularBarrel>();
-                if (_firearm == null) _firearm = currentTransform.GetComponentInChildren<FVRFireArm>();
-                currentTransform = currentTransform.parent;
-            } while ((_barrel == null || _firearm == null) && currentTransform != null);
+            _barrel = transform.root.GetComponentInChildren<ModularBarrel>();
+            _firearm = transform.root.GetComponentInChildren<FVRFireArm>();
 
             if (_firearm != null && _barrel != null)
             {
@@ -157,6 +150,10 @@ namespace ModularWorkshop
         public override void DisablePart()
         {
             base.DisablePart();
+
+            _barrel = transform.root.GetComponentInChildren<ModularBarrel>();
+            _firearm = transform.root.GetComponentInChildren<FVRFireArm>();
+
 
             if (_firearm != null && _barrel != null)
             {
@@ -271,7 +268,10 @@ namespace ModularWorkshop
                         _firearm.AudioClipSet = modularFireArm.OrigAudioSet;
                     }
                 }
-                if (ChangesMuzzlePosition || HasCustomMuzzleEffects) _firearm.UpdateCurrentMuzzle();
+                if (ChangesMuzzlePosition || HasCustomMuzzleEffects)
+                {
+                    _firearm.UpdateCurrentMuzzle();
+                }
             }
         }
     }

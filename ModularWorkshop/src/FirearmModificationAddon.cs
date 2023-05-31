@@ -27,8 +27,10 @@ namespace ModularWorkshop
         private UniversalAdvancedMagazineGrabTrigger.E_InputType _origMagGrabInputType;
 
         public bool ChangesTriggerThresholds;
+        [Tooltip("Also known as TriggerFiringThreshold/TriggerBreakThreshold.")]
         public float TriggerThreshold;
         private float _origTriggerThreshold;
+        [Tooltip("Also known as TriggerResetThreshold.")]
         public float TriggerReset;
         private float _origTriggerReset;
 

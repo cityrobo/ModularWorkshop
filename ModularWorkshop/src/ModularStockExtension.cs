@@ -44,19 +44,12 @@ namespace ModularWorkshop
             base.OnDestroy();
         }
 
-        public override void ConfigurePart()
+        public override void EnablePart()
         {
-            base.ConfigurePart();
+            base.EnablePart();
 
-            // Go up hierarchy until you find both components
-
-            Transform currentTransform = transform;
-            do
-            {
-                if (_stock == null) _stock = currentTransform.GetComponentInChildren<ModularStock>();
-                if (_firearm == null) _firearm = currentTransform.GetComponentInChildren<FVRFireArm>();
-                currentTransform = currentTransform.parent;
-            } while ((_stock == null || _firearm == null) && currentTransform != null);
+            _stock = transform.root.GetComponentInChildren<ModularStock>();
+            _firearm = transform.root.GetComponentInChildren<FVRFireArm>();
 
             if (_firearm != null && _stock != null)
             {
@@ -91,6 +84,9 @@ namespace ModularWorkshop
         public override void DisablePart()
         {
             base.DisablePart();
+
+            _stock = transform.root.GetComponentInChildren<ModularStock>();
+            _firearm = transform.root.GetComponentInChildren<FVRFireArm>();
 
             if (_firearm != null && _stock != null)
             {

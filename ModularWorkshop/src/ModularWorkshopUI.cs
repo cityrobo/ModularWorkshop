@@ -367,8 +367,8 @@ namespace ModularWorkshop
                 if (PageIndex != null)
                 {
                     PageIndex.text = _isShowingSkins
-                        ? $"{1 + _skinPageIndex}/{Mathf.CeilToInt(1 + (_skinDictionary.Count / PartButtons.Length))}"
-                        : $"{1 + _pageIndex}/{Mathf.CeilToInt(1 + (_partDictionary.Count / PartButtons.Length))}";
+                        ? $"{1 + _skinPageIndex}/{Mathf.CeilToInt(1 + ((_skinDictionary.Count - 1) / PartButtons.Length))}"
+                        : $"{1 + _pageIndex}/{Mathf.CeilToInt(1 + ((_partDictionary.Count - 1) / PartButtons.Length))}";
                 }
             }
             else

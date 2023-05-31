@@ -20,6 +20,9 @@ namespace ModularWorkshop
         public TransformProxy ModularPartUIPointProxy;
         public string SelectedModularWeaponPart;
 
+        [HideInInspector]
+        public bool IsActive = true;
+
         public string SkinPath => ModularPartsGroupID + "/" + SelectedModularWeaponPart;
 
         public string CurrentSkin 

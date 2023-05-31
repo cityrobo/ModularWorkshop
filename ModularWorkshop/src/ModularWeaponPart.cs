@@ -25,6 +25,7 @@ namespace ModularWorkshop
         [Tooltip("Contains all physics colliders of the part. Use for even better performance by flattening out the hierarchy.")]
         public Transform PhysContainer;
         public Transform[] ParentToFirearm;
+        public string AlsoOccupiesPointWithModularPartsGroupID = string.Empty;
 
         private Transform[] _childObjects;
 
@@ -73,7 +74,7 @@ namespace ModularWorkshop
             }
         }
 
-        public virtual void ConfigurePart() { }
+        public virtual void EnablePart() { }
 
         public virtual void DisablePart() { }
 
