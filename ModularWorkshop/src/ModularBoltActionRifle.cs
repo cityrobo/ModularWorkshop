@@ -51,10 +51,11 @@ namespace ModularWorkshop
         {
             base.Awake();
 
-            ConfigureAll();
             ConvertTransformsToProxies();
 
             ModularFVRFireArm.Awake(this);
+
+            ConfigureAll();
         }
 
         public override void ConfigureFromFlagDic(Dictionary<string, string> f)
