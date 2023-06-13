@@ -15,10 +15,13 @@ namespace ModularWorkshop
         { 
             set 
             {
-                ScopeInterface.FireArm = value;
-                ScopeInterface.IsIntegrated = true;
-                ScopeInterface.ForceInteractable = true;
-                ScopeInterface.Initialize();
+                if (value != null)
+                {
+                    ScopeInterface.FireArm = value;
+                    ScopeInterface.IsIntegrated = true;
+                    ScopeInterface.ForceInteractable = true;
+                    ScopeInterface.Initialize();
+                }
             } 
         }
     }

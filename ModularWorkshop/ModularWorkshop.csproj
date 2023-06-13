@@ -89,6 +89,9 @@
   <ItemGroup>
     <Compile Include="src\FireModeAddon.cs" />
     <Compile Include="src\InteractionVisualEffectAddon.cs" />
+    <Compile Include="src\ModularBreakActionWeapon.cs" />
+    <Compile Include="src\ModularTubeFedShotgun.cs" />
+    <Compile Include="src\ModularHandguardExtension.cs" />
     <Compile Include="src\ReceiverSkinSystem.cs" />
     <Compile Include="src\ModularPreattachedAttachments.cs" />
     <Compile Include="src\ModularPreattachedForeignAttachments.cs" />
@@ -117,6 +120,8 @@
     <Compile Include="src\ModularWorkshopPlatform.cs" />
     <Compile Include="src\ModularWorkshopUI.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="src\WeaponPartSpecificGameObjectManipulation.cs" />
+    <Compile Include="src\WeaponPartSpecificGameObjectToggle.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

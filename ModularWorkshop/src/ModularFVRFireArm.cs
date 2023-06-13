@@ -23,7 +23,7 @@ namespace ModularWorkshop
         public ModularWeaponPartsAttachmentPoint[] ModularWeaponPartsAttachmentPoints;
 
         [Header("Receiver Skins")]
-        [Tooltip("This is a combination of ModularPartsGroupID and PartName of a Skins definition, with a \"/\" in between. A requirement of the system. You should choose ModularPartsGroupID and PartName so that it doesn't conflict with anything else. Formatting Example: \"ModularPartsGroupID/PartName\". I would personally recommend something like \"ReceiverName/Receiver\" as a standard.")]
+        [Tooltip("This is a combination of ModularPartsGroupID and PartName of a Skins definition, with a \"/\" in between. A requirement of the system. You should choose ModularPartsGroupID and PartName so that it doesn't conflict with anything else. Formatting Example: \"ModularPartsGroupID/PartName\". I would personally recommend something like \"ItemID/Receiver\" as a standard.")]
         public string SkinPath;
         public Transform ReceiverSkinUIPoint;
         [HideInInspector]
@@ -68,6 +68,9 @@ namespace ModularWorkshop
         public bool WasUnvaulted = false;
         [HideInInspector]
         public FVRFireArm FireArm;
+
+        [HideInInspector]
+        public event PartAdded PartAdded;
 
         // Original Barrel Parameters
         [HideInInspector]
@@ -156,7 +159,7 @@ namespace ModularWorkshop
             OrigPoseOverride = new(fireArm.PoseOverride);
             OrigPoseOverride_Touch = new(fireArm.PoseOverride_Touch);
 
-            if (SkinPath == string.Empty) SkinPath = fireArm.gameObject.name.Replace("(Clone)","") + "/" + "Receiver";
+            if (SkinPath == string.Empty) SkinPath = fireArm.ObjectWrapper.ItemID + "/" + "Receiver";
             if (ReceiverMeshRenderers == null || ReceiverMeshRenderers.Length == 0) GetReceiverMeshRenderers(fireArm);
             CheckForDefaultReceiverSkin(fireArm);
 
@@ -170,6 +173,20 @@ namespace ModularWorkshop
                 }
 
                 UnityEngine.Object.Destroy(PhysContainer.gameObject);
+            }
+
+            ModularBarrelAttachmentPoint.IsActive = true;
+            ModularHandguardAttachmentPoint.IsActive = true;
+            ModularStockAttachmentPoint.IsActive = true;
+
+            foreach (var point in ModularWeaponPartsAttachmentPoints)
+            {
+                point.IsActive = true;
+            }
+
+            foreach (var subPoint in SubAttachmentPoints)
+            {
+                subPoint.IsActive = true;
             }
         }
 
@@ -324,6 +341,8 @@ namespace ModularWorkshop
                 else AddSubAttachmentPoint(point, fireArm, oldSubParts, oldSkins, point.SelectedModularWeaponPart);
             }
 
+            PartAdded?.Invoke(newPart);
+
             return newPart;
         }
 
@@ -474,6 +493,8 @@ namespace ModularWorkshop
                 if (oldSubParts.TryGetValue(point.ModularPartsGroupID, out string oldSelectedPart) && oldSelectedPart != point.SelectedModularWeaponPart) AddSubAttachmentPoint(point, fireArm, oldSubParts, oldSkins, oldSelectedPart);
                 else AddSubAttachmentPoint(point, fireArm, oldSubParts, oldSkins, point.SelectedModularWeaponPart);
             }
+
+            PartAdded?.Invoke(newPart);
 
             return newPart;
         }
@@ -629,6 +650,43 @@ namespace ModularWorkshop
                                 break;
                         }
                         break;
+                    case null:
+                        switch (newPart.ColliderType)
+                        {
+                            case ModularHandguard.EColliderType.Sphere:
+                                SphereCollider sphereCollider = grabTrigger.gameObject.AddComponent<SphereCollider>();
+                                sphereCollider.center = newPart.TriggerCenter;
+                                sphereCollider.radius = newPart.TriggerSize.x;
+                                sphereCollider.isTrigger = true;
+
+                                fireArm.Foregrip.GetComponent<FVRAlternateGrip>().m_colliders = fireArm.Foregrip.GetComponentsInChildren<Collider>(true);
+                                break;
+                            case ModularHandguard.EColliderType.Capsule:
+                                CapsuleCollider capsuleCollider = grabTrigger.gameObject.AddComponent<CapsuleCollider>();
+                                capsuleCollider.center = newPart.TriggerCenter;
+                                capsuleCollider.radius = newPart.TriggerSize.x;
+                                capsuleCollider.height = newPart.TriggerSize.y;
+                                capsuleCollider.direction = newPart.ColliderAxis switch
+                                {
+                                    OpenScripts2_BasePlugin.Axis.X => 0,
+                                    OpenScripts2_BasePlugin.Axis.Y => 1,
+                                    OpenScripts2_BasePlugin.Axis.Z => 2,
+                                    _ => 0,
+                                };
+                                capsuleCollider.isTrigger = true;
+
+                                fireArm.Foregrip.GetComponent<FVRAlternateGrip>().m_colliders = fireArm.Foregrip.GetComponentsInChildren<Collider>(true);
+                                break;
+                            case ModularHandguard.EColliderType.Box:
+                                BoxCollider boxCollider = grabTrigger.gameObject.AddComponent<BoxCollider>();
+                                boxCollider.center = newPart.TriggerCenter;
+                                boxCollider.size = newPart.TriggerSize;
+                                boxCollider.isTrigger = true;
+
+                                fireArm.Foregrip.GetComponent<FVRAlternateGrip>().m_colliders = fireArm.Foregrip.GetComponentsInChildren<Collider>(true);
+                                break;
+                        }
+                        break;
                 }
             }
 
@@ -648,6 +706,8 @@ namespace ModularWorkshop
                 if (oldSubParts.TryGetValue(point.ModularPartsGroupID, out string oldSelectedPart) && oldSelectedPart != point.SelectedModularWeaponPart) AddSubAttachmentPoint(point, fireArm, oldSubParts, oldSkins, oldSelectedPart);
                 else AddSubAttachmentPoint(point, fireArm, oldSubParts, oldSkins, point.SelectedModularWeaponPart);
             }
+
+            PartAdded?.Invoke(newPart);
 
             return newPart;
         }
@@ -741,6 +801,8 @@ namespace ModularWorkshop
                 if (oldSubParts.TryGetValue(point.ModularPartsGroupID, out string oldSelectedPart) && oldSelectedPart != point.SelectedModularWeaponPart) AddSubAttachmentPoint(point, fireArm, oldSubParts, oldSkins, oldSelectedPart);
                 else AddSubAttachmentPoint(point, fireArm, oldSubParts, oldSkins, point.SelectedModularWeaponPart);
             }
+
+            PartAdded?.Invoke(newPart);
 
             return newPart;
         }
@@ -952,30 +1014,36 @@ namespace ModularWorkshop
 
         private void EnableAttachmentPoint(ModularWeaponPart part)
         {
-            if (AllAttachmentPoints.TryGetValue(part.AlsoOccupiesPointWithModularPartsGroupID, out ModularWeaponPartsAttachmentPoint disabledPoint))
+            foreach (var alsoOccupiesPointWithModularPartsGroupID in part.AlsoOccupiesPointWithModularPartsGroupIDs)
             {
-                disabledPoint.IsActive = true;
-                ConfigureModularWeaponPart(disabledPoint, disabledPoint.SelectedModularWeaponPart, FireArm);
+                if (AllAttachmentPoints.TryGetValue(alsoOccupiesPointWithModularPartsGroupID, out ModularWeaponPartsAttachmentPoint disabledPoint))
+                {
+                    disabledPoint.IsActive = true;
+                    ConfigureModularWeaponPart(disabledPoint, disabledPoint.SelectedModularWeaponPart, FireArm);
 
-                if (!SubAttachmentPoints.Contains(disabledPoint)) WorkshopPlatform?.CreateUIForPoint(disabledPoint, ModularWorkshopUI.EPartType.MainWeaponGeneralAttachmentPoint);
-                else WorkshopPlatform?.CreateUIForPoint(disabledPoint);
+                    if (!SubAttachmentPoints.Contains(disabledPoint)) WorkshopPlatform?.CreateUIForPoint(disabledPoint, ModularWorkshopUI.EPartType.MainWeaponGeneralAttachmentPoint);
+                    else WorkshopPlatform?.CreateUIForPoint(disabledPoint);
+                }
             }
         }
 
         private void DisableAttachmentPoint(ModularWeaponPart part)
         {
-            if (AllAttachmentPoints.TryGetValue(part.AlsoOccupiesPointWithModularPartsGroupID, out ModularWeaponPartsAttachmentPoint pointToDisable))
+            foreach (var alsoOccupiesPointWithModularPartsGroupID in part.AlsoOccupiesPointWithModularPartsGroupIDs)
             {
-                WorkshopPlatform?.RemoveUIFromPoint(pointToDisable);
+                if (AllAttachmentPoints.TryGetValue(alsoOccupiesPointWithModularPartsGroupID, out ModularWeaponPartsAttachmentPoint pointToDisable))
+                {
+                    WorkshopPlatform?.RemoveUIFromPoint(pointToDisable);
 
-                pointToDisable.IsActive = false;
-                GameObject temp = new(pointToDisable.ModularPartsGroupID + "_TempPoint");
-                temp.transform.position = pointToDisable.ModularPartPoint.position;
-                temp.transform.rotation = pointToDisable.ModularPartPoint.rotation;
-                temp.transform.parent = pointToDisable.ModularPartPoint.parent;
+                    pointToDisable.IsActive = false;
+                    GameObject temp = new(pointToDisable.ModularPartsGroupID + "_TempPoint");
+                    temp.transform.position = pointToDisable.ModularPartPoint.position;
+                    temp.transform.rotation = pointToDisable.ModularPartPoint.rotation;
+                    temp.transform.parent = pointToDisable.ModularPartPoint.parent;
 
-                UnityEngine.Object.Destroy(pointToDisable.ModularPartPoint.gameObject);
-                pointToDisable.ModularPartPoint = temp.transform;
+                    UnityEngine.Object.Destroy(pointToDisable.ModularPartPoint.gameObject);
+                    pointToDisable.ModularPartPoint = temp.transform;
+                }
             }
         }
 
@@ -1009,4 +1077,6 @@ namespace ModularWorkshop
             }
         }
     }
+
+    public delegate void PartAdded(ModularWeaponPart part);
 }
