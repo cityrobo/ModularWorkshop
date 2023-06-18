@@ -82,7 +82,22 @@ namespace ModularWorkshop
 
             if (_firearm != null && _barrel != null)
             {
-                if (ChangesMuzzlePosition) _firearm.MuzzlePos.GoToTransformProxy(MuzzlePosProxy);
+                if (ChangesMuzzlePosition)
+                {
+                    _firearm.MuzzlePos.GoToTransformProxy(MuzzlePosProxy);
+
+                    switch (_firearm)
+                    {
+                        case BreakActionWeapon w:
+                            foreach (var barrel in w.Barrels)
+                            {
+                                Vector3 transformedMuzzle = barrel.Muzzle.parent.InverseTransformPoint(MuzzlePosProxy.position);
+                                barrel.Muzzle.ModifyLocalPositionAxisValue(OpenScripts2_BasePlugin.Axis.Z, transformedMuzzle.z);
+                            }
+                            break;
+                    }
+                }
+
                 if (ChangesDefaultMuzzleStandAndDamping)
                 {
                     _firearm.DefaultMuzzleState = DefaultMuzzleState;
@@ -158,7 +173,22 @@ namespace ModularWorkshop
             if (_firearm != null && _barrel != null)
             {
                 ModularFVRFireArm modularFireArm = _firearm.GetComponent<IModularWeapon>().GetModularFVRFireArm;
-                if (ChangesMuzzlePosition) _firearm.MuzzlePos.GoToTransformProxy(_barrel.MuzzlePosProxy);
+                if (ChangesMuzzlePosition)
+                {
+                    _firearm.MuzzlePos.GoToTransformProxy(_barrel.MuzzlePosProxy);
+
+                    switch (_firearm)
+                    {
+                        case BreakActionWeapon w:
+                            foreach (var barrel in w.Barrels)
+                            {
+                                Vector3 transformedMuzzle = barrel.Muzzle.parent.InverseTransformPoint(_barrel.MuzzlePosProxy.position);
+                                barrel.Muzzle.ModifyLocalPositionAxisValue(OpenScripts2_BasePlugin.Axis.Z, transformedMuzzle.z);
+                            }
+                            break;
+                    }
+                }
+
                 if (ChangesDefaultMuzzleStandAndDamping)
                 {
                     _firearm.DefaultMuzzleState = _barrel.DefaultMuzzleState;

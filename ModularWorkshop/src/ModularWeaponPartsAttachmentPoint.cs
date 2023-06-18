@@ -21,7 +21,7 @@ namespace ModularWorkshop
         public string SelectedModularWeaponPart;
 
         [HideInInspector]
-        public bool IsActive = true;
+        public bool IsPointDisabled = false;
 
         public string SkinPath => ModularPartsGroupID + "/" + SelectedModularWeaponPart;
 

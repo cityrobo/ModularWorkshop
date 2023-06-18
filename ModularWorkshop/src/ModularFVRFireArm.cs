@@ -174,20 +174,6 @@ namespace ModularWorkshop
 
                 UnityEngine.Object.Destroy(PhysContainer.gameObject);
             }
-
-            ModularBarrelAttachmentPoint.IsActive = true;
-            ModularHandguardAttachmentPoint.IsActive = true;
-            ModularStockAttachmentPoint.IsActive = true;
-
-            foreach (var point in ModularWeaponPartsAttachmentPoints)
-            {
-                point.IsActive = true;
-            }
-
-            foreach (var subPoint in SubAttachmentPoints)
-            {
-                subPoint.IsActive = true;
-            }
         }
 
         public void AddSubAttachmentPoint(ModularWeaponPartsAttachmentPoint subPoint, FVRFireArm fireArm, Dictionary<string,string> oldSubParts, Dictionary<string, string> oldSkins, string selectedPart)
@@ -243,14 +229,24 @@ namespace ModularWorkshop
                 if (f.TryGetValue("Modul" + SubAttachmentPoints.ElementAt(i).ModularPartsGroupID, out selectedPart)) ConfigureModularWeaponPart(SubAttachmentPoints.ElementAt(i), selectedPart, fireArm);
             }
 
-            if (f.TryGetValue(SkinPath, out selectedSkin)) ApplyReceiverSkin(selectedSkin); 
+            if (f.TryGetValue(SkinPath, out selectedSkin)) ApplyReceiverSkin(selectedSkin);
 
-            foreach (var anyPoint in AllAttachmentPoints.Values)
+            List<ModularWeaponPartsAttachmentPoint> points = AllAttachmentPoints.Values.ToList();
+            points.Sort((x, y) => string.Compare(x.ModularPartsGroupID, y.ModularPartsGroupID));
+            List<FVRFireArmAttachmentMount> mounts = new();
+
+            foreach (var anyPoint in points)
             {
                 string key = anyPoint.ModularPartsGroupID + "/" + anyPoint.SelectedModularWeaponPart;
 
                 if (f.TryGetValue(key, out selectedSkin)) anyPoint.ApplySkin(selectedSkin);
+
+                ModularWeaponPart part = anyPoint.ModularPartPoint.GetComponent<ModularWeaponPart>();
+                if (part != null) mounts.AddRange(part.AttachmentMounts);
             }
+
+            FireArm.AttachmentMounts.RemoveAll(mounts.Contains);
+            FireArm.AttachmentMounts.AddRange(mounts);
 
             WasUnvaulted = true;
         }
@@ -272,12 +268,22 @@ namespace ModularWorkshop
 
             flagDic.Add(SkinPath, CurrentSelectedReceiverSkinID);
 
-            foreach (var anyPoint in AllAttachmentPoints.Values)
+            List<ModularWeaponPartsAttachmentPoint> points = AllAttachmentPoints.Values.ToList();
+            points.Sort((x,y) => string.Compare(x.ModularPartsGroupID,y.ModularPartsGroupID));
+            List<FVRFireArmAttachmentMount> mounts = new();
+
+            foreach (var anyPoint in points)
             {
                 string key = anyPoint.ModularPartsGroupID + "/" + anyPoint.SelectedModularWeaponPart;
                 string value = anyPoint.CurrentSkin;
                 flagDic.Add(key, value);
+
+                ModularWeaponPart part = anyPoint.ModularPartPoint.GetComponent<ModularWeaponPart>();
+                if (part != null) mounts.AddRange(part.AttachmentMounts);
             }
+
+            FireArm.AttachmentMounts.RemoveAll(mounts.Contains);
+            FireArm.AttachmentMounts.AddRange(mounts);
 
             return flagDic;
         }
@@ -1018,7 +1024,7 @@ namespace ModularWorkshop
             {
                 if (AllAttachmentPoints.TryGetValue(alsoOccupiesPointWithModularPartsGroupID, out ModularWeaponPartsAttachmentPoint disabledPoint))
                 {
-                    disabledPoint.IsActive = true;
+                    disabledPoint.IsPointDisabled = false;
                     ConfigureModularWeaponPart(disabledPoint, disabledPoint.SelectedModularWeaponPart, FireArm);
 
                     if (!SubAttachmentPoints.Contains(disabledPoint)) WorkshopPlatform?.CreateUIForPoint(disabledPoint, ModularWorkshopUI.EPartType.MainWeaponGeneralAttachmentPoint);
@@ -1035,7 +1041,7 @@ namespace ModularWorkshop
                 {
                     WorkshopPlatform?.RemoveUIFromPoint(pointToDisable);
 
-                    pointToDisable.IsActive = false;
+                    pointToDisable.IsPointDisabled = true;
                     GameObject temp = new(pointToDisable.ModularPartsGroupID + "_TempPoint");
                     temp.transform.position = pointToDisable.ModularPartPoint.position;
                     temp.transform.rotation = pointToDisable.ModularPartPoint.rotation;

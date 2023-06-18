@@ -53,7 +53,7 @@ namespace ModularWorkshop
                     }
 
                     // Modular Barrel UI
-                    if (ModularWeapon.ModularBarrelPartsID != string.Empty && ModularWeapon.AllAttachmentPoints[ModularWeapon.ModularBarrelPartsID].IsActive)
+                    if (ModularWeapon.ModularBarrelPartsID != string.Empty && !ModularWeapon.AllAttachmentPoints[ModularWeapon.ModularBarrelPartsID].IsPointDisabled)
                     {
                         UIObject = Instantiate(UIPrefab, ModularWeapon.ModularBarrelUIPointProxy.position, ModularWeapon.ModularBarrelUIPointProxy.rotation, ModularWeapon.ModularBarrelUIPointProxy.parent);
                         UIObject.transform.localScale = ModularWeapon.ModularBarrelUIPointProxy.localScale.MultiplyComponentWise(UIObject.transform.localScale);
@@ -67,7 +67,7 @@ namespace ModularWorkshop
                         UI.UpdateDisplay();
                     }
                     // Modular Handguard UI
-                    if (ModularWeapon.ModularHandguardPartsID != string.Empty && ModularWeapon.AllAttachmentPoints[ModularWeapon.ModularHandguardPartsID].IsActive)
+                    if (ModularWeapon.ModularHandguardPartsID != string.Empty && !ModularWeapon.AllAttachmentPoints[ModularWeapon.ModularHandguardPartsID].IsPointDisabled)
                     {
                         UIObject = Instantiate(UIPrefab, ModularWeapon.ModularHandguardUIPointProxy.position, ModularWeapon.ModularHandguardUIPointProxy.rotation, ModularWeapon.ModularHandguardUIPointProxy.parent);
                         UIObject.transform.localScale = ModularWeapon.ModularHandguardUIPointProxy.localScale.MultiplyComponentWise(UIObject.transform.localScale);
@@ -81,7 +81,7 @@ namespace ModularWorkshop
                         UI.UpdateDisplay();
                     }
                     // Modular Stock UI
-                    if (ModularWeapon.ModularStockPartsID != string.Empty && ModularWeapon.AllAttachmentPoints[ModularWeapon.ModularStockPartsID].IsActive)
+                    if (ModularWeapon.ModularStockPartsID != string.Empty && !ModularWeapon.AllAttachmentPoints[ModularWeapon.ModularStockPartsID].IsPointDisabled)
                     {
                         UIObject = Instantiate(UIPrefab, ModularWeapon.ModularStockUIPointProxy.position, ModularWeapon.ModularStockUIPointProxy.rotation, ModularWeapon.ModularStockUIPointProxy.parent);
                         UIObject.transform.localScale = ModularWeapon.ModularStockUIPointProxy.localScale.MultiplyComponentWise(UIObject.transform.localScale);
@@ -97,7 +97,7 @@ namespace ModularWorkshop
                     // Modular Parts Points UI
                     foreach (var point in ModularWeapon.ModularWeaponPartsAttachmentPoints)
                     {
-                        if (point.IsActive)
+                        if (!point.IsPointDisabled)
                         {
                             UIObject = Instantiate(UIPrefab, point.ModularPartUIPointProxy.position, point.ModularPartUIPointProxy.rotation, point.ModularPartUIPointProxy.parent);
                             UIObject.transform.localScale = point.ModularPartUIPointProxy.localScale.MultiplyComponentWise(UIObject.transform.localScale);
@@ -114,7 +114,7 @@ namespace ModularWorkshop
                     // Sub Attachment Points UI
                     foreach (var subPoint in ModularWeapon.SubAttachmentPoints)
                     {
-                        if (subPoint.IsActive)
+                        if (!subPoint.IsPointDisabled)
                         {
                             UIObject = Instantiate(UIPrefab, subPoint.ModularPartUIPointProxy.position, subPoint.ModularPartUIPointProxy.rotation, subPoint.ModularPartUIPointProxy.parent);
                             UIObject.transform.localScale = subPoint.ModularPartUIPointProxy.localScale.MultiplyComponentWise(UIObject.transform.localScale);
@@ -197,7 +197,7 @@ namespace ModularWorkshop
 
         public void CreateUIForPoint(ModularWeaponPartsAttachmentPoint point, ModularWorkshopUI.EPartType partType = ModularWorkshopUI.EPartType.SubAttachmentPoint)
         {
-            if (!_UIScreens.ContainsKey(point.ModularPartsGroupID) && point.IsActive)
+            if (!_UIScreens.ContainsKey(point.ModularPartsGroupID) && !point.IsPointDisabled)
             {
                 GameObject UIPrefab = ModularWeapon.UIPrefab;
                 GameObject UIObject;
