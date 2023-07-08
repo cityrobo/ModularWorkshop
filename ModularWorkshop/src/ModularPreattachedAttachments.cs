@@ -32,17 +32,32 @@ namespace ModularWorkshop
 		public IEnumerator AttachAllToMount()
 		{
 			yield return null;
-			FVRFireArmAttachmentMount AttachmentMount = ModularPartsGroupID != string.Empty ? _modularWeapon.AllAttachmentPoints[ModularPartsGroupID].ModularPartPoint.GetComponent<ModularWeaponPart>().AttachmentMounts[MountIndex] : _modularWeapon.GetModularFVRFireArm.FireArm.AttachmentMounts[MountIndex];
-			foreach (var attachment in Attachments)
+
+			FVRFireArmAttachmentMount[] mounts = ModularPartsGroupID != string.Empty ? _modularWeapon.AllAttachmentPoints[ModularPartsGroupID].ModularPartPoint.GetComponent<ModularWeaponPart>().AttachmentMounts : _modularWeapon.GetModularFVRFireArm.FireArm.AttachmentMounts.ToArray();
+			if (mounts.Length > 0 || mounts.Length <= MountIndex)
 			{
-				attachment.SetParentage(AttachmentMount.transform);
-				attachment.AttachToMount(AttachmentMount, false);
-				if (attachment is Suppressor suppressor)
+				FVRFireArmAttachmentMount AttachmentMount = mounts[MountIndex];
+				foreach (var attachment in Attachments)
 				{
-					suppressor.AutoMountWell();
+					attachment.SetParentage(AttachmentMount.transform);
+					attachment.AttachToMount(AttachmentMount, false);
+					if (attachment is Suppressor suppressor)
+					{
+						suppressor.AutoMountWell();
+					}
+					yield return null;
 				}
-				yield return null;
 			}
+			else
+			{
+				if (ModularPartsGroupID == string.Empty) OpenScripts2_BepInExPlugin.LogWarning(this, $"No mounts on Modular Weapon found! Dropping attachment!");
+				else OpenScripts2_BepInExPlugin.LogWarning(this, $"No mounts on Modular Weapon Part on point \"{ModularPartsGroupID}\" found! Dropping Attachment!");
+
+                foreach (var attachment in Attachments)
+                {
+                    attachment.SetParentage(null);
+                }
+            }
 
 			Destroy(this);
 		}

@@ -17,7 +17,7 @@ namespace ModularWorkshop
     public class ModularWorkshopManager : BaseUnityPlugin
     {
         private static readonly List<ModularWorkshopPartsDefinition> s_foundModularPartsDefinitions = new();
-        public static readonly Dictionary<string, ModularWorkshopPartsDefinition> ModularWorkshopDictionary = new();
+        public static readonly Dictionary<string, ModularWorkshopPartsDefinition> ModularWorkshopPartsDictionary = new();
 
         private static readonly List<ModularWorkshopSkinsDefinition> s_foundModularSkinsDefinitions = new();
         public static readonly Dictionary<string, ModularWorkshopSkinsDefinition> ModularWorkshopSkinsDictionary = new();
@@ -74,7 +74,7 @@ namespace ModularWorkshop
         {
             _loadingPartDatabase = true;
             s_foundModularPartsDefinitions.Clear();
-            ModularWorkshopDictionary.Clear();
+            ModularWorkshopPartsDictionary.Clear();
             while (_numberOfPartsTries < MaximumNumberOfTries.Value)
             {
                 ModularWorkshopPartsDefinition[] partsDefinitions = Resources.FindObjectsOfTypeAll<ModularWorkshopPartsDefinition>();
@@ -87,10 +87,10 @@ namespace ModularWorkshop
 
                         //if (partDefinition.ModularPartsGroupID == null) Logger.LogError($"{partDefinition.name} has null ModularPartsGroupID field!");
 
-                        if (!ModularWorkshopDictionary.TryGetValue(partDefinition.ModularPartsGroupID, out ModularWorkshopPartsDefinition partsDefinitionOld))
+                        if (!ModularWorkshopPartsDictionary.TryGetValue(partDefinition.ModularPartsGroupID, out ModularWorkshopPartsDefinition partsDefinitionOld))
                         {
                             if (partDefinition.DisplayName == string.Empty) partDefinition.DisplayName = partDefinition.ModularPartsGroupID;
-                            ModularWorkshopDictionary.Add(partDefinition.ModularPartsGroupID, partDefinition);
+                            ModularWorkshopPartsDictionary.Add(partDefinition.ModularPartsGroupID, partDefinition);
                             Logger.LogInfo($"Loaded ModularWorkshopPartsDefinition {partDefinition.name} with ModularPartsGroupID {partDefinition.ModularPartsGroupID}.");
                         }
                         else
@@ -113,13 +113,13 @@ namespace ModularWorkshop
             }
 
             _loadingPartDatabase = false;
-            Logger.LogInfo($"Finishded loading with {_lastNumberOfPartsDefinitions} ModularWorkshopPartsDefinitions total and {ModularWorkshopDictionary.Count} in Dictionary.");
+            Logger.LogInfo($"Finishded loading with {_lastNumberOfPartsDefinitions} ModularWorkshopPartsDefinitions total and {ModularWorkshopPartsDictionary.Count} in Dictionary.");
         }
         private IEnumerator UpdateSkinDatabase()
         {
             _loadingSkinDatabase = true;
             s_foundModularPartsDefinitions.Clear();
-            ModularWorkshopDictionary.Clear();
+            ModularWorkshopPartsDictionary.Clear();
             while (_numberOfSkinTries < MaximumNumberOfTries.Value)
             {
                 ModularWorkshopSkinsDefinition[] skinsDefinitions = Resources.FindObjectsOfTypeAll<ModularWorkshopSkinsDefinition>().Where(d => !d.AutomaticallyCreated).ToArray();

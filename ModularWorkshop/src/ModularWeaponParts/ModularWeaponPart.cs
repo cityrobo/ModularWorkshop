@@ -27,6 +27,12 @@ namespace ModularWorkshop
         public Transform[] ParentToFirearm;
         public string[] AlsoOccupiesPointWithModularPartsGroupIDs;
 
+        [Header("Take and Hold Settings")]
+        [Tooltip("Should the part be a valid part for Take and Hold randomization?")]
+        public bool RemovedFromSpawnTable = false;
+        [Tooltip("Use this to add additional entries of this item to the spawn table to skew the odds in its favour on random rolls.")]
+        public int AdditionalSpawnTableEntries = 0;
+
         private Transform[] _childObjects;
 
         protected List<Transform> _objectsToKeep = new();

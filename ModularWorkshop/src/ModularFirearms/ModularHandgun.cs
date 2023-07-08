@@ -7,12 +7,10 @@ using OpenScripts2;
 
 namespace ModularWorkshop
 {
-    public class ModularClosedBoltWeapon : ClosedBoltWeapon , IModularWeapon
+    public class ModularHandgun : Handgun, IModularWeapon
     {
         [Header("Modular Configuration")]
         public ModularFVRFireArm ModularFVRFireArm;
-
-        public bool AllowExternalBoltReleaseButtonModification = true;
         public GameObject UIPrefab => ModularFVRFireArm.UIPrefab;
         public string ModularBarrelPartsID => ModularFVRFireArm.ModularBarrelAttachmentPoint.ModularPartsGroupID;
         public Transform ModularBarrelPoint => ModularFVRFireArm.ModularBarrelAttachmentPoint.ModularPartPoint;
@@ -75,31 +73,53 @@ namespace ModularWorkshop
             return flagDic;
         }
 
-        public ModularWeaponPart ConfigureModularWeaponPart(ModularWeaponPartsAttachmentPoint modularWeaponPartsAttachmentPoint, string selectedPart)
+        public ModularWeaponPart ConfigureModularWeaponPart(ModularWeaponPartsAttachmentPoint modularWeaponPartsAttachmentPoint, string selectedPart, bool isRandomized = false)
         {
-            return ModularFVRFireArm.ConfigureModularWeaponPart(modularWeaponPartsAttachmentPoint, selectedPart, this);
+            return ModularFVRFireArm.ConfigureModularWeaponPart(modularWeaponPartsAttachmentPoint, selectedPart, isRandomized);
         }
-        public ModularBarrel ConfigureModularBarrel(string selectedPart)
+        public ModularBarrel ConfigureModularBarrel(string selectedPart, bool isRandomized = false)
         {
-            return ModularFVRFireArm.ConfigureModularBarrel(selectedPart, this);
+            return ModularFVRFireArm.ConfigureModularBarrel(selectedPart, isRandomized);
         }
-        public ModularHandguard ConfigureModularHandguard(string selectedPart)
+        public ModularHandguard ConfigureModularHandguard(string selectedPart, bool isRandomized = false)
         {
-            return ModularFVRFireArm.ConfigureModularHandguard(selectedPart, this);
+            return ModularFVRFireArm.ConfigureModularHandguard(selectedPart, false);
         }
-        public ModularStock ConfigureModularStock(string selectedPart)
+        public ModularStock ConfigureModularStock(string selectedPart, bool isRandomized = false)
         {
-            return ModularFVRFireArm.ConfigureModularStock(selectedPart, this);
+            return ModularFVRFireArm.ConfigureModularStock(selectedPart, isRandomized);
         }
 
         public void ConfigureAll()
         {
-            if (ModularBarrelPartsID != string.Empty) ConfigureModularBarrel(SelectedModularBarrel);
-            if (ModularHandguardPartsID != string.Empty) ConfigureModularHandguard(SelectedModularHandguard);
-            if (ModularStockPartsID != string.Empty) ConfigureModularStock(SelectedModularStock);
+            string selectedPart;
+            if (ModularBarrelPartsID != string.Empty)
+            {
+                selectedPart = ModularFVRFireArm.IsInTakeAndHold ? ModularWorkshopManager.ModularWorkshopPartsDictionary[ModularBarrelPartsID].GetRandomPart() : SelectedModularBarrel;
+                ConfigureModularBarrel(selectedPart);
+            }
+            if (ModularHandguardPartsID != string.Empty)
+            {
+                selectedPart = ModularFVRFireArm.IsInTakeAndHold ? ModularWorkshopManager.ModularWorkshopPartsDictionary[ModularHandguardPartsID].GetRandomPart() : SelectedModularHandguard;
+
+                ConfigureModularHandguard(selectedPart);
+            }
+            if (ModularStockPartsID != string.Empty)
+            {
+                selectedPart = ModularFVRFireArm.IsInTakeAndHold ? ModularWorkshopManager.ModularWorkshopPartsDictionary[ModularStockPartsID].GetRandomPart() : SelectedModularStock;
+
+                ConfigureModularStock(selectedPart);
+            }
             foreach (ModularWeaponPartsAttachmentPoint attachmentPoint in ModularFVRFireArm.ModularWeaponPartsAttachmentPoints)
             {
-                if (ModularWorkshopManager.ModularWorkshopDictionary.TryGetValue(attachmentPoint.ModularPartsGroupID, out ModularWorkshopPartsDefinition prefabs) && prefabs.PartsDictionary.Count > 0) ConfigureModularWeaponPart(attachmentPoint, attachmentPoint.SelectedModularWeaponPart);
+                if (attachmentPoint.IsPointDisabled) continue;
+
+                if (ModularWorkshopManager.ModularWorkshopPartsDictionary.TryGetValue(attachmentPoint.ModularPartsGroupID, out ModularWorkshopPartsDefinition prefabs) && prefabs.PartsDictionary.Count > 0)
+                {
+                    selectedPart = ModularFVRFireArm.IsInTakeAndHold ? ModularWorkshopManager.ModularWorkshopPartsDictionary[attachmentPoint.ModularPartsGroupID].GetRandomPart() : attachmentPoint.SelectedModularWeaponPart;
+
+                    ConfigureModularWeaponPart(attachmentPoint, selectedPart, ModularFVRFireArm.IsInTakeAndHold);
+                }
             }
         }
 
@@ -116,23 +136,21 @@ namespace ModularWorkshop
         [ContextMenu("Copy Existing Firearm Component")]
         public void CopyFirearm()
         {
-            ClosedBoltWeapon[] weapon = GetComponents<ClosedBoltWeapon>();
-            ClosedBoltWeapon toCopy = weapon.Single(c => c != this);
-            if (toCopy.Bolt != null) toCopy.Bolt.Weapon = this;
+            Handgun[] weapon = GetComponents<Handgun>();
+            Handgun toCopy = weapon.Single(c => c != this);
+            if (toCopy.Slide != null) toCopy.Slide.Handgun = this;
             if (toCopy.Chamber != null) toCopy.Chamber.Firearm = this;
-            if (toCopy.Handle != null) toCopy.Handle.Weapon = this;
 
             if (toCopy.Foregrip != null)
             {
                 toCopy.Foregrip.GetComponent<FVRAlternateGrip>().PrimaryObject = this;
             }
 
-            ClosedBoltMagEjectionTrigger grabTrigger = toCopy.GetComponentInChildren<ClosedBoltMagEjectionTrigger>();
-            if (grabTrigger != null) grabTrigger.Receiver = this;
+            HandgunMagReleaseTrigger grabTrigger = toCopy.GetComponentInChildren<HandgunMagReleaseTrigger>();
+            if (grabTrigger != null) grabTrigger.Handgun = this;
             FVRFireArmReloadTriggerWell magWell = toCopy.GetComponentInChildren<FVRFireArmReloadTriggerWell>();
             if (magWell != null) magWell.FireArm = this;
 
-            toCopy.AttachmentMounts = toCopy.AttachmentMounts.Where(mount => mount != null).ToList();
             foreach (var mount in toCopy.AttachmentMounts)
             {
                 mount.MyObject = this;

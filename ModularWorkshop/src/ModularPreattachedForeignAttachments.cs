@@ -51,17 +51,31 @@ namespace ModularWorkshop
 		private IEnumerator AttachAllToMount()
 		{
 			yield return null;
-            FVRFireArmAttachmentMount AttachmentMount = ModularPartsGroupID != string.Empty ? _modularWeapon.AllAttachmentPoints[ModularPartsGroupID].ModularPartPoint.GetComponent<ModularWeaponPart>().AttachmentMounts[MountIndex] : _modularWeapon.GetModularFVRFireArm.FireArm.AttachmentMounts[MountIndex];
-            foreach (var spawnedAttachment in _spawnedAttachments)
+            FVRFireArmAttachmentMount[] mounts = ModularPartsGroupID != string.Empty ? _modularWeapon.AllAttachmentPoints[ModularPartsGroupID].ModularPartPoint.GetComponent<ModularWeaponPart>().AttachmentMounts : _modularWeapon.GetModularFVRFireArm.FireArm.AttachmentMounts.ToArray();
+			if (mounts.Length > 0 || mounts.Length <= MountIndex)
 			{
-                spawnedAttachment.SetParentage(AttachmentMount.transform);
-                spawnedAttachment.AttachToMount(AttachmentMount, false);
-				if (spawnedAttachment is Suppressor suppressor)
+				FVRFireArmAttachmentMount AttachmentMount = mounts[MountIndex];
+				foreach (var spawnedAttachment in _spawnedAttachments)
 				{
-					suppressor.AutoMountWell();
+					spawnedAttachment.SetParentage(AttachmentMount.transform);
+					spawnedAttachment.AttachToMount(AttachmentMount, false);
+					if (spawnedAttachment is Suppressor suppressor)
+					{
+						suppressor.AutoMountWell();
+					}
+					yield return null;
 				}
-				yield return null;
 			}
+            else
+            {
+                if (ModularPartsGroupID == string.Empty) OpenScripts2_BepInExPlugin.LogWarning(this, $"No mounts on Modular Weapon found! Dropping attachment!");
+                else OpenScripts2_BepInExPlugin.LogWarning(this, $"No mounts on Modular Weapon Part on point \"{ModularPartsGroupID}\" found! Dropping Attachment!");
+
+                foreach (var attachment in _spawnedAttachments)
+                {
+                    attachment.SetParentage(null);
+                }
+            }
 
             Destroy(this);
         }

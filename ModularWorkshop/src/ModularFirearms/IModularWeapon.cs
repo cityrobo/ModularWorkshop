@@ -29,12 +29,12 @@ namespace ModularWorkshop
 
         public ModularWeaponPartsAttachmentPoint[] ModularWeaponPartsAttachmentPoints { get; }
 
-        public ModularWeaponPart ConfigureModularWeaponPart(ModularWeaponPartsAttachmentPoint modularWeaponPartsAttachmentPoint, string partName);
+        public ModularWeaponPart ConfigureModularWeaponPart(ModularWeaponPartsAttachmentPoint modularWeaponPartsAttachmentPoint, string partName, bool isRandomized = false);
 
-        public ModularBarrel ConfigureModularBarrel(string partName);
-        public ModularHandguard ConfigureModularHandguard(string partName);
+        public ModularBarrel ConfigureModularBarrel(string partName, bool isRandomized = false);
+        public ModularHandguard ConfigureModularHandguard(string partName, bool isRandomized = false);
 
-        public ModularStock ConfigureModularStock(string partName);
+        public ModularStock ConfigureModularStock(string partName, bool isRandomized = false);
 
         public ModularWorkshopPlatform WorkshopPlatform { get; set; }
         public List<ModularWeaponPartsAttachmentPoint> SubAttachmentPoints { get; }

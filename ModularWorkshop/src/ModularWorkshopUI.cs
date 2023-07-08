@@ -143,6 +143,7 @@ namespace ModularWorkshop
             if (!_isShowingSkins) _pageIndex++;
             else _skinPageIndex++;
             //_selectedButton--;
+            _selectedButton = _selectedPart - _pageIndex * PartButtons.Length;
             UpdateDisplay();
             Beep();
         }
@@ -151,6 +152,7 @@ namespace ModularWorkshop
             if (!_isShowingSkins) _pageIndex--;
             else _skinPageIndex--;
             //_selectedButton++;
+            _selectedButton = _selectedPart - _pageIndex * PartButtons.Length;
             UpdateDisplay();
             Beep();
         }
@@ -226,12 +228,12 @@ namespace ModularWorkshop
                     _selectedPart = Array.IndexOf(_partNames, ModularWeapon.SelectedModularStock);
                     break;
                 case EPartType.MainWeaponGeneralAttachmentPoint:
-                    _partDictionary = ModularWorkshopManager.ModularWorkshopDictionary[ModularPartsGroupID].PartsDictionary;
+                    _partDictionary = ModularWorkshopManager.ModularWorkshopPartsDictionary[ModularPartsGroupID].PartsDictionary;
                     _partNames = _partDictionary.Select(prefab => prefab.Key).ToArray();
                     _selectedPart = Array.IndexOf(_partNames, ModularWeapon.ModularWeaponPartsAttachmentPoints.Single(obj => obj.ModularPartsGroupID == ModularPartsGroupID).SelectedModularWeaponPart);
                     break;
                 case EPartType.SubAttachmentPoint:
-                    _partDictionary = ModularWorkshopManager.ModularWorkshopDictionary[ModularPartsGroupID].PartsDictionary;
+                    _partDictionary = ModularWorkshopManager.ModularWorkshopPartsDictionary[ModularPartsGroupID].PartsDictionary;
                     _partNames = _partDictionary.Select(prefab => prefab.Key).ToArray();
                     _selectedPart = Array.IndexOf(_partNames, ModularWeapon.SubAttachmentPoints.Single(obj => obj.ModularPartsGroupID == ModularPartsGroupID).SelectedModularWeaponPart);
                     break;
@@ -297,7 +299,7 @@ namespace ModularWorkshop
 
         public void UpdateDisplay()
         {
-            if (DisplayNameText != null && !_skinOnlyMode) DisplayNameText.text = ModularWorkshopManager.ModularWorkshopDictionary[ModularPartsGroupID].DisplayName;
+            if (DisplayNameText != null && !_skinOnlyMode) DisplayNameText.text = ModularWorkshopManager.ModularWorkshopPartsDictionary[ModularPartsGroupID].DisplayName;
             else if (DisplayNameText != null && _skinOnlyMode) DisplayNameText.text = "Receiver Skins";
 
             if (_isShowingUI)
@@ -379,7 +381,7 @@ namespace ModularWorkshop
                 else ShowButton.SetActive(false);
                 HideButton.SetActive(false);
 
-                if (!_skinOnlyMode) ShowButtonText.text = ModularWorkshopManager.ModularWorkshopDictionary[ModularPartsGroupID].DisplayName;
+                if (!_skinOnlyMode) ShowButtonText.text = ModularWorkshopManager.ModularWorkshopPartsDictionary[ModularPartsGroupID].DisplayName;
                 else ShowButtonText.text = "Receiver Skin";
             }
         }

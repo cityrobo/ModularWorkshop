@@ -51,9 +51,9 @@ namespace ModularWorkshop
         public Transform PhysContainer;
 
         // Dictionaries
-        public Dictionary<string, GameObject> ModularBarrelPrefabsDictionary => ModularWorkshopManager.ModularWorkshopDictionary[ModularBarrelAttachmentPoint.ModularPartsGroupID].PartsDictionary;
-        public Dictionary<string, GameObject> ModularHandguardPrefabsDictionary => ModularWorkshopManager.ModularWorkshopDictionary[ModularHandguardAttachmentPoint.ModularPartsGroupID].PartsDictionary;
-        public Dictionary<string, GameObject> ModularStockPrefabsDictionary => ModularWorkshopManager.ModularWorkshopDictionary[ModularStockAttachmentPoint.ModularPartsGroupID].PartsDictionary;
+        public Dictionary<string, GameObject> ModularBarrelPrefabsDictionary => ModularWorkshopManager.ModularWorkshopPartsDictionary[ModularBarrelAttachmentPoint.ModularPartsGroupID].PartsDictionary;
+        public Dictionary<string, GameObject> ModularHandguardPrefabsDictionary => ModularWorkshopManager.ModularWorkshopPartsDictionary[ModularHandguardAttachmentPoint.ModularPartsGroupID].PartsDictionary;
+        public Dictionary<string, GameObject> ModularStockPrefabsDictionary => ModularWorkshopManager.ModularWorkshopPartsDictionary[ModularStockAttachmentPoint.ModularPartsGroupID].PartsDictionary;
 
         [HideInInspector]
         public List<ModularWeaponPartsAttachmentPoint> SubAttachmentPoints;
@@ -99,6 +99,9 @@ namespace ModularWorkshop
         public TransformProxy OrigPoseOverride;
         [HideInInspector]
         public TransformProxy OrigPoseOverride_Touch;
+
+        [HideInInspector]
+        public bool IsInTakeAndHold = false;
 
         public Dictionary<string, ModularWeaponPartsAttachmentPoint> AllAttachmentPoints
         {
@@ -174,6 +177,11 @@ namespace ModularWorkshop
 
                 UnityEngine.Object.Destroy(PhysContainer.gameObject);
             }
+
+            if (GM.TNH_Manager != null)
+            {
+                IsInTakeAndHold = true;
+            }
         }
 
         public void AddSubAttachmentPoint(ModularWeaponPartsAttachmentPoint subPoint, FVRFireArm fireArm, Dictionary<string,string> oldSubParts, Dictionary<string, string> oldSkins, string selectedPart)
@@ -216,9 +224,9 @@ namespace ModularWorkshop
         {
             string selectedPart;
             string selectedSkin;
-            if (f.TryGetValue(c_modularBarrelKey, out selectedPart)) ConfigureModularBarrel(selectedPart, fireArm);
-            if (f.TryGetValue(c_modularHandguardKey, out selectedPart)) ConfigureModularHandguard(selectedPart, fireArm);
-            if (f.TryGetValue(c_modularStockKey, out selectedPart)) ConfigureModularStock(selectedPart, fireArm);
+            if (f.TryGetValue(c_modularBarrelKey, out selectedPart)) ConfigureModularBarrel(selectedPart, false);
+            if (f.TryGetValue(c_modularHandguardKey, out selectedPart)) ConfigureModularHandguard(selectedPart, false);
+            if (f.TryGetValue(c_modularStockKey, out selectedPart)) ConfigureModularStock(selectedPart, false);
 
             foreach (var modularWeaponPartsAttachmentPoint in ModularWeaponPartsAttachmentPoints)
             {
@@ -259,11 +267,11 @@ namespace ModularWorkshop
             ModularWorkshopPartsDefinition partDefinition;
             foreach (var modularWeaponPartsAttachmentPoint in ModularWeaponPartsAttachmentPoints)
             {
-                if (ModularWorkshopManager.ModularWorkshopDictionary.TryGetValue(modularWeaponPartsAttachmentPoint.ModularPartsGroupID, out partDefinition) && partDefinition.ModularPrefabs.Count > 0) flagDic.Add("Modul" + modularWeaponPartsAttachmentPoint.ModularPartsGroupID, modularWeaponPartsAttachmentPoint.SelectedModularWeaponPart);
+                if (ModularWorkshopManager.ModularWorkshopPartsDictionary.TryGetValue(modularWeaponPartsAttachmentPoint.ModularPartsGroupID, out partDefinition) && partDefinition.ModularPrefabs.Count > 0) flagDic.Add("Modul" + modularWeaponPartsAttachmentPoint.ModularPartsGroupID, modularWeaponPartsAttachmentPoint.SelectedModularWeaponPart);
             }
             foreach (var subPoint in SubAttachmentPoints)
             {
-                if (ModularWorkshopManager.ModularWorkshopDictionary.TryGetValue(subPoint.ModularPartsGroupID, out partDefinition) && partDefinition.ModularPrefabs.Count > 0) flagDic.Add("Modul" + subPoint.ModularPartsGroupID, subPoint.SelectedModularWeaponPart);
+                if (ModularWorkshopManager.ModularWorkshopPartsDictionary.TryGetValue(subPoint.ModularPartsGroupID, out partDefinition) && partDefinition.ModularPrefabs.Count > 0) flagDic.Add("Modul" + subPoint.ModularPartsGroupID, subPoint.SelectedModularWeaponPart);
             }
 
             flagDic.Add(SkinPath, CurrentSelectedReceiverSkinID);
@@ -288,20 +296,20 @@ namespace ModularWorkshop
             return flagDic;
         }
 
-        public ModularWeaponPart ConfigureModularWeaponPart(ModularWeaponPartsAttachmentPoint modularWeaponPartsAttachmentPoint, string selectedPart, FVRFireArm fireArm, Dictionary<string, string> oldSubParts = null, Dictionary<string, string> oldSkins = null)
+        public ModularWeaponPart ConfigureModularWeaponPart(ModularWeaponPartsAttachmentPoint modularWeaponPartsAttachmentPoint, string selectedPart, bool isRandomized = false, Dictionary<string, string> oldSubParts = null, Dictionary<string, string> oldSkins = null)
         {
-            if (ModularWorkshopManager.ModularWorkshopDictionary.TryGetValue(modularWeaponPartsAttachmentPoint.ModularPartsGroupID, out ModularWorkshopPartsDefinition partsDefinition))
+            if (ModularWorkshopManager.ModularWorkshopPartsDictionary.TryGetValue(modularWeaponPartsAttachmentPoint.ModularPartsGroupID, out ModularWorkshopPartsDefinition partsDefinition))
             {
                 if (!partsDefinition.PartsDictionary.ContainsKey(selectedPart))
                 {
-                    OpenScripts2_BepInExPlugin.LogError(fireArm, $"Parts group \"{modularWeaponPartsAttachmentPoint.ModularPartsGroupID}\" does not contain part with name \"{selectedPart}\"");
+                    OpenScripts2_BepInExPlugin.LogError(FireArm, $"Parts group \"{modularWeaponPartsAttachmentPoint.ModularPartsGroupID}\" does not contain part with name \"{selectedPart}\"");
                     return null;
                 }
             }
-            else if (selectedPart != string.Empty) OpenScripts2_BepInExPlugin.LogError(fireArm, $"Parts group \"{modularWeaponPartsAttachmentPoint.ModularPartsGroupID}\" not found in ModularWorkshopManager dictionary!");
+            else if (selectedPart != string.Empty) OpenScripts2_BepInExPlugin.LogError(FireArm, $"Parts group \"{modularWeaponPartsAttachmentPoint.ModularPartsGroupID}\" not found in ModularWorkshopManager dictionary!");
             else if (selectedPart == string.Empty)
             {
-                OpenScripts2_BepInExPlugin.LogWarning(fireArm, $"Parts group \"{modularWeaponPartsAttachmentPoint.ModularPartsGroupID}\" not found in ModularWorkshopManager dictionary, but current part name also empty. Treating as future attachment point!");
+                OpenScripts2_BepInExPlugin.LogWarning(FireArm, $"Parts group \"{modularWeaponPartsAttachmentPoint.ModularPartsGroupID}\" not found in ModularWorkshopManager dictionary, but current part name also empty. Treating as future attachment point!");
                 return null;
             }
 
@@ -324,13 +332,13 @@ namespace ModularWorkshop
                     oldSubParts.Add(point.ModularPartsGroupID, point.SelectedModularWeaponPart);
                     oldSkins.Add(point.ModularPartsGroupID, point.CurrentSkin);
 
-                    RemoveSubAttachmentPoint(point, fireArm, oldSubParts);
+                    RemoveSubAttachmentPoint(point, FireArm, oldSubParts);
                 }
             }
 
             ModularWeaponPart newPart = modularWeaponPartPrefab.GetComponent<ModularWeaponPart>();
             modularWeaponPartsAttachmentPoint.SelectedModularWeaponPart = selectedPart;
-            UpdateFirearm(oldPart, newPart, fireArm);
+            UpdateFireArm(oldPart, newPart);
 
             UnityEngine.Object.Destroy(modularWeaponPartsAttachmentPoint.ModularPartPoint.gameObject);
             modularWeaponPartsAttachmentPoint.ModularPartPoint = newPart.transform;
@@ -341,22 +349,18 @@ namespace ModularWorkshop
 
             TryApplyOldSkin(modularWeaponPartsAttachmentPoint, selectedPart, oldSkins);
 
-            foreach (var point in newPart.SubAttachmentPoints)
-            {
-                if (oldSubParts.TryGetValue(point.ModularPartsGroupID, out string oldSelectedPart)) AddSubAttachmentPoint(point, fireArm, oldSubParts, oldSkins, oldSelectedPart);
-                else AddSubAttachmentPoint(point, fireArm, oldSubParts, oldSkins, point.SelectedModularWeaponPart);
-            }
+            ConfigureNewSubParts(newPart, oldSubParts, oldSkins, isRandomized);
 
             PartAdded?.Invoke(newPart);
 
             return newPart;
         }
 
-        public ModularBarrel ConfigureModularBarrel(string selectedPart, FVRFireArm fireArm)
+        public ModularBarrel ConfigureModularBarrel(string selectedPart, bool isRandomized)
         {
             if (!ModularBarrelPrefabsDictionary.ContainsKey(selectedPart))
             {
-                OpenScripts2_BepInExPlugin.LogError(fireArm, $"Parts group \"{ModularBarrelAttachmentPoint.ModularPartsGroupID}\" does not contain part with name \"{selectedPart}\"");
+                OpenScripts2_BepInExPlugin.LogError(FireArm, $"Parts group \"{ModularBarrelAttachmentPoint.ModularPartsGroupID}\" does not contain part with name \"{selectedPart}\"");
                 return null;
             }
 
@@ -380,47 +384,47 @@ namespace ModularWorkshop
                     oldSubParts.Add(point.ModularPartsGroupID, point.SelectedModularWeaponPart);
                     oldSkins.Add(point.ModularPartsGroupID, point.CurrentSkin);
 
-                    RemoveSubAttachmentPoint(point, fireArm, oldSubParts);
+                    RemoveSubAttachmentPoint(point, FireArm, oldSubParts);
                 }
                 if (oldPart.HasCustomMuzzleEffects)
                 {
-                    fireArm.DefaultMuzzleEffectSize = OrigMuzzleEffectSize;
-                    fireArm.MuzzleEffects = OrigMuzzleEffects;
+                    FireArm.DefaultMuzzleEffectSize = OrigMuzzleEffectSize;
+                    FireArm.MuzzleEffects = OrigMuzzleEffects;
                 }
                 if (oldPart.HasCustomMechanicalAccuracy)
                 {
-                    fireArm.AccuracyClass = OrigMechanicalAccuracyClass;
-                    fireArm.m_internalMechanicalMOA = AM.GetFireArmMechanicalSpread(fireArm.AccuracyClass);
+                    FireArm.AccuracyClass = OrigMechanicalAccuracyClass;
+                    FireArm.m_internalMechanicalMOA = AM.GetFireArmMechanicalSpread(FireArm.AccuracyClass);
                 }
                 if (oldPart.ChangesFireArmRoundType)
                 {
-                    fireArm.RoundType = OrigRoundType;
-                    foreach (var chamber in fireArm.FChambers)
+                    FireArm.RoundType = OrigRoundType;
+                    foreach (var chamber in FireArm.FChambers)
                     {
                         chamber.RoundType = OrigRoundType;
                     }
                 }
                 if (oldPart.ChangesRecoilProfile)
                 {
-                    fireArm.RecoilProfile = OrigRecoilProfile;
+                    FireArm.RecoilProfile = OrigRecoilProfile;
                     if (OrigRecoilProfileStocked != null)
                     {
-                        fireArm.UsesStockedRecoilProfile = true;
-                        fireArm.RecoilProfileStocked = OrigRecoilProfileStocked;
+                        FireArm.UsesStockedRecoilProfile = true;
+                        FireArm.RecoilProfileStocked = OrigRecoilProfileStocked;
                     }
                 }
                 if (oldPart.ChangesMagazineMountPoint)
                 {
-                    fireArm.MagazineMountPos.GoToTransformProxy(OrigMagMountPos);
-                    fireArm.MagazineEjectPos.GoToTransformProxy(OrigMagEjectPos);
+                    FireArm.MagazineMountPos.GoToTransformProxy(OrigMagMountPos);
+                    FireArm.MagazineEjectPos.GoToTransformProxy(OrigMagEjectPos);
                 }
                 if (oldPart.ChangesMagazineType)
                 {
-                    fireArm.MagazineType = OrigMagazineType;
+                    FireArm.MagazineType = OrigMagazineType;
                 }
                 if (oldPart.ChangesAudioSet)
                 {
-                    fireArm.AudioClipSet = OrigAudioSet;
+                    FireArm.AudioClipSet = OrigAudioSet;
                 }
             }
 
@@ -428,62 +432,62 @@ namespace ModularWorkshop
 
             ModularBarrel newPart = modularBarrelPrefab.GetComponent<ModularBarrel>();
 
-            fireArm.MuzzlePos.GoToTransformProxy(newPart.MuzzlePosProxy);
+            FireArm.MuzzlePos.GoToTransformProxy(newPart.MuzzlePosProxy);
 
-            fireArm.DefaultMuzzleState = newPart.DefaultMuzzleState;
-            fireArm.DefaultMuzzleDamping = newPart.DefaultMuzzleDamping;
+            FireArm.DefaultMuzzleState = newPart.DefaultMuzzleState;
+            FireArm.DefaultMuzzleDamping = newPart.DefaultMuzzleDamping;
 
             if (newPart.HasCustomMuzzleEffects)
             {
                 if (newPart.KeepRevolverCylinderSmoke)
                 {
-                    MuzzleEffect cylinderSmoke = fireArm.MuzzleEffects.Single(obj => obj.Entry == MuzzleEffectEntry.Smoke_RevolverCylinder);
+                    MuzzleEffect cylinderSmoke = FireArm.MuzzleEffects.Single(obj => obj.Entry == MuzzleEffectEntry.Smoke_RevolverCylinder);
 
                     newPart.CustomMuzzleEffects = newPart.CustomMuzzleEffects.Concat(new MuzzleEffect[] { cylinderSmoke }).ToArray();
                 }
-                fireArm.DefaultMuzzleEffectSize = newPart.CustomMuzzleEffectSize;
-                fireArm.MuzzleEffects = newPart.CustomMuzzleEffects;
+                FireArm.DefaultMuzzleEffectSize = newPart.CustomMuzzleEffectSize;
+                FireArm.MuzzleEffects = newPart.CustomMuzzleEffects;
             }
             if (newPart.HasCustomMechanicalAccuracy)
             {
-                fireArm.AccuracyClass = newPart.CustomMechanicalAccuracy;
-                fireArm.m_internalMechanicalMOA = AM.GetFireArmMechanicalSpread(fireArm.AccuracyClass);
+                FireArm.AccuracyClass = newPart.CustomMechanicalAccuracy;
+                FireArm.m_internalMechanicalMOA = AM.GetFireArmMechanicalSpread(FireArm.AccuracyClass);
             }
             if (newPart.ChangesFireArmRoundType)
             {
-                fireArm.RoundType = newPart.CustomRoundType;
-                foreach (var chamber in fireArm.FChambers)
+                FireArm.RoundType = newPart.CustomRoundType;
+                foreach (var chamber in FireArm.FChambers)
                 {
                     chamber.RoundType = newPart.CustomRoundType;
                 }
             }
             if (newPart.ChangesRecoilProfile)
             {
-                fireArm.RecoilProfile = newPart.CustomRecoilProfile;
+                FireArm.RecoilProfile = newPart.CustomRecoilProfile;
                 if (newPart.CustomRecoilProfileStocked != null)
                 {
-                    fireArm.UsesStockedRecoilProfile = true;
-                    fireArm.RecoilProfileStocked = newPart.CustomRecoilProfileStocked;
+                    FireArm.UsesStockedRecoilProfile = true;
+                    FireArm.RecoilProfileStocked = newPart.CustomRecoilProfileStocked;
                 }
-                else fireArm.UsesStockedRecoilProfile = false;
+                else FireArm.UsesStockedRecoilProfile = false;
             }
             if (newPart.ChangesMagazineMountPoint)
             {
-                fireArm.MagazineMountPos.GoToTransformProxy(newPart.MagMountPoint);
-                fireArm.MagazineEjectPos.GoToTransformProxy(newPart.MagEjectPoint);
+                FireArm.MagazineMountPos.GoToTransformProxy(newPart.MagMountPoint);
+                FireArm.MagazineEjectPos.GoToTransformProxy(newPart.MagEjectPoint);
             }
             if (newPart.ChangesMagazineType)
             {
-                fireArm.MagazineType = newPart.CustomMagazineType;
+                FireArm.MagazineType = newPart.CustomMagazineType;
             }
             if (newPart.ChangesAudioSet)
             {
-                fireArm.AudioClipSet = newPart.CustomAudioSet;
+                FireArm.AudioClipSet = newPart.CustomAudioSet;
             }
 
-            fireArm.UpdateCurrentMuzzle();
+            FireArm.UpdateCurrentMuzzle();
 
-            UpdateFirearm(oldPart, newPart, fireArm);
+            UpdateFireArm(oldPart, newPart);
 
             UnityEngine.Object.Destroy(ModularBarrelAttachmentPoint.ModularPartPoint.gameObject);
             ModularBarrelAttachmentPoint.ModularPartPoint = modularBarrelPrefab.transform;
@@ -494,21 +498,17 @@ namespace ModularWorkshop
 
             TryApplyOldSkin(ModularBarrelAttachmentPoint, selectedPart, oldSkins);
 
-            foreach (var point in newPart.SubAttachmentPoints)
-            {
-                if (oldSubParts.TryGetValue(point.ModularPartsGroupID, out string oldSelectedPart) && oldSelectedPart != point.SelectedModularWeaponPart) AddSubAttachmentPoint(point, fireArm, oldSubParts, oldSkins, oldSelectedPart);
-                else AddSubAttachmentPoint(point, fireArm, oldSubParts, oldSkins, point.SelectedModularWeaponPart);
-            }
+            ConfigureNewSubParts(newPart, oldSubParts, oldSkins, isRandomized);
 
             PartAdded?.Invoke(newPart);
 
             return newPart;
         }
-        public ModularHandguard ConfigureModularHandguard(string selectedPart, FVRFireArm fireArm)
+        public ModularHandguard ConfigureModularHandguard(string selectedPart, bool isRandomized)
         {
             if (!ModularHandguardPrefabsDictionary.ContainsKey(selectedPart))
             {
-                OpenScripts2_BepInExPlugin.LogError(fireArm, $"Parts group \"{ModularHandguardAttachmentPoint.ModularPartsGroupID}\" does not contain part with name \"{selectedPart}\"");
+                OpenScripts2_BepInExPlugin.LogError(FireArm, $"Parts group \"{ModularHandguardAttachmentPoint.ModularPartsGroupID}\" does not contain part with name \"{selectedPart}\"");
                 return null;
             }
 
@@ -531,18 +531,18 @@ namespace ModularWorkshop
                     oldSubParts.Add(point.ModularPartsGroupID, point.SelectedModularWeaponPart);
                     oldSkins.Add(point.ModularPartsGroupID, point.CurrentSkin);
 
-                    RemoveSubAttachmentPoint(point, fireArm, oldSubParts);
+                    RemoveSubAttachmentPoint(point, FireArm, oldSubParts);
                 }
             }
 
             ModularHandguardAttachmentPoint.SelectedModularWeaponPart = selectedPart;
             ModularHandguard newPart = modularHandguardPrefab.GetComponent<ModularHandguard>();
 
-            fireArm.Foregrip.gameObject.SetActive(newPart.ActsLikeForeGrip);
+            FireArm.Foregrip.gameObject.SetActive(newPart.ActsLikeForeGrip);
             if (newPart.ActsLikeForeGrip)
             {
-                Collider grabTrigger = fireArm.Foregrip.GetComponent<Collider>();
-                fireArm.Foregrip.transform.GoToTransformProxy(newPart.ForeGripTransformProxy);
+                Collider grabTrigger = FireArm.Foregrip.GetComponent<Collider>();
+                FireArm.Foregrip.transform.GoToTransformProxy(newPart.ForeGripTransformProxy);
                 switch (grabTrigger)
                 {
                     case SphereCollider c:
@@ -568,7 +568,7 @@ namespace ModularWorkshop
 
                                 UnityEngine.Object.Destroy(grabTrigger);
 
-                                fireArm.Foregrip.GetComponent<FVRAlternateGrip>().m_colliders = fireArm.Foregrip.GetComponentsInChildren<Collider>(true);
+                                FireArm.Foregrip.GetComponent<FVRAlternateGrip>().m_colliders = FireArm.Foregrip.GetComponentsInChildren<Collider>(true);
                                 break;
                             case ModularHandguard.EColliderType.Box:
                                 BoxCollider boxCollider = grabTrigger.gameObject.AddComponent<BoxCollider>();
@@ -578,7 +578,7 @@ namespace ModularWorkshop
 
                                 UnityEngine.Object.Destroy(grabTrigger);
 
-                                fireArm.Foregrip.GetComponent<FVRAlternateGrip>().m_colliders = fireArm.Foregrip.GetComponentsInChildren<Collider>(true);
+                                FireArm.Foregrip.GetComponent<FVRAlternateGrip>().m_colliders = FireArm.Foregrip.GetComponentsInChildren<Collider>(true);
                                 break;
                         }
                         break;
@@ -593,7 +593,7 @@ namespace ModularWorkshop
 
                                 UnityEngine.Object.Destroy(grabTrigger);
 
-                                fireArm.Foregrip.GetComponent<FVRAlternateGrip>().m_colliders = fireArm.Foregrip.GetComponentsInChildren<Collider>(true);
+                                FireArm.Foregrip.GetComponent<FVRAlternateGrip>().m_colliders = FireArm.Foregrip.GetComponentsInChildren<Collider>(true);
                                 break;
                             case ModularHandguard.EColliderType.Capsule:
                                 c.center = newPart.TriggerCenter;
@@ -615,7 +615,7 @@ namespace ModularWorkshop
 
                                 UnityEngine.Object.Destroy(grabTrigger);
 
-                                fireArm.Foregrip.GetComponent<FVRAlternateGrip>().m_colliders = fireArm.Foregrip.GetComponentsInChildren<Collider>(true);
+                                FireArm.Foregrip.GetComponent<FVRAlternateGrip>().m_colliders = FireArm.Foregrip.GetComponentsInChildren<Collider>(true);
                                 break;
                         }
                         break;
@@ -630,7 +630,7 @@ namespace ModularWorkshop
 
                                 UnityEngine.Object.Destroy(grabTrigger);
 
-                                fireArm.Foregrip.GetComponent<FVRAlternateGrip>().m_colliders = fireArm.Foregrip.GetComponentsInChildren<Collider>(true);
+                                FireArm.Foregrip.GetComponent<FVRAlternateGrip>().m_colliders = FireArm.Foregrip.GetComponentsInChildren<Collider>(true);
                                 break;
                             case ModularHandguard.EColliderType.Capsule:
                                 CapsuleCollider capsuleCollider = grabTrigger.gameObject.AddComponent<CapsuleCollider>();
@@ -648,7 +648,7 @@ namespace ModularWorkshop
 
                                 UnityEngine.Object.Destroy(grabTrigger);
 
-                                fireArm.Foregrip.GetComponent<FVRAlternateGrip>().m_colliders = fireArm.Foregrip.GetComponentsInChildren<Collider>(true);
+                                FireArm.Foregrip.GetComponent<FVRAlternateGrip>().m_colliders = FireArm.Foregrip.GetComponentsInChildren<Collider>(true);
                                 break;
                             case ModularHandguard.EColliderType.Box:
                                 c.center = newPart.TriggerCenter;
@@ -665,7 +665,7 @@ namespace ModularWorkshop
                                 sphereCollider.radius = newPart.TriggerSize.x;
                                 sphereCollider.isTrigger = true;
 
-                                fireArm.Foregrip.GetComponent<FVRAlternateGrip>().m_colliders = fireArm.Foregrip.GetComponentsInChildren<Collider>(true);
+                                FireArm.Foregrip.GetComponent<FVRAlternateGrip>().m_colliders = FireArm.Foregrip.GetComponentsInChildren<Collider>(true);
                                 break;
                             case ModularHandguard.EColliderType.Capsule:
                                 CapsuleCollider capsuleCollider = grabTrigger.gameObject.AddComponent<CapsuleCollider>();
@@ -681,7 +681,7 @@ namespace ModularWorkshop
                                 };
                                 capsuleCollider.isTrigger = true;
 
-                                fireArm.Foregrip.GetComponent<FVRAlternateGrip>().m_colliders = fireArm.Foregrip.GetComponentsInChildren<Collider>(true);
+                                FireArm.Foregrip.GetComponent<FVRAlternateGrip>().m_colliders = FireArm.Foregrip.GetComponentsInChildren<Collider>(true);
                                 break;
                             case ModularHandguard.EColliderType.Box:
                                 BoxCollider boxCollider = grabTrigger.gameObject.AddComponent<BoxCollider>();
@@ -689,14 +689,14 @@ namespace ModularWorkshop
                                 boxCollider.size = newPart.TriggerSize;
                                 boxCollider.isTrigger = true;
 
-                                fireArm.Foregrip.GetComponent<FVRAlternateGrip>().m_colliders = fireArm.Foregrip.GetComponentsInChildren<Collider>(true);
+                                FireArm.Foregrip.GetComponent<FVRAlternateGrip>().m_colliders = FireArm.Foregrip.GetComponentsInChildren<Collider>(true);
                                 break;
                         }
                         break;
                 }
             }
 
-            UpdateFirearm(oldPart, newPart, fireArm);
+            UpdateFireArm(oldPart, newPart);
 
             UnityEngine.Object.Destroy(ModularHandguardAttachmentPoint.ModularPartPoint.gameObject);
             ModularHandguardAttachmentPoint.ModularPartPoint = modularHandguardPrefab.transform;
@@ -707,22 +707,18 @@ namespace ModularWorkshop
 
             TryApplyOldSkin(ModularHandguardAttachmentPoint, selectedPart, oldSkins);
 
-            foreach (var point in newPart.SubAttachmentPoints)
-            {
-                if (oldSubParts.TryGetValue(point.ModularPartsGroupID, out string oldSelectedPart) && oldSelectedPart != point.SelectedModularWeaponPart) AddSubAttachmentPoint(point, fireArm, oldSubParts, oldSkins, oldSelectedPart);
-                else AddSubAttachmentPoint(point, fireArm, oldSubParts, oldSkins, point.SelectedModularWeaponPart);
-            }
+            ConfigureNewSubParts(newPart, oldSubParts, oldSkins, isRandomized);
 
             PartAdded?.Invoke(newPart);
 
             return newPart;
         }
 
-        public ModularStock ConfigureModularStock(string selectedPart, FVRFireArm fireArm)
+        public ModularStock ConfigureModularStock(string selectedPart, bool isRandomized)
         {
             if (!ModularStockPrefabsDictionary.ContainsKey(selectedPart))
             {
-                OpenScripts2_BepInExPlugin.LogError(fireArm, $"Parts group \"{ModularStockAttachmentPoint.ModularPartsGroupID}\" does not contain part with name \"{selectedPart}\"");
+                OpenScripts2_BepInExPlugin.LogError(FireArm, $"Parts group \"{ModularStockAttachmentPoint.ModularPartsGroupID}\" does not contain part with name \"{selectedPart}\"");
                 return null;
             }
 
@@ -746,7 +742,7 @@ namespace ModularWorkshop
                     oldSubParts.Add(point.ModularPartsGroupID, point.SelectedModularWeaponPart);
                     oldSkins.Add(point.ModularPartsGroupID, point.CurrentSkin);
 
-                    RemoveSubAttachmentPoint(point, fireArm, oldSubParts);
+                    RemoveSubAttachmentPoint(point, FireArm, oldSubParts);
                 }
 
                 if (oldPart.ChangesPosePosition)
@@ -754,44 +750,44 @@ namespace ModularWorkshop
                     FVRViveHand hand = GM.CurrentMovementManager.Hands[0];
                     if (hand.CMode == ControlMode.Oculus || hand.CMode == ControlMode.Index)
                     {
-                        fireArm.PoseOverride.GoToTransformProxy(OrigPoseOverride_Touch);
-                        fireArm.PoseOverride_Touch.GoToTransformProxy(OrigPoseOverride_Touch);
-                        fireArm.m_storedLocalPoseOverrideRot = fireArm.PoseOverride.localRotation;
+                        FireArm.PoseOverride.GoToTransformProxy(OrigPoseOverride_Touch);
+                        FireArm.PoseOverride_Touch.GoToTransformProxy(OrigPoseOverride_Touch);
+                        FireArm.m_storedLocalPoseOverrideRot = FireArm.PoseOverride.localRotation;
                     }
                     else
                     {
-                        fireArm.PoseOverride.GoToTransformProxy(OrigPoseOverride);
-                        fireArm.m_storedLocalPoseOverrideRot = fireArm.PoseOverride.localRotation;
+                        FireArm.PoseOverride.GoToTransformProxy(OrigPoseOverride);
+                        FireArm.m_storedLocalPoseOverrideRot = FireArm.PoseOverride.localRotation;
                     }
                 }
             }
             ModularStockAttachmentPoint.SelectedModularWeaponPart = selectedPart;
             ModularStock newPart = modularStockPrefab.GetComponent<ModularStock>();
 
-            fireArm.HasActiveShoulderStock = newPart.ActsLikeStock;
-            fireArm.StockPos = newPart.StockPoint;
+            FireArm.HasActiveShoulderStock = newPart.ActsLikeStock;
+            FireArm.StockPos = newPart.StockPoint;
 
-            if (newPart.CollapsingStock != null) newPart.CollapsingStock.Firearm = fireArm;
-            if (newPart.FoldingStockX != null) newPart.FoldingStockX.FireArm = fireArm;
-            if (newPart.FoldingStockY != null) newPart.FoldingStockY.FireArm = fireArm;
+            if (newPart.CollapsingStock != null) newPart.CollapsingStock.Firearm = FireArm;
+            if (newPart.FoldingStockX != null) newPart.FoldingStockX.FireArm = FireArm;
+            if (newPart.FoldingStockY != null) newPart.FoldingStockY.FireArm = FireArm;
 
             if (newPart.ChangesPosePosition)
             {
                 FVRViveHand hand = GM.CurrentMovementManager.Hands[0];
                 if (hand.CMode == ControlMode.Oculus || hand.CMode == ControlMode.Index)
                 {
-                    fireArm.PoseOverride.GoToTransformProxy(newPart.CustomPoseOverride_TouchProxy);
-                    fireArm.PoseOverride_Touch.GoToTransformProxy(newPart.CustomPoseOverride_TouchProxy);
-                    fireArm.m_storedLocalPoseOverrideRot = fireArm.PoseOverride.localRotation;
+                    FireArm.PoseOverride.GoToTransformProxy(newPart.CustomPoseOverride_TouchProxy);
+                    FireArm.PoseOverride_Touch.GoToTransformProxy(newPart.CustomPoseOverride_TouchProxy);
+                    FireArm.m_storedLocalPoseOverrideRot = FireArm.PoseOverride.localRotation;
                 }
                 else
                 {
-                    fireArm.PoseOverride.GoToTransformProxy(newPart.CustomPoseOverrideProxy);
-                    fireArm.m_storedLocalPoseOverrideRot = fireArm.PoseOverride.localRotation;
+                    FireArm.PoseOverride.GoToTransformProxy(newPart.CustomPoseOverrideProxy);
+                    FireArm.m_storedLocalPoseOverrideRot = FireArm.PoseOverride.localRotation;
                 }
             }
 
-            UpdateFirearm(oldPart, newPart, fireArm);
+            UpdateFireArm(oldPart, newPart);
 
             UnityEngine.Object.Destroy(ModularStockAttachmentPoint.ModularPartPoint.gameObject);
             ModularStockAttachmentPoint.ModularPartPoint = modularStockPrefab.transform;
@@ -802,11 +798,7 @@ namespace ModularWorkshop
 
             TryApplyOldSkin(ModularStockAttachmentPoint, selectedPart, oldSkins);
 
-            foreach (var point in newPart.SubAttachmentPoints)
-            {
-                if (oldSubParts.TryGetValue(point.ModularPartsGroupID, out string oldSelectedPart) && oldSelectedPart != point.SelectedModularWeaponPart) AddSubAttachmentPoint(point, fireArm, oldSubParts, oldSkins, oldSelectedPart);
-                else AddSubAttachmentPoint(point, fireArm, oldSubParts, oldSkins, point.SelectedModularWeaponPart);
-            }
+            ConfigureNewSubParts(newPart, oldSubParts, oldSkins, isRandomized);
 
             PartAdded?.Invoke(newPart);
 
@@ -834,7 +826,7 @@ namespace ModularWorkshop
             else Debug.LogError($"Skin with name {skinName} not found in SkinsDefinition {ReceiverSkinsDefinition.name}!");
         }
 
-        public void CheckForDefaultReceiverSkin(FVRFireArm fireArm)
+        public void CheckForDefaultReceiverSkin(FVRFireArm FireArm)
         {
             if (CurrentSelectedReceiverSkinID == "Default" && ModularWorkshopManager.ModularWorkshopSkinsDictionary.TryGetValue(SkinPath, out ModularWorkshopSkinsDefinition skinsDefinition))
             {
@@ -905,7 +897,7 @@ namespace ModularWorkshop
             }
             else if (CurrentSelectedReceiverSkinID != "Default" && !ModularWorkshopManager.ModularWorkshopSkinsDictionary.ContainsKey(SkinPath))
             {
-                Debug.LogWarning($"No SkinsDefinition found for receiver skin path {SkinPath}, but part receiver {fireArm.gameObject.name} set to skin name {CurrentSelectedReceiverSkinID}. Naming error?");
+                Debug.LogWarning($"No SkinsDefinition found for receiver skin path {SkinPath}, but part receiver {FireArm.gameObject.name} set to skin name {CurrentSelectedReceiverSkinID}. Naming error?");
             }
         }
         public void GetReceiverMeshRenderers(FVRFireArm fireArm)
@@ -965,7 +957,7 @@ namespace ModularWorkshop
             }
         }
 
-        private void UpdateFirearm(ModularWeaponPart oldPart, ModularWeaponPart newPart, FVRFireArm fireArm)
+        private void UpdateFireArm(ModularWeaponPart oldPart, ModularWeaponPart newPart)
         {
             IPartFireArmRequirement[] partFireArmRequirements;
             if (oldPart != null)
@@ -974,9 +966,9 @@ namespace ModularWorkshop
                 {
                     DetachAllAttachmentsFromMount(mount);
 
-                    fireArm.AttachmentMounts.Remove(mount);
+                    FireArm.AttachmentMounts.Remove(mount);
                 }
-                fireArm.Slots = fireArm.Slots.Where(s => !oldPart.SubQuickBeltSlots.Contains(s)).ToArray();
+                FireArm.Slots = FireArm.Slots.Where(s => !oldPart.SubQuickBeltSlots.Contains(s)).ToArray();
 
                 partFireArmRequirements = oldPart.GetComponents<IPartFireArmRequirement>();
                 foreach (var item in partFireArmRequirements)
@@ -984,23 +976,23 @@ namespace ModularWorkshop
                     item.FireArm = null;
                 }
             }
-            fireArm.AttachmentMounts.AddRange(newPart.AttachmentMounts);
+            FireArm.AttachmentMounts.AddRange(newPart.AttachmentMounts);
             foreach (var mount in newPart.AttachmentMounts)
             {
-                mount.Parent = fireArm;
-                mount.MyObject = fireArm;
+                mount.Parent = FireArm;
+                mount.MyObject = FireArm;
             }
 
-            fireArm.Slots.AddRangeToArray(newPart.SubQuickBeltSlots);
+            FireArm.Slots.AddRangeToArray(newPart.SubQuickBeltSlots);
 
-            fireArm.m_colliders = fireArm.GetComponentsInChildren<Collider>(true);
+            FireArm.m_colliders = FireArm.GetComponentsInChildren<Collider>(true);
 
-            if (fireArm.m_quickbeltSlot != null) fireArm.SetAllCollidersToLayer(false, "NoCol");
+            if (FireArm.m_quickbeltSlot != null) FireArm.SetAllCollidersToLayer(false, "NoCol");
 
             partFireArmRequirements = newPart.GetComponents<IPartFireArmRequirement>();
             foreach (var item in partFireArmRequirements)
             {
-                item.FireArm = fireArm;
+                item.FireArm = FireArm;
             }
         }
 
@@ -1082,6 +1074,21 @@ namespace ModularWorkshop
                 }
             }
         }
+
+        private void ConfigureNewSubParts(ModularWeaponPart newPart, Dictionary<string, string> oldSubParts, Dictionary<string, string> oldSkins, bool isRandomized)
+        {
+            foreach (var subPoint in newPart.SubAttachmentPoints)
+            {
+                if (!isRandomized && oldSubParts.TryGetValue(subPoint.ModularPartsGroupID, out string oldSelectedPart) && oldSelectedPart != subPoint.SelectedModularWeaponPart) AddSubAttachmentPoint(subPoint, FireArm, oldSubParts, oldSkins, oldSelectedPart);
+                else
+                {
+                    string selectedSubPart = isRandomized ? ModularWorkshopManager.ModularWorkshopPartsDictionary[subPoint.ModularPartsGroupID].GetRandomPart() : subPoint.SelectedModularWeaponPart;
+
+                    AddSubAttachmentPoint(subPoint, FireArm, oldSubParts, oldSkins, selectedSubPart);
+                }
+            }
+        }
+
     }
 
     public delegate void PartAdded(ModularWeaponPart part);

@@ -15,10 +15,13 @@ namespace ModularWorkshop
         { 
             set 
             {
-                ReflexSightInterface.FireArm = value;
-                ReflexSightInterface.IsIntegrated = true;
-                ReflexSightInterface.ForceInteractable = true;
-                ReflexSightInterface.OffsetReticle();
+                if (value != null)
+                {
+                    ReflexSightInterface.FireArm = value;
+                    ReflexSightInterface.IsIntegrated = true;
+                    ReflexSightInterface.ForceInteractable = true;
+                    ReflexSightInterface.OffsetReticle();
+                }
             } 
         }
     }

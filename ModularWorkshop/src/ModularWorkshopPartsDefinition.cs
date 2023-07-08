@@ -39,11 +39,35 @@ namespace ModularWorkshop
             }
         }
 
-        public GameObject GetRandomPart()
+        public string GetRandomPart()
         {
-            int randomIndex = UnityEngine.Random.Range(0, ModularPrefabs.Count);
+            List<string> spawnpool = TakeAndHoldSpawnPool;
 
-            return ModularPrefabs[randomIndex];
+            int randomIndex = UnityEngine.Random.Range(0, spawnpool.Count);
+
+            return spawnpool[randomIndex];
+        }
+
+        public List<string> TakeAndHoldSpawnPool
+        {
+            get
+            {
+                List<string> spawnpool = new();
+                foreach (var prefab in ModularPrefabs)
+                {
+                    ModularWeaponPart part = prefab.GetComponent<ModularWeaponPart>();
+                    if (part.RemovedFromSpawnTable) continue;
+                    string Name = part.Name;
+
+                    spawnpool.Add(Name);
+
+                    for (int i = 0; i < part.AdditionalSpawnTableEntries; i++)
+                    {
+                        spawnpool.Add(Name);
+                    }
+                }
+                return spawnpool;
+            }
         }
     }
 }

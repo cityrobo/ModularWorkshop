@@ -49,8 +49,8 @@ namespace ModularWorkshop
         [HideInInspector]
         public TransformProxy MagEjectPoint;
 
-        private ModularBarrel _barrel;
-        private FVRFireArm _firearm;
+        protected ModularBarrel _barrel;
+        protected FVRFireArm _firearm;
 
         public override void Awake()
         {
