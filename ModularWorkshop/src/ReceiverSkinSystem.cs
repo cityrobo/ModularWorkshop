@@ -42,9 +42,8 @@ namespace ModularWorkshop
         
         public void Awake()
         {
-            if (MainObject != null) _existingReceiverSkinSystems.Add(MainObject, this);
-            else _existingReceiverSkinSystems.Add(GetComponent<FVRPhysicalObject>(), this);
-
+            if (MainObject == null) MainObject = GetComponent<FVRPhysicalObject>();
+            _existingReceiverSkinSystems.Add(MainObject, this);
             if (ReceiverMeshRenderers == null || ReceiverMeshRenderers.Length == 0) GetReceiverMeshRenderers();
         }
 
@@ -225,6 +224,16 @@ namespace ModularWorkshop
             }
         }
 
+        [HarmonyPatch(typeof(FVRPhysicalObject), nameof(FVRPhysicalObject.DuplicateFromSpawnLock))]
+        [HarmonyPostfix]
+        public static void DuplicateFromSpawnLockPatch(FVRPhysicalObject __instance, ref GameObject __result)
+        {
+            if (_existingReceiverSkinSystems.TryGetValue(__instance, out ReceiverSkinSystem skinSystem))
+            {
+                __result = skinSystem.DuplicateFromSpawnLock(__result);
+            }
+        }
+
         public void ConfigureFromFlagDic(Dictionary<string, string> f)
         {
             if (SkinPath == null && MainObject != null && MainObject.ObjectWrapper != null) SkinPath = MainObject.ObjectWrapper.ItemID + "/" + "Receiver";
@@ -237,6 +246,15 @@ namespace ModularWorkshop
             flagDic.Add(SkinPath, CurrentSelectedReceiverSkinID);
 
             return flagDic;
+        }
+
+        public GameObject DuplicateFromSpawnLock(GameObject copy)
+        {
+            ReceiverSkinSystem receiverSkinSystem = copy.GetComponentInChildren<ReceiverSkinSystem>();
+
+            receiverSkinSystem.ApplyReceiverSkin(CurrentSelectedReceiverSkinID);
+
+            return copy;
         }
     }
 }
