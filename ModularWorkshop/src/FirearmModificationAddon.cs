@@ -26,6 +26,25 @@ namespace ModularWorkshop
         public UniversalAdvancedMagazineGrabTrigger.E_InputType RequiredMagGrabInput;
         private UniversalAdvancedMagazineGrabTrigger.E_InputType _origMagGrabInputType;
 
+        //public enum FireSelectorModeType
+        //{
+        //    Safe,
+        //    Single,
+        //    Burst,
+        //    FullAuto
+        //}
+
+        //[Serializable]
+        //public class FireSelectorMode
+        //{
+        //    public float SelectorPosition;
+        //    public FireSelectorModeType ModeType;
+        //    public int BurstAmount = 3;
+        //}
+
+        //public bool ChangesFireSelectorModes;
+        //public FireSelectorMode[] FireSelectorModes;
+
         public bool ChangesTriggerThresholds;
         [Tooltip("Also known as TriggerFiringThreshold/TriggerBreakThreshold.")]
         public float TriggerThreshold;
@@ -60,6 +79,16 @@ namespace ModularWorkshop
         public Vector3 BoltHandleRotatingPartNeutralEulers = Vector3.zero;
         public Vector3 BoltHandleRotatingPartRightEulers = Vector3.zero;
 
+        [Header("Handgun Slide")]
+        public Transform TiltinBarrel;
+        public float BarrelUntilted;
+        public float BarrelTilted;
+
+        [Header("Bolt Action Handle Base Rot Offset")]
+        public bool AdjustsBoltActionBoltBaseRotOffset;
+        public float BaseRotOffset;
+        private float _origBaseRotOffset;
+
         [Header("Trigger")]
         public Transform Trigger;
 
@@ -67,9 +96,11 @@ namespace ModularWorkshop
         [Tooltip("GameObject with DustCover components on it. One for ClosedBolt, the other for OpenBolt weapons! Needs both to work on both weapon types. If that is not required, use one or the other.")]
         public GameObject DustCover;
 
-        [Header("AltGrip/CarryHandle")]
+        [Header("AltGrip/CarryHandle/Bipod")]
         public FVRAlternateGrip AltGrip;
         public CarryHandleWaggle CarryHandle;
+        public FVRFireArmBipod Bipod;
+
 
         [Header("Fire Rate Adjustments")]
         public bool AdjustsFireRate;
@@ -91,6 +122,9 @@ namespace ModularWorkshop
 
                     if (BoltReleaseButton != E_ModificationMode.Ignore) ModifyBoltRelease(ModeToBool(BoltReleaseButton));
                     if (MagazineReleaseButton != E_ModificationMode.Ignore) ModifyMagReleaseButton(ModeToBool(MagazineReleaseButton));
+
+                    //if (ChangesFireSelectorModes) ModifyFireControl(true);
+
                     if (ChangesAdvancedMagGrabTriggerMode) ModifyMagGrabTrigger(true);
                     if (ChangesTriggerThresholds) ModifyTriggerThresholds(true);
                     if (Trigger != null) ModifyTrigger(true);
@@ -103,11 +137,15 @@ namespace ModularWorkshop
 
                     if (BoltHandleRotatingPiece != null) ModifyBoltHandleRotatingPiece(true);
 
+                    if (TiltinBarrel != null) ModifyTiltingBarrel(true);
+
+                    if (AdjustsBoltActionBoltBaseRotOffset) ModifyBoltHandleBaseRotOffset(true);
+
                     if (DustCover != null) ModifyDustCover(true);
 
                     if (AltGrip != null) AddAltGrip(true);
-
                     if (CarryHandle != null) AddCarryHandle(true);
+                    if (Bipod != null) AddBipod(true);
 
                     if (AdjustsFireRate) ModifyFireRate(true);
                 }
@@ -127,20 +165,84 @@ namespace ModularWorkshop
 
                     if (BoltHandleRotatingPiece != null) ModifyBoltHandleRotatingPiece(false);
 
+                    if (TiltinBarrel != null) ModifyTiltingBarrel(false);
+
+                    if (AdjustsBoltActionBoltBaseRotOffset) ModifyBoltHandleBaseRotOffset(false);
+
                     if (DustCover != null) ModifyDustCover(false);
 
                     if (AltGrip != null) AddAltGrip(false);
-
                     if (CarryHandle != null) AddCarryHandle(false);
+                    if (Bipod != null) AddBipod(false);
 
                     if (AdjustsFireRate) ModifyFireRate(false);
                 }
             }
         }
 
-        //public void OnDestroy()
+        // Fire Control Group
+        //private void ModifyFireControl(bool activate)
         //{
+        //    if (activate)
+        //    {
+        //        switch (_firearm)
+        //        {
+        //            case ClosedBoltWeapon w:
+        //                List<ClosedBoltWeapon.FireSelectorMode> newClosedBoltSelectorModes = new();
+        //                foreach (var mode in FireSelectorModes)
+        //                {
+        //                    ClosedBoltWeapon.FireSelectorMode fireSelectorMode = new()
+        //                    {
+        //                        SelectorPosition = mode.SelectorPosition,
+        //                        ModeType = MiscUtilities.ParseEnum<ClosedBoltWeapon.FireSelectorModeType>(mode.ModeType.ToString()),
+        //                        BurstAmount = mode.BurstAmount
+        //                    };
+
+        //                    newClosedBoltSelectorModes.Add(fireSelectorMode);
+        //                }
+
+        //                w.FireSelector_Modes = newClosedBoltSelectorModes.ToArray();
+        //                break;
+        //            case Handgun w:
+        //                List<Handgun.FireSelectorMode> newHandgunSelectorModes = new();
+        //                foreach (var mode in FireSelectorModes)
+        //                {
+        //                    Handgun.FireSelectorMode fireSelectorMode = new()
+        //                    {
+        //                        SelectorPosition = mode.SelectorPosition,
+        //                        ModeType = MiscUtilities.ParseEnum<Handgun.FireSelectorModeType>(mode.ModeType.ToString()),
+        //                        BurstAmount = mode.BurstAmount
+        //                    };
+
+        //                    newHandgunSelectorModes.Add(fireSelectorMode);
+        //                }
+
+        //                w.FireSelectorModes = newHandgunSelectorModes.ToArray();
+        //                break;
+        //            case OpenBoltReceiver w:
+        //                List<OpenBoltReceiver.FireSelectorMode> newOpenBoltSelectorModes = new();
+        //                foreach (var mode in FireSelectorModes)
+        //                {
+        //                    OpenBoltReceiver.FireSelectorMode fireSelectorMode = new()
+        //                    {
+        //                        SelectorPosition = mode.SelectorPosition,
+        //                        ModeType = MiscUtilities.ParseEnum<OpenBoltReceiver.FireSelectorModeType>(mode.ModeType.ToString()),
+        //                        BurstAmount = mode.BurstAmount
+        //                    };
+
+        //                    newOpenBoltSelectorModes.Add(fireSelectorMode);
+        //                }
+
+        //                w.FireSelector_Modes = newOpenBoltSelectorModes.ToArray();
+        //                break;
+        //        }
+        //    }
+        //    else
+        //    {
+
+        //    }
         //}
+
 
         // Bolt/Slide
         private void ModifyBoltRelease(bool mode)
@@ -487,7 +589,6 @@ namespace ModularWorkshop
             }
         }
 
-
         // Bolt Rotating Piece
         private void ModifyBoltRotatingPiece(bool activate)
         {
@@ -581,6 +682,58 @@ namespace ModularWorkshop
             }
         }
 
+        // Tilting Handgun Barrel
+        private void ModifyTiltingBarrel(bool activate)
+        {
+            if (activate)
+            {
+                switch (_firearm)
+                {
+                    case Handgun w:
+                        w.HasTiltingBarrel = true;
+                        w.Barrel = TiltinBarrel;
+                        w.BarrelUntilted = BarrelUntilted;
+                        w.BarrelTilted = BarrelTilted;
+                        break;
+                }
+            }
+            else
+            {
+                switch (_firearm)
+                {
+                    case Handgun w:
+                        w.HasTiltingBarrel = false;
+                        w.Barrel = null;
+                        w.BarrelUntilted = 0f;
+                        w.BarrelTilted = 0f;
+                        break;
+                }
+            }
+        }
+
+        private void ModifyBoltHandleBaseRotOffset(bool activate)
+        {
+            if (activate)
+            {
+                switch (_firearm)
+                {
+                    case BoltActionRifle w:
+                        _origBaseRotOffset = w.BoltHandle.BaseRotOffset;
+                        w.BoltHandle.BaseRotOffset = BaseRotOffset;
+                        break;
+                }
+            }
+            else
+            {
+                switch (_firearm)
+                {
+                    case BoltActionRifle w:
+                        w.BoltHandle.BaseRotOffset = _origBaseRotOffset;
+                        break;
+                }
+            }
+        }
+
         // Dust Cover
         public void ModifyDustCover(bool activate)
         {
@@ -619,7 +772,7 @@ namespace ModularWorkshop
             }
         }
 
-        // Alt Grip / Carry Handle
+        // Alt Grip / Carry Handle / Bipod
         public void AddAltGrip(bool activate)
         {
             if (activate)
@@ -643,6 +796,19 @@ namespace ModularWorkshop
             else
             {
 
+            }
+        }
+
+        public void AddBipod(bool activate)
+        {
+            if (activate)
+            {
+                Bipod.FireArm = _firearm;
+                _firearm.Bipod = Bipod;
+            }
+            else
+            {
+                _firearm.Bipod = null;
             }
         }
 

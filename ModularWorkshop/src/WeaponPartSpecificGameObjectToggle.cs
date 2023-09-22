@@ -57,6 +57,49 @@ namespace ModularWorkshop
                 _modularWeapon.GetModularFVRFireArm.PartAdded -= OnPartAttached;
                 _modularWeapon.GetModularFVRFireArm.PartAdded += OnPartAttached;
             }
+
+            if (_modularWeapon != null)
+            {
+                if (_modularWeapon.AllAttachmentPoints.TryGetValue(ModularPartsGroupID, out ModularWeaponPartsAttachmentPoint point))
+                {
+                    if (SpecificParts.Contains(point.SelectedModularWeaponPart))
+                    {
+                        switch (Mode)
+                        {
+                            case E_Mode.EnableGameObject:
+                                ObjectToToggle.SetActive(true);
+                                break;
+                            case E_Mode.DisableGameObject:
+                                ObjectToToggle.SetActive(false);
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        switch (Mode)
+                        {
+                            case E_Mode.EnableGameObject:
+                                ObjectToToggle.SetActive(false);
+                                break;
+                            case E_Mode.DisableGameObject:
+                                ObjectToToggle.SetActive(true);
+                                break;
+                        }
+                    }
+                }
+                else
+                {
+                    switch (Mode)
+                    {
+                        case E_Mode.EnableGameObject:
+                            ObjectToToggle.SetActive(false);
+                            break;
+                        case E_Mode.DisableGameObject:
+                            ObjectToToggle.SetActive(true);
+                            break;
+                    }
+                }
+            }
         }
 
         public void OnDestroy()
@@ -64,6 +107,16 @@ namespace ModularWorkshop
             if (_modularWeapon != null)
             {
                 _modularWeapon.GetModularFVRFireArm.PartAdded -= OnPartAttached;
+
+                switch (Mode)
+                {
+                    case E_Mode.EnableGameObject:
+                        ObjectToToggle.SetActive(false);
+                        break;
+                    case E_Mode.DisableGameObject:
+                        ObjectToToggle.SetActive(true);
+                        break;
+                }
             }
         }
 

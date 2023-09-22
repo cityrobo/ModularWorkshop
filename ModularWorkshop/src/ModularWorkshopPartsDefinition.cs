@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace ModularWorkshop
@@ -17,6 +16,11 @@ namespace ModularWorkshop
         [Tooltip("Optional Display name. If left empty, the ModularPartsGroupID will be used as a display name instead.")]
         public string DisplayName;
         public List<GameObject> ModularPrefabs;
+
+        [HideInInspector]
+        public bool _usesCategories = false;
+        [HideInInspector]
+        public List<ModularWorkshopCategoryDefinition> _categoryDefinitions = new();
 
         public Dictionary<string, GameObject> PartsDictionary
         {
@@ -32,7 +36,7 @@ namespace ModularWorkshop
                     }
                     catch (ArgumentException)
                     {
-                        Debug.LogWarning($"Part with name {Name} already in parts dictionary! Skipping part!");
+                        Debug.LogWarning($"Part with name {Name} already in parts dictionary \"{name}\" with ModularPartsGroupID {ModularPartsGroupID}! Skipping duplicate part!");
                     }
                 }
                 return keyValuePairs;

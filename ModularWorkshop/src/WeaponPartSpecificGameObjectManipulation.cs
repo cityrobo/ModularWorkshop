@@ -49,6 +49,25 @@ namespace ModularWorkshop
                 _modularWeapon.GetModularFVRFireArm.PartAdded -= OnPartAttached;
                 _modularWeapon.GetModularFVRFireArm.PartAdded += OnPartAttached;
             }
+
+            if (_modularWeapon != null)
+            {
+                if (_modularWeapon.AllAttachmentPoints.TryGetValue(ModularPartsGroupID, out ModularWeaponPartsAttachmentPoint point))
+                {
+                    if (SpecificParts.Contains(point.SelectedModularWeaponPart))
+                    {
+                        foreach (var manipulationDefinition in ManipulationDefinitions) manipulationDefinition.SetLerp(1f);
+                    }
+                    else
+                    {
+                        foreach (var manipulationDefinition in ManipulationDefinitions) manipulationDefinition.SetLerp(0f);
+                    }
+                }
+                else
+                {
+                    foreach (var manipulationDefinition in ManipulationDefinitions) manipulationDefinition.SetLerp(0f);
+                }
+            }
         }
 
         public void OnDestroy()
@@ -56,6 +75,8 @@ namespace ModularWorkshop
             if (_modularWeapon != null)
             {
                 _modularWeapon.GetModularFVRFireArm.PartAdded -= OnPartAttached;
+
+                foreach (var manipulationDefinition in ManipulationDefinitions) manipulationDefinition.SetLerp(0f);
             }
         }
 

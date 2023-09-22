@@ -56,18 +56,18 @@ namespace ModularWorkshop
                     }
                     catch (ArgumentException)
                     {
-                        Debug.LogWarning($"Skin with name {SkinName} already in Skin dictionary! Skipping skin!");
+                        Debug.LogWarning($"Skin with name {SkinName} already in skin dictionary \"{name}\" with SkinPath {ModularPartsGroupID}/{PartName}! Skipping duplicate skin!");
                     }
                 }
                 return keyValuePairs;
             }
         }
 
-        public SkinDefinition GetRandomSkin()
+        public string GetRandomSkin()
         {
             int randomIndex = UnityEngine.Random.Range(0, SkinDefinitions.Count);
 
-            return SkinDefinitions[randomIndex];
+            return SkinDefinitions[randomIndex].ModularSkinID;
         }
     }
 }

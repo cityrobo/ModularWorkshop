@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Serialization;
 using FistVR;
-using Steamworks;
 using OpenScripts2;
-using System.IO;
 using static ModularWorkshop.ModularWorkshopSkinsDefinition;
 
 namespace ModularWorkshop
@@ -15,10 +12,14 @@ namespace ModularWorkshop
     {
         public string ModularPartsGroupID;
         public Transform ModularPartPoint;
+        [HideInInspector]
+        public Vector3 PartPointStartScale = Vector3.zero;
         public Transform ModularPartUIPoint;
         [HideInInspector]
         public TransformProxy ModularPartUIPointProxy;
         public string SelectedModularWeaponPart;
+
+        public bool DisallowTakeAndHoldRandomization = false;
 
         [HideInInspector]
         public bool IsPointDisabled = false;

@@ -7,7 +7,6 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 using OpenScripts2;
-using static RootMotion.FinalIK.IKSolver;
 
 namespace ModularWorkshop
 {
@@ -18,11 +17,14 @@ namespace ModularWorkshop
         public IModularWeapon ModularWeapon;
         [HideInInspector]
         public ReceiverSkinSystem SkinSystem;
+        [HideInInspector]
+        public ModularFVRPhysicalObject ModularPhysicalObject;
 
         public Transform AlignmentDirection;
 
         private IModularWeapon _lastModularWeapon;
         private ReceiverSkinSystem _lastSkinSystem;
+        private ModularFVRPhysicalObject _lastModularPhysicalObject;
 
         private readonly Dictionary<string, GameObject> _UIScreens = new();
 
@@ -31,7 +33,8 @@ namespace ModularWorkshop
             if (QuickBeltSlot.HeldObject != null)
             {
                 ModularWeapon = QuickBeltSlot.HeldObject as IModularWeapon;
-                SkinSystem = QuickBeltSlot.HeldObject.GetComponent<ReceiverSkinSystem>();
+                SkinSystem = QuickBeltSlot.HeldObject.GetComponentInChildren<ReceiverSkinSystem>();
+                ModularPhysicalObject = QuickBeltSlot.HeldObject.GetComponentInChildren<ModularFVRPhysicalObject>();
 
                 if (ModularWeapon != null && _lastModularWeapon != ModularWeapon)
                 {
@@ -149,6 +152,60 @@ namespace ModularWorkshop
                         UI.UpdateDisplay();
                     }
                 }
+                else if (ModularPhysicalObject != null && _lastModularPhysicalObject != ModularPhysicalObject)
+                {
+                    GameObject UIPrefab = ModularPhysicalObject.UIPrefab;
+                    GameObject UIObject;
+                    ModularWorkshopUI UI;
+
+                    // Receiver Skin UI
+                    if (ModularPhysicalObject.ReceiverSkinUIPointProxy != null)
+                    {
+                        UIObject = Instantiate(UIPrefab, ModularPhysicalObject.ReceiverSkinUIPointProxy.position, ModularPhysicalObject.ReceiverSkinUIPointProxy.rotation, ModularPhysicalObject.ReceiverSkinUIPointProxy.parent);
+                        UIObject.transform.localScale = ModularPhysicalObject.ReceiverSkinUIPointProxy.localScale.MultiplyComponentWise(UIObject.transform.localScale);
+                        _UIScreens.Add(ModularPhysicalObject.SkinPath, UIObject);
+                        UI = UIObject.GetComponent<ModularWorkshopUI>();
+                        UI.ModularPhysicalObject = ModularPhysicalObject;
+
+                        UI.SetupReceiverSkinOnlyMode();
+                        UI.UpdateDisplay();
+                    }
+                    // Modular Parts Points UI
+                    foreach (var point in ModularPhysicalObject.ModularWeaponPartsAttachmentPoints)
+                    {
+                        if (!point.IsPointDisabled)
+                        {
+                            UIObject = Instantiate(UIPrefab, point.ModularPartUIPointProxy.position, point.ModularPartUIPointProxy.rotation, point.ModularPartUIPointProxy.parent);
+                            UIObject.transform.localScale = point.ModularPartUIPointProxy.localScale.MultiplyComponentWise(UIObject.transform.localScale);
+                            _UIScreens.Add(point.ModularPartsGroupID, UIObject);
+                            UI = UIObject.GetComponent<ModularWorkshopUI>();
+                            UI.PartType = ModularWorkshopUI.EPartType.MainWeaponGeneralAttachmentPoint;
+                            UI.ModularPhysicalObject = ModularPhysicalObject;
+                            UI.ModularPartsGroupID = point.ModularPartsGroupID;
+
+                            UI.InitializeArrays();
+                            UI.UpdateDisplay();
+                        }
+                    }
+                    // Sub Attachment Points UI
+                    foreach (var subPoint in ModularPhysicalObject.SubAttachmentPoints)
+                    {
+                        if (!subPoint.IsPointDisabled)
+                        {
+                            UIObject = Instantiate(UIPrefab, subPoint.ModularPartUIPointProxy.position, subPoint.ModularPartUIPointProxy.rotation, subPoint.ModularPartUIPointProxy.parent);
+                            UIObject.transform.localScale = subPoint.ModularPartUIPointProxy.localScale.MultiplyComponentWise(UIObject.transform.localScale);
+                            _UIScreens.Add(subPoint.ModularPartsGroupID, UIObject);
+                            UI = UIObject.GetComponent<ModularWorkshopUI>();
+                            UI.PartType = ModularWorkshopUI.EPartType.SubAttachmentPoint;
+                            UI.ModularPhysicalObject = ModularPhysicalObject;
+                            UI.ModularPartsGroupID = subPoint.ModularPartsGroupID;
+
+                            UI.InitializeArrays();
+                            UI.UpdateDisplay();
+                        }
+                    }
+                    ModularPhysicalObject.WorkshopPlatform = this;
+                }
             }
             else if (QuickBeltSlot.HeldObject == null && _lastModularWeapon != null)
             {
@@ -173,9 +230,22 @@ namespace ModularWorkshop
                 _lastSkinSystem = null;
                 SkinSystem = null;
             }
+            else if (QuickBeltSlot.HeldObject == null && _lastModularPhysicalObject != null)
+            {
+                for (int i = 0; i < _UIScreens.Count; i++)
+                {
+                    if (_UIScreens.ElementAt(i).Value != null) Destroy(_UIScreens.ElementAt(i).Value);
+                }
+
+                _UIScreens.Clear();
+                _lastModularPhysicalObject = null;
+                ModularPhysicalObject.WorkshopPlatform = null;
+                ModularPhysicalObject = null;
+            }
 
             _lastModularWeapon = ModularWeapon;
             _lastSkinSystem = SkinSystem;
+            _lastModularPhysicalObject = ModularPhysicalObject;
 
             if (QuickBeltSlot.CurObject != null && AlignmentDirection != null) AlignQBSlot();
         }
@@ -192,14 +262,16 @@ namespace ModularWorkshop
                 newRot = AlignmentDirection.rotation;
             }
 
-            if ( newRot != QuickBeltSlot.PoseOverride.rotation) QuickBeltSlot.PoseOverride.rotation = newRot;
+            if (newRot != QuickBeltSlot.PoseOverride.rotation) QuickBeltSlot.PoseOverride.rotation = newRot;
         }
 
         public void CreateUIForPoint(ModularWeaponPartsAttachmentPoint point, ModularWorkshopUI.EPartType partType = ModularWorkshopUI.EPartType.SubAttachmentPoint)
         {
             if (!_UIScreens.ContainsKey(point.ModularPartsGroupID) && !point.IsPointDisabled)
             {
-                GameObject UIPrefab = ModularWeapon.UIPrefab;
+                GameObject UIPrefab = null;
+                if (ModularWeapon != null) UIPrefab = ModularWeapon.UIPrefab;
+                else if (ModularPhysicalObject != null) UIPrefab = ModularPhysicalObject.UIPrefab;
                 GameObject UIObject;
                 ModularWorkshopUI UI;
                 UIObject = Instantiate(UIPrefab, point.ModularPartUIPointProxy.position, point.ModularPartUIPointProxy.rotation, point.ModularPartUIPointProxy.parent);
@@ -209,6 +281,7 @@ namespace ModularWorkshop
                 UI.PartType = partType;
                 UI.ModularPartsGroupID = point.ModularPartsGroupID;
                 UI.ModularWeapon = ModularWeapon;
+                UI.ModularPhysicalObject = ModularPhysicalObject;
 
                 UI.InitializeArrays();
                 UI.UpdateDisplay();

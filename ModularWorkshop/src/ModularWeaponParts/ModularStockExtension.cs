@@ -48,10 +48,7 @@ namespace ModularWorkshop
         {
             base.EnablePart();
 
-            _stock = transform.root.GetComponentInChildren<ModularStock>();
-            _firearm = transform.root.GetComponentInChildren<FVRFireArm>();
-
-            if (_firearm != null && _stock != null)
+            if (transform.TryGetComponentInParent(out _firearm) && _firearm.TryGetComponentInChildren(out _stock))
             {
                 if (ModifiesStockBehavior)
                 {
@@ -85,10 +82,7 @@ namespace ModularWorkshop
         {
             base.DisablePart();
 
-            _stock = transform.root.GetComponentInChildren<ModularStock>();
-            _firearm = transform.root.GetComponentInChildren<FVRFireArm>();
-
-            if (_firearm != null && _stock != null)
+            if (transform.TryGetComponentInParent(out _firearm) && _firearm.TryGetComponentInChildren(out _stock))
             {
                 ModularFVRFireArm modularFireArm = _firearm.GetComponent<IModularWeapon>().GetModularFVRFireArm;
                 if (ModifiesStockBehavior)
@@ -130,6 +124,11 @@ namespace ModularWorkshop
                         }
                     }
                 }
+            }
+            else
+            {
+                if (_firearm == null) OpenScripts2_BepInExPlugin.LogWarning(this, "Firearm not found! ModularStockExtension disabled!");
+                if (_stock == null) OpenScripts2_BepInExPlugin.LogWarning(this, "ModularStock not found! ModularStockExtension disabled!");
             }
         }
     }

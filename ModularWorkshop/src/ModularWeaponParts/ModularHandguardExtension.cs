@@ -79,9 +79,7 @@ namespace ModularWorkshop
         {
             base.EnablePart();
 
-            _firearm = transform.root.GetComponentInChildren<FVRFireArm>();
-
-            if (_firearm != null)
+            if (transform.TryGetComponentInParent(out _firearm))
             {
                 Vector3 transformedCenterGlobal = ForeGripExtensionTransformProxy.parent.TransformPoint(ForeGripExtensionTransformProxy.localPosition + TriggerCenter.MultiplyComponentWise(ForeGripExtensionTransformProxy.localScale));
                 Vector3 transformedCenterLocal = _firearm.Foregrip.transform.InverseTransformPoint(transformedCenterGlobal);
@@ -118,9 +116,7 @@ namespace ModularWorkshop
         {
             base.DisablePart();
 
-            _firearm = transform.root.GetComponentInChildren<FVRFireArm>();
-
-            if (_firearm != null && _addedCollider != null)
+            if (_addedCollider != null)
             {
                 Destroy(_addedCollider);
             }

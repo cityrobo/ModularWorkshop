@@ -54,14 +54,22 @@ namespace ModularWorkshop
             FVRFireArmAttachmentMount[] mounts = ModularPartsGroupID != string.Empty ? _modularWeapon.AllAttachmentPoints[ModularPartsGroupID].ModularPartPoint.GetComponent<ModularWeaponPart>().AttachmentMounts : _modularWeapon.GetModularFVRFireArm.FireArm.AttachmentMounts.ToArray();
 			if (mounts.Length > 0 || mounts.Length <= MountIndex)
 			{
-				FVRFireArmAttachmentMount AttachmentMount = mounts[MountIndex];
+				FVRFireArmAttachmentMount attachmentMount = mounts[MountIndex];
 				foreach (var spawnedAttachment in _spawnedAttachments)
 				{
-					spawnedAttachment.SetParentage(AttachmentMount.transform);
-					spawnedAttachment.AttachToMount(AttachmentMount, false);
-					if (spawnedAttachment is Suppressor suppressor)
+					if (spawnedAttachment.Type != attachmentMount.Type)
 					{
-						suppressor.AutoMountWell();
+						OpenScripts2_BepInExPlugin.LogWarning(this, $"Incompatible mount type found! Dropping attachment!");
+						spawnedAttachment.transform.SetParent(null);
+					}
+					else
+					{
+						spawnedAttachment.transform.SetParent(attachmentMount.transform);
+						spawnedAttachment.AttachToMount(attachmentMount, false);
+						if (spawnedAttachment is Suppressor suppressor)
+						{
+							suppressor.AutoMountWell();
+						}
 					}
 					yield return null;
 				}
@@ -73,7 +81,7 @@ namespace ModularWorkshop
 
                 foreach (var attachment in _spawnedAttachments)
                 {
-                    attachment.SetParentage(null);
+                    attachment.transform.SetParent(null);
                 }
             }
 

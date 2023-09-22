@@ -77,10 +77,7 @@ namespace ModularWorkshop
         {
             base.EnablePart();
 
-            _barrel = transform.root.GetComponentInChildren<ModularBarrel>();
-            _firearm = transform.root.GetComponentInChildren<FVRFireArm>();
-
-            if (_firearm != null && _barrel != null)
+            if (transform.TryGetComponentInParent(out _firearm) && _firearm.TryGetComponentInChildren(out _barrel))
             {
                 if (ChangesMuzzlePosition)
                 {
@@ -157,8 +154,8 @@ namespace ModularWorkshop
             }
             else
             {
-                if (_firearm == null) OpenScripts2_BepInExPlugin.LogWarning(this, "Firearm not found! ModularStockExtension disabled!");
-                if (_barrel == null) OpenScripts2_BepInExPlugin.LogWarning(this, "ModularBarrel not found! ModularStockExtension disabled!");
+                if (_firearm == null) OpenScripts2_BepInExPlugin.LogWarning(this, "Firearm not found! ModularBarrelExtension disabled!");
+                if (_barrel == null) OpenScripts2_BepInExPlugin.LogWarning(this, "ModularBarrel not found! ModularBarrelExtension disabled!");
             }
         }
 
@@ -166,11 +163,7 @@ namespace ModularWorkshop
         {
             base.DisablePart();
 
-            _barrel = transform.root.GetComponentInChildren<ModularBarrel>();
-            _firearm = transform.root.GetComponentInChildren<FVRFireArm>();
-
-
-            if (_firearm != null && _barrel != null)
+            if (transform.TryGetComponentInParent(out _firearm) && _firearm.TryGetComponentInChildren(out _barrel))
             {
                 ModularFVRFireArm modularFireArm = _firearm.GetComponent<IModularWeapon>().GetModularFVRFireArm;
                 if (ChangesMuzzlePosition)
@@ -302,6 +295,11 @@ namespace ModularWorkshop
                 {
                     _firearm.UpdateCurrentMuzzle();
                 }
+            }
+            else
+            {
+                if (_firearm == null) OpenScripts2_BepInExPlugin.LogWarning(this, "Firearm not found! ModularBarrelExtension couldn't be disabled!");
+                if (_barrel == null) OpenScripts2_BepInExPlugin.LogWarning(this, "ModularBarrel not found! ModularBarrelExtension couldn't be disabled!");
             }
         }
     }

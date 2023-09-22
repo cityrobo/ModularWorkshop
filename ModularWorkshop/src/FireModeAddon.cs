@@ -134,7 +134,7 @@ namespace ModularWorkshop
             {
                 FireModeAddon.FireSelectorModeType.Safe => OpenBoltReceiver.FireSelectorModeType.Safe,
                 FireModeAddon.FireSelectorModeType.Single => OpenBoltReceiver.FireSelectorModeType.Single,
-                //FireModeAddon.FireSelectorModeType.Burst => OpenBoltReceiver.FireSelectorModeType.Burst,
+                FireModeAddon.FireSelectorModeType.Burst => OpenBoltReceiver.FireSelectorModeType.Burst,
                 FireModeAddon.FireSelectorModeType.FullAuto => OpenBoltReceiver.FireSelectorModeType.FullAuto,
                 _ => OpenBoltReceiver.FireSelectorModeType.Safe,
             };

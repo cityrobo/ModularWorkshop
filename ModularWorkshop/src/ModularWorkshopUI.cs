@@ -48,6 +48,8 @@ namespace ModularWorkshop
         public IModularWeapon ModularWeapon;
         [HideInInspector]
         public ReceiverSkinSystem SkinSystem;
+        [HideInInspector]
+        public ModularFVRPhysicalObject ModularPhysicalObject;
 
         public enum EPartType
         {
@@ -109,19 +111,34 @@ namespace ModularWorkshop
 
         //}
 
-        public void PBButton_ApplyPart()
+        public ModularWeaponPart PBButton_ApplyPart()
         {
             string selectedPart = _partNames[_selectedPart];
-            ModularWeaponPart part = PartType switch
+            ModularWeaponPart part = null;
+            if (ModularWeapon != null)
             {
-                EPartType.Barrel => ModularWeapon.ConfigureModularBarrel(selectedPart),
-                EPartType.Handguard => ModularWeapon.ConfigureModularHandguard(selectedPart),
-                EPartType.Stock => ModularWeapon.ConfigureModularStock(selectedPart),
-                EPartType.MainWeaponGeneralAttachmentPoint => ModularWeapon.ConfigureModularWeaponPart(ModularWeapon.ModularWeaponPartsAttachmentPoints.Single(obj => obj.ModularPartsGroupID == ModularPartsGroupID), selectedPart),
-                EPartType.SubAttachmentPoint => ModularWeapon.ConfigureModularWeaponPart(ModularWeapon.SubAttachmentPoints.Single(obj => obj.ModularPartsGroupID == ModularPartsGroupID), selectedPart),
-                _ => null,
-            };
+                part = PartType switch
+                {
+                    EPartType.Barrel => ModularWeapon.ConfigureModularBarrel(selectedPart),
+                    EPartType.Handguard => ModularWeapon.ConfigureModularHandguard(selectedPart),
+                    EPartType.Stock => ModularWeapon.ConfigureModularStock(selectedPart),
+                    EPartType.MainWeaponGeneralAttachmentPoint => ModularWeapon.ConfigureModularWeaponPart(ModularWeapon.ModularWeaponPartsAttachmentPoints.Single(obj => obj.ModularPartsGroupID == ModularPartsGroupID), selectedPart),
+                    EPartType.SubAttachmentPoint => ModularWeapon.ConfigureModularWeaponPart(ModularWeapon.SubAttachmentPoints.Single(obj => obj.ModularPartsGroupID == ModularPartsGroupID), selectedPart),
+                    _ => null,
+                };
+            }
+            else if (ModularPhysicalObject != null) 
+            {
+                part = PartType switch
+                {
+                    EPartType.MainWeaponGeneralAttachmentPoint => ModularPhysicalObject.ConfigureModularWeaponPart(ModularPhysicalObject.ModularWeaponPartsAttachmentPoints.Single(obj => obj.ModularPartsGroupID == ModularPartsGroupID), selectedPart),
+                    EPartType.SubAttachmentPoint => ModularPhysicalObject.ConfigureModularWeaponPart(ModularPhysicalObject.SubAttachmentPoints.Single(obj => obj.ModularPartsGroupID == ModularPartsGroupID), selectedPart),
+                    _ => null,
+                };
+            }
+
             SM.PlayCoreSound(FVRPooledAudioType.Generic, ApplySound, transform.position);
+            return part;
         }
 
         public void PButton_ShowUI()
@@ -184,7 +201,9 @@ namespace ModularWorkshop
             _skinNames = _skinDictionary.Keys.ToArray();
             _skinSprites = _skinDictionary.Values.Select(s => s.Icon).ToArray();
             _skinDisplayNames = _skinDictionary.Values.Select(s => s.DisplayName).ToArray();
-            string skinName = ModularWeapon.AllAttachmentPoints[ModularPartsGroupID].CurrentSkin;
+            string skinName = string.Empty;
+            if (ModularWeapon != null) skinName = ModularWeapon.AllAttachmentPoints[ModularPartsGroupID].CurrentSkin;
+            else if (ModularPhysicalObject != null) skinName = ModularPhysicalObject.AllAttachmentPoints[ModularPartsGroupID].CurrentSkin;
             _selectedSkin = Array.IndexOf(_skinNames, skinName);
             _skinPageIndex = Mathf.FloorToInt(_selectedSkin / PartButtons.Length);
             _selectedButton = _selectedSkin - _skinPageIndex * PartButtons.Length;
@@ -202,8 +221,10 @@ namespace ModularWorkshop
 
         public void PBButton_ApplySkin()
         {
-            if (!_receiverSkinMode) ModularWeapon.ApplySkin(ModularPartsGroupID, _skinNames[_selectedSkin]);
-            else if (_receiverSkinMode && !_receiverSkinSystemMode) ModularWeapon.GetModularFVRFireArm.ApplyReceiverSkin(_skinNames[_selectedSkin]);
+            if (!_receiverSkinMode && ModularWeapon != null) ModularWeapon.ApplySkin(ModularPartsGroupID, _skinNames[_selectedSkin]);
+            else if (_receiverSkinMode && !_receiverSkinSystemMode && ModularWeapon != null) ModularWeapon.GetModularFVRFireArm.ApplyReceiverSkin(_skinNames[_selectedSkin]);
+            if (!_receiverSkinMode && ModularPhysicalObject != null) ModularPhysicalObject.ApplySkin(ModularPartsGroupID, _skinNames[_selectedSkin]);
+            else if (_receiverSkinMode && !_receiverSkinSystemMode && ModularPhysicalObject != null) ModularPhysicalObject.ApplyReceiverSkin(_skinNames[_selectedSkin]);
             else if (_receiverSkinMode && _receiverSkinSystemMode) SkinSystem.ApplyReceiverSkin(_skinNames[_selectedSkin]);
             SM.PlayCoreSound(FVRPooledAudioType.Generic, ApplySkinSound, transform.position);
         }
@@ -228,14 +249,16 @@ namespace ModularWorkshop
                     _selectedPart = Array.IndexOf(_partNames, ModularWeapon.SelectedModularStock);
                     break;
                 case EPartType.MainWeaponGeneralAttachmentPoint:
-                    _partDictionary = ModularWorkshopManager.ModularWorkshopPartsDictionary[ModularPartsGroupID].PartsDictionary;
+                    _partDictionary = ModularWorkshopManager.ModularWorkshopPartsGroupsDictionary[ModularPartsGroupID].PartsDictionary;
                     _partNames = _partDictionary.Select(prefab => prefab.Key).ToArray();
-                    _selectedPart = Array.IndexOf(_partNames, ModularWeapon.ModularWeaponPartsAttachmentPoints.Single(obj => obj.ModularPartsGroupID == ModularPartsGroupID).SelectedModularWeaponPart);
-                    break;
+                    if (ModularWeapon != null) _selectedPart = Array.IndexOf(_partNames, ModularWeapon.ModularWeaponPartsAttachmentPoints.Single(obj => obj.ModularPartsGroupID == ModularPartsGroupID).SelectedModularWeaponPart);
+                    else if (ModularPhysicalObject != null) _selectedPart = Array.IndexOf(_partNames, ModularPhysicalObject.ModularWeaponPartsAttachmentPoints.Single(obj => obj.ModularPartsGroupID == ModularPartsGroupID).SelectedModularWeaponPart);
+                    break; 
                 case EPartType.SubAttachmentPoint:
-                    _partDictionary = ModularWorkshopManager.ModularWorkshopPartsDictionary[ModularPartsGroupID].PartsDictionary;
+                    _partDictionary = ModularWorkshopManager.ModularWorkshopPartsGroupsDictionary[ModularPartsGroupID].PartsDictionary;
                     _partNames = _partDictionary.Select(prefab => prefab.Key).ToArray();
-                    _selectedPart = Array.IndexOf(_partNames, ModularWeapon.SubAttachmentPoints.Single(obj => obj.ModularPartsGroupID == ModularPartsGroupID).SelectedModularWeaponPart);
+                    if (ModularWeapon != null) _selectedPart = Array.IndexOf(_partNames, ModularWeapon.SubAttachmentPoints.Single(obj => obj.ModularPartsGroupID == ModularPartsGroupID).SelectedModularWeaponPart);
+                    else if (ModularPhysicalObject != null) _selectedPart = Array.IndexOf(_partNames, ModularPhysicalObject.SubAttachmentPoints.Single(obj => obj.ModularPartsGroupID == ModularPartsGroupID).SelectedModularWeaponPart);
                     break;
             }
             _partSprites = _partDictionary.Select(prefab => prefab.Value.GetComponent<ModularWeaponPart>().Icon).ToArray();
@@ -255,7 +278,9 @@ namespace ModularWorkshop
                 _skinNames = _skinDictionary.Keys.ToArray();
                 _skinSprites = _skinDictionary.Values.Select(s => s.Icon).ToArray();
                 _skinDisplayNames = _skinDictionary.Values.Select(s => s.DisplayName).ToArray();
-                string skinName = ModularWeapon.AllAttachmentPoints[ModularPartsGroupID].CurrentSkin;
+                string skinName = string.Empty;
+                if (ModularWeapon != null) skinName = ModularWeapon.AllAttachmentPoints[ModularPartsGroupID].CurrentSkin;
+                else if (ModularPhysicalObject != null) skinName = ModularPhysicalObject.AllAttachmentPoints[ModularPartsGroupID].CurrentSkin;
                 _selectedSkin = Array.IndexOf(_skinNames, skinName);
                 _skinPageIndex = Mathf.FloorToInt(_selectedSkin / PartButtons.Length);
                 _selectedButton = _selectedSkin - _skinPageIndex * PartButtons.Length;
@@ -271,13 +296,16 @@ namespace ModularWorkshop
 
             if (!_receiverSkinSystemMode)
             {
-                string skinPath = ModularWeapon.GetModularFVRFireArm.SkinPath;
-
+                string skinPath = string.Empty;
+                if (ModularWeapon != null) skinPath = ModularWeapon.GetModularFVRFireArm.SkinPath;
+                else if (ModularPhysicalObject != null) skinPath = ModularPhysicalObject.SkinPath;
                 _skinDictionary = ModularWorkshopManager.ModularWorkshopSkinsDictionary[skinPath].SkinDictionary;
                 _skinNames = _skinDictionary.Keys.ToArray();
                 _skinSprites = _skinDictionary.Values.Select(s => s.Icon).ToArray();
                 _skinDisplayNames = _skinDictionary.Values.Select(s => s.DisplayName).ToArray();
-                string skinName = ModularWeapon.GetModularFVRFireArm.CurrentSelectedReceiverSkinID;
+                string skinName = string.Empty;
+                if (ModularWeapon != null) skinName = ModularWeapon.GetModularFVRFireArm.CurrentSelectedReceiverSkinID;
+                else if (ModularPhysicalObject != null) skinName = ModularPhysicalObject.CurrentSelectedReceiverSkinID;
                 _selectedSkin = Array.IndexOf(_skinNames, skinName);
                 _skinPageIndex = Mathf.FloorToInt(_selectedSkin / PartButtons.Length);
                 _selectedButton = _selectedSkin - _skinPageIndex * PartButtons.Length;
@@ -299,7 +327,7 @@ namespace ModularWorkshop
 
         public void UpdateDisplay()
         {
-            if (DisplayNameText != null && !_skinOnlyMode) DisplayNameText.text = ModularWorkshopManager.ModularWorkshopPartsDictionary[ModularPartsGroupID].DisplayName;
+            if (DisplayNameText != null && !_skinOnlyMode) DisplayNameText.text = ModularWorkshopManager.ModularWorkshopPartsGroupsDictionary[ModularPartsGroupID].DisplayName;
             else if (DisplayNameText != null && _skinOnlyMode) DisplayNameText.text = "Receiver Skins";
 
             if (_isShowingUI)
@@ -381,7 +409,7 @@ namespace ModularWorkshop
                 else ShowButton.SetActive(false);
                 HideButton.SetActive(false);
 
-                if (!_skinOnlyMode) ShowButtonText.text = ModularWorkshopManager.ModularWorkshopPartsDictionary[ModularPartsGroupID].DisplayName;
+                if (!_skinOnlyMode) ShowButtonText.text = ModularWorkshopManager.ModularWorkshopPartsGroupsDictionary[ModularPartsGroupID].DisplayName;
                 else ShowButtonText.text = "Receiver Skin";
             }
         }

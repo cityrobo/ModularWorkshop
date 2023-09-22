@@ -72,6 +72,19 @@ namespace ModularWorkshop
             }
         }
 
+        public void AdjustScale(ModularWeaponPartsAttachmentPoint point)
+        {
+            if (point.PartPointStartScale == Vector3.zero) point.PartPointStartScale = point.ModularPartPoint.localScale;
+
+            Vector3 scale = point.PartPointStartScale;
+            transform.localScale = transform.localScale.MultiplyComponentWise(scale);
+
+            foreach (Transform child in _childObjects)
+            {
+                child.localScale = child.localScale.MultiplyComponentWise(scale);
+            }
+        }
+
         public virtual void OnDestroy()
         {
             foreach (Transform child in _childObjects)

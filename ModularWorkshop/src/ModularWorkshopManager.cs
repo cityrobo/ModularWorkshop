@@ -12,12 +12,14 @@ using System.Linq;
 
 namespace ModularWorkshop
 {
-    [BepInPlugin("h3vr.cityrobo.ModularWorkshopManager", "Modular Workshop Manager", "1.0.3")]
+    [BepInPlugin("h3vr.cityrobo.ModularWorkshopManager", "Modular Workshop Manager", "1.1.0")]
     [BepInDependency("h3vr.OpenScripts2")]
     public class ModularWorkshopManager : BaseUnityPlugin
     {
+        public static ConfigEntry<bool> EnableTNHRandomization;
+
         private static readonly List<ModularWorkshopPartsDefinition> s_foundModularPartsDefinitions = new();
-        public static readonly Dictionary<string, ModularWorkshopPartsDefinition> ModularWorkshopPartsDictionary = new();
+        public static readonly Dictionary<string, ModularWorkshopPartsDefinition> ModularWorkshopPartsGroupsDictionary = new();
 
         private static readonly List<ModularWorkshopSkinsDefinition> s_foundModularSkinsDefinitions = new();
         public static readonly Dictionary<string, ModularWorkshopSkinsDefinition> ModularWorkshopSkinsDictionary = new();
@@ -36,6 +38,7 @@ namespace ModularWorkshop
         {
             MaximumNumberOfTries = Config.Bind("Modular Workshop Manager", "Maximum number of tries", 10, "The maximum number of tries (or seconds), the parts manager waits after the last ModularWeaponPartsDefinition has been loaded before it stops loading new definitions.");
             ReloadDatabase = Config.Bind("Modular Workshop Manager", "Reload Database", false, "You can use this from inside the game to reload the database, if needed. Shouldn't be, but hey, I give you the option!");
+            EnableTNHRandomization = Config.Bind("Modular Workshop Manager", "Enable TnH Randomization", true, "You can disable Take & Hold randomization of modular objects here.");
         }
 
         public void Awake()
@@ -49,6 +52,8 @@ namespace ModularWorkshop
             ReloadDatabase.SettingChanged += SettingsChanged;
 
             Harmony.CreateAndPatchAll(typeof(ReceiverSkinSystem));
+            Harmony.CreateAndPatchAll(typeof(ModularFVRPhysicalObject));
+            Harmony.CreateAndPatchAll(typeof(ModularMagazineExtension));
         }
 
         public void OnDestroy()
@@ -74,7 +79,7 @@ namespace ModularWorkshop
         {
             _loadingPartDatabase = true;
             s_foundModularPartsDefinitions.Clear();
-            ModularWorkshopPartsDictionary.Clear();
+            ModularWorkshopPartsGroupsDictionary.Clear();
             while (_numberOfPartsTries < MaximumNumberOfTries.Value)
             {
                 ModularWorkshopPartsDefinition[] partsDefinitions = Resources.FindObjectsOfTypeAll<ModularWorkshopPartsDefinition>();
@@ -87,10 +92,10 @@ namespace ModularWorkshop
 
                         //if (partDefinition.ModularPartsGroupID == null) Logger.LogError($"{partDefinition.name} has null ModularPartsGroupID field!");
 
-                        if (!ModularWorkshopPartsDictionary.TryGetValue(partDefinition.ModularPartsGroupID, out ModularWorkshopPartsDefinition partsDefinitionOld))
+                        if (!ModularWorkshopPartsGroupsDictionary.TryGetValue(partDefinition.ModularPartsGroupID, out ModularWorkshopPartsDefinition partsDefinitionOld))
                         {
                             if (partDefinition.DisplayName == string.Empty) partDefinition.DisplayName = partDefinition.ModularPartsGroupID;
-                            ModularWorkshopPartsDictionary.Add(partDefinition.ModularPartsGroupID, partDefinition);
+                            ModularWorkshopPartsGroupsDictionary.Add(partDefinition.ModularPartsGroupID, partDefinition);
                             Logger.LogInfo($"Loaded ModularWorkshopPartsDefinition {partDefinition.name} with ModularPartsGroupID {partDefinition.ModularPartsGroupID}.");
                         }
                         else
@@ -113,13 +118,13 @@ namespace ModularWorkshop
             }
 
             _loadingPartDatabase = false;
-            Logger.LogInfo($"Finishded loading with {_lastNumberOfPartsDefinitions} ModularWorkshopPartsDefinitions total and {ModularWorkshopPartsDictionary.Count} in Dictionary.");
+            Logger.LogInfo($"Finishded loading with {_lastNumberOfPartsDefinitions} ModularWorkshopPartsDefinitions total and {ModularWorkshopPartsGroupsDictionary.Count} in Dictionary.");
         }
         private IEnumerator UpdateSkinDatabase()
         {
             _loadingSkinDatabase = true;
             s_foundModularPartsDefinitions.Clear();
-            ModularWorkshopPartsDictionary.Clear();
+            ModularWorkshopPartsGroupsDictionary.Clear();
             while (_numberOfSkinTries < MaximumNumberOfTries.Value)
             {
                 ModularWorkshopSkinsDefinition[] skinsDefinitions = Resources.FindObjectsOfTypeAll<ModularWorkshopSkinsDefinition>().Where(d => !d.AutomaticallyCreated).ToArray();
