@@ -12,7 +12,7 @@ using System.Linq;
 
 namespace ModularWorkshop
 {
-    [BepInPlugin("h3vr.cityrobo.ModularWorkshopManager", "Modular Workshop Manager", "1.1.0")]
+    [BepInPlugin("h3vr.cityrobo.ModularWorkshopManager", "Modular Workshop Manager", "1.1.1")]
     [BepInDependency("h3vr.OpenScripts2")]
     public class ModularWorkshopManager : BaseUnityPlugin
     {
@@ -24,15 +24,21 @@ namespace ModularWorkshop
         private static readonly List<ModularWorkshopSkinsDefinition> s_foundModularSkinsDefinitions = new();
         public static readonly Dictionary<string, ModularWorkshopSkinsDefinition> ModularWorkshopSkinsDictionary = new();
 
+        private static readonly List<ModularWorkshopCategoryDefinition> s_foundModularCategoryDefinitions = new();
+        public static readonly Dictionary<string, ModularWorkshopCategoryDefinition> ModularWorkshopCategoryDictionary = new();
+
         public static ConfigEntry<int> MaximumNumberOfTries;
         public static ConfigEntry<bool> ReloadDatabase;
 
         private int _lastNumberOfPartsDefinitions = 0;
         private int _lastNumberOfSkinsDefinitions = 0;
+        private int _lastNumberOfCategoryDefinitions = 0;
         private int _numberOfPartsTries = 0;
         private int _numberOfSkinTries = 0;
+        private int _numberOfCategoryTries = 0;
         private bool _loadingPartDatabase = false;
         private bool _loadingSkinDatabase = false;
+        private bool _loadingCategoryDatabase = false;
 
         public ModularWorkshopManager()
         {
@@ -118,13 +124,14 @@ namespace ModularWorkshop
             }
 
             _loadingPartDatabase = false;
-            Logger.LogInfo($"Finishded loading with {_lastNumberOfPartsDefinitions} ModularWorkshopPartsDefinitions total and {ModularWorkshopPartsGroupsDictionary.Count} in Dictionary.");
+            Logger.LogInfo($"Finished loading with {_lastNumberOfPartsDefinitions} ModularWorkshopPartsDefinitions total and {ModularWorkshopPartsGroupsDictionary.Count} in Dictionary.");
         }
+
         private IEnumerator UpdateSkinDatabase()
         {
             _loadingSkinDatabase = true;
             s_foundModularPartsDefinitions.Clear();
-            ModularWorkshopPartsGroupsDictionary.Clear();
+            ModularWorkshopSkinsDictionary.Clear();
             while (_numberOfSkinTries < MaximumNumberOfTries.Value)
             {
                 ModularWorkshopSkinsDefinition[] skinsDefinitions = Resources.FindObjectsOfTypeAll<ModularWorkshopSkinsDefinition>().Where(d => !d.AutomaticallyCreated).ToArray();
@@ -168,7 +175,59 @@ namespace ModularWorkshop
             }
 
             _loadingSkinDatabase = false;
-            Logger.LogInfo($"Finishded loading with {_lastNumberOfSkinsDefinitions} ModularWorkshopSkinsDefinition total and {ModularWorkshopSkinsDictionary.Values.Where(d=>!d.AutomaticallyCreated).Count()} in Dictionary.");
+            Logger.LogInfo($"Finished loading with {_lastNumberOfSkinsDefinitions} ModularWorkshopSkinsDefinition total and {ModularWorkshopSkinsDictionary.Values.Where(d=>!d.AutomaticallyCreated).Count()} in Dictionary.");
         }
+
+        //private IEnumerator UpdateCategoryDatabase()
+        //{
+        //    _loadingCategoryDatabase = true;
+        //    s_foundModularCategoryDefinitions.Clear();
+        //    ModularWorkshopCategoryDictionary.Clear();
+        //    while (_numberOfSkinTries < MaximumNumberOfTries.Value)
+        //    {
+        //        //ModularWorkshopCategoryDefinition[] skinsDefinitions = Resources.FindObjectsOfTypeAll<ModularWorkshopCategoryDefinition>().Where(d => !d.AutomaticallyCreated).ToArray();
+        //        ModularWorkshopCategoryDefinition[] categoryDefinitions = Resources.FindObjectsOfTypeAll<ModularWorkshopCategoryDefinition>();
+
+        //        foreach (var categoryDefinition in categoryDefinitions)
+        //        {
+        //            if (!s_foundModularCategoryDefinitions.Contains(categoryDefinition))
+        //            {
+        //                s_foundModularCategoryDefinitions.Add(categoryDefinition);
+
+        //                //if (partDefinition.ModularPartsGroupID == null) Logger.LogError($"{partDefinition.name} has null ModularPartsGroupID field!");
+        //                string skinPath = categoryDefinition.ModularPartsGroupID + "/" + categoryDefinition.PartName;
+
+        //                if (ModularWorkshopSkinsDictionary.TryGetValue(skinPath, out ModularWorkshopSkinsDefinition skinsDefinitionOld))
+        //                {
+        //                    skinsDefinitionOld.SkinDefinitions.AddRange(categoryDefinition.SkinDefinitions);
+        //                    Logger.LogInfo($"Added more skins from ModularWorkshopSkinsDefinition {categoryDefinition.name} to ModularSkin {skinPath}.");
+        //                }
+        //                else
+        //                {
+        //                    foreach (var skin in categoryDefinition.SkinDefinitions)
+        //                    {
+        //                        if (skin.DisplayName == string.Empty) skin.DisplayName = skin.ModularSkinID;
+        //                    }
+
+        //                    ModularWorkshopSkinsDictionary.Add(skinPath, categoryDefinition);
+        //                    Logger.LogInfo($"Loaded ModularWorkshopSkinsDefinition {categoryDefinition.name} with ModularSkin {skinPath}.");
+        //                }
+        //            }
+        //        }
+
+        //        if (_lastNumberOfSkinsDefinitions != categoryDefinitions.Length)
+        //        {
+        //            _lastNumberOfSkinsDefinitions = categoryDefinitions.Length;
+        //            _numberOfSkinTries = 0;
+        //            Logger.LogInfo($"Loaded {_lastNumberOfSkinsDefinitions} ModularWorkshopSkinsDefinition.");
+        //        }
+        //        else _numberOfSkinTries++;
+
+        //        yield return new WaitForSeconds(1f);
+        //    }
+
+        //    _loadingSkinDatabase = false;
+        //    Logger.LogInfo($"Finished loading with {_lastNumberOfSkinsDefinitions} ModularWorkshopSkinsDefinition total and {ModularWorkshopSkinsDictionary.Values.Where(d => !d.AutomaticallyCreated).Count()} in Dictionary.");
+        //}
     }
 }

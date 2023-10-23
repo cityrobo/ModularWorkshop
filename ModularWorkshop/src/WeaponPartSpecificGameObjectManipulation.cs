@@ -80,7 +80,7 @@ namespace ModularWorkshop
             }
         }
 
-        private void OnPartAttached(ModularWeaponPart part)
+        private void OnPartAttached(ModularWeaponPartsAttachmentPoint _, ModularWeaponPart part)
         {
             if (_modularWeapon.AllAttachmentPoints.TryGetValue(ModularPartsGroupID, out ModularWeaponPartsAttachmentPoint point))
             {

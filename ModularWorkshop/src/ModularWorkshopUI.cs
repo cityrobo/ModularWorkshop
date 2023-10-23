@@ -157,19 +157,33 @@ namespace ModularWorkshop
 
         public void PBButton_Next()
         {
-            if (!_isShowingSkins) _pageIndex++;
-            else _skinPageIndex++;
-            //_selectedButton--;
-            _selectedButton = _selectedPart - _pageIndex * PartButtons.Length;
+            if (!_isShowingSkins)
+            {
+                _pageIndex++;
+                _selectedButton = _selectedPart - _pageIndex * PartButtons.Length;
+            }
+            else
+            {
+                _skinPageIndex++;
+                _selectedButton = _selectedSkin - _skinPageIndex * PartButtons.Length;
+            }
+            
             UpdateDisplay();
             Beep();
         }
         public void PBButton_Previous()
         {
-            if (!_isShowingSkins) _pageIndex--;
-            else _skinPageIndex--;
-            //_selectedButton++;
-            _selectedButton = _selectedPart - _pageIndex * PartButtons.Length;
+            if (!_isShowingSkins)
+            {
+                _pageIndex--;
+                _selectedButton = _selectedPart - _pageIndex * PartButtons.Length;
+            }
+            else
+            {
+                _skinPageIndex--;
+                _selectedButton = _selectedSkin - _skinPageIndex * PartButtons.Length;
+            }
+            
             UpdateDisplay();
             Beep();
         }

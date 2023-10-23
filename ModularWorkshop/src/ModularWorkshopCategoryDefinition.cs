@@ -14,7 +14,7 @@ namespace ModularWorkshop
         public Sprite CategoryIcon;
         public List<string> ModularWeaponPartNames;
 
-        public Dictionary<string, GameObject> PartsDictionary
+        public Dictionary<string, GameObject> CategoryPartsDictionary
         {
             get
             {
@@ -28,7 +28,7 @@ namespace ModularWorkshop
                     }
                     catch (ArgumentException)
                     {
-                        Debug.LogWarning($"Part with name {Name} already in parts dictionary! Skipping part!");
+                        Debug.LogWarning($"Part with name {Name} already in category parts dictionary! Skipping part!");
                     }
                 }
                 return keyValuePairs;

@@ -171,5 +171,11 @@ namespace ModularWorkshop
         {
             ModularFVRFireArm.GetReceiverMeshRenderers(this);
         }
+
+        [ContextMenu("Update Selected Parts")]
+        public void UpdateSelectedParts()
+        {
+            ModularFVRFireArm.UpdateSelectedParts();
+        }
     }
 }

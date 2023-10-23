@@ -212,9 +212,9 @@ namespace ModularWorkshop
 
             if (PhysContainer != null)
             {
-                foreach (Transform child in PhysContainer)
+                while (PhysContainer.childCount != 0)
                 {
-                    child.SetParent(fireArm.transform);
+                    PhysContainer.GetChild(0).SetParent(fireArm.transform);
                 }
 
                 UnityEngine.Object.Destroy(PhysContainer.gameObject);
@@ -273,11 +273,11 @@ namespace ModularWorkshop
 
             foreach (var modularWeaponPartsAttachmentPoint in ModularWeaponPartsAttachmentPoints)
             {
-                if (f.TryGetValue("Modul" + modularWeaponPartsAttachmentPoint.ModularPartsGroupID, out selectedPart)) ConfigureModularWeaponPart(modularWeaponPartsAttachmentPoint, selectedPart);
+                if (!modularWeaponPartsAttachmentPoint.IsPointDisabled && f.TryGetValue("Modul" + modularWeaponPartsAttachmentPoint.ModularPartsGroupID, out selectedPart)) ConfigureModularWeaponPart(modularWeaponPartsAttachmentPoint, selectedPart);
             }
             for (int i = 0; i < SubAttachmentPoints.Count; i++)
             {
-                if (f.TryGetValue("Modul" + SubAttachmentPoints.ElementAt(i).ModularPartsGroupID, out selectedPart)) ConfigureModularWeaponPart(SubAttachmentPoints.ElementAt(i), selectedPart);
+                if (!SubAttachmentPoints[i].IsPointDisabled && f.TryGetValue("Modul" + SubAttachmentPoints.ElementAt(i).ModularPartsGroupID, out selectedPart)) ConfigureModularWeaponPart(SubAttachmentPoints.ElementAt(i), selectedPart);
             }
 
             if (f.TryGetValue(SkinPath, out selectedSkin)) ApplyReceiverSkin(selectedSkin);
@@ -354,9 +354,10 @@ namespace ModularWorkshop
                 OpenScripts2_BepInExPlugin.LogError(FireArm, $"PartsAttachmentPoint Error: Parts group \"{modularWeaponPartsAttachmentPoint.ModularPartsGroupID}\" not found in ModularWorkshopManager dictionary!");
                 return null;
             }
-            else if (selectedPart == string.Empty)
+            else if (selectedPart == string.Empty || modularWeaponPartsAttachmentPoint.SelectedModularWeaponPart == string.Empty)
             {
                 OpenScripts2_BepInExPlugin.LogWarning(FireArm, $"PartsAttachmentPoint Warning: Parts group \"{modularWeaponPartsAttachmentPoint.ModularPartsGroupID}\" not found in ModularWorkshopManager dictionary, but current part name also empty. Treating as future attachment point!");
+                modularWeaponPartsAttachmentPoint.IsPointDisabled = true;
                 return null;
             }
 
@@ -403,7 +404,7 @@ namespace ModularWorkshop
 
             ConfigureNewSubParts(newPart, oldSubParts, oldSkins, isRandomized);
 
-            PartAdded?.Invoke(newPart);
+            PartAdded?.Invoke(modularWeaponPartsAttachmentPoint, newPart);
 
             FireArm.ResetClampCOM();
 
@@ -463,6 +464,7 @@ namespace ModularWorkshop
                     {
                         chamber.RoundType = OrigRoundType;
                     }
+                    FireArm.ObjectWrapper.RoundType = OrigRoundType;
                 }
                 if (oldPart.ChangesRecoilProfile)
                 {
@@ -521,6 +523,7 @@ namespace ModularWorkshop
                 {
                     chamber.RoundType = newPart.CustomRoundType;
                 }
+                FireArm.ObjectWrapper.RoundType = newPart.CustomRoundType;
             }
             if (newPart.ChangesRecoilProfile)
             {
@@ -561,7 +564,7 @@ namespace ModularWorkshop
 
             ConfigureNewSubParts(newPart, oldSubParts, oldSkins, isRandomized);
 
-            PartAdded?.Invoke(newPart);
+            PartAdded?.Invoke(ModularBarrelAttachmentPoint, newPart);
 
             FireArm.ResetClampCOM();
 
@@ -779,7 +782,7 @@ namespace ModularWorkshop
 
             ConfigureNewSubParts(newPart, oldSubParts, oldSkins, isRandomized);
 
-            PartAdded?.Invoke(newPart);
+            PartAdded?.Invoke(ModularHandguardAttachmentPoint, newPart);
 
             FireArm.ResetClampCOM();
 
@@ -879,7 +882,7 @@ namespace ModularWorkshop
 
             ConfigureNewSubParts(newPart, oldSubParts, oldSkins, isRandomized);
 
-            PartAdded?.Invoke(newPart);
+            PartAdded?.Invoke(ModularStockAttachmentPoint, newPart);
 
             FireArm.ResetClampCOM();
 
@@ -1098,7 +1101,7 @@ namespace ModularWorkshop
                 if (AllAttachmentPoints.TryGetValue(alsoOccupiesPointWithModularPartsGroupID, out ModularWeaponPartsAttachmentPoint disabledPoint))
                 {
                     disabledPoint.IsPointDisabled = false;
-                    ConfigureModularWeaponPart(disabledPoint, disabledPoint.SelectedModularWeaponPart, FireArm);
+                    ConfigureModularWeaponPart(disabledPoint, disabledPoint.SelectedModularWeaponPart);
 
                     if (!SubAttachmentPoints.Contains(disabledPoint)) WorkshopPlatform?.CreateUIForPoint(disabledPoint, ModularWorkshopUI.EPartType.MainWeaponGeneralAttachmentPoint);
                     else WorkshopPlatform?.CreateUIForPoint(disabledPoint);
@@ -1194,7 +1197,27 @@ namespace ModularWorkshop
             }
         }
 
+        public void UpdateSelectedParts()
+        {
+            foreach (var point in AllAttachmentPoints.Values)
+            {
+                UpdateSelectedPart(point);
+            }
+        }
+
+        private void UpdateSelectedPart(ModularWeaponPartsAttachmentPoint point)
+        {
+            if (point.ModularPartPoint.TryGetComponentInChildren(out ModularWeaponPart part))
+            {
+                point.SelectedModularWeaponPart = part.Name;
+
+                foreach (var subpoint in part.SubAttachmentPoints)
+                {
+                    UpdateSelectedPart(subpoint);
+                }
+            }
+        }
     }
 
-    public delegate void PartAdded(ModularWeaponPart part);
+    public delegate void PartAdded(ModularWeaponPartsAttachmentPoint point, ModularWeaponPart part);
 }

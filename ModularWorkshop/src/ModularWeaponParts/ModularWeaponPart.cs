@@ -49,9 +49,9 @@ namespace ModularWorkshop
 
             if (PhysContainer != null)
             {
-                foreach (Transform child in PhysContainer)
+                while (PhysContainer.childCount != 0)
                 {
-                    child.SetParent(transform);
+                    PhysContainer.GetChild(0).SetParent(transform);
                 }
 
                 Destroy(PhysContainer.gameObject);

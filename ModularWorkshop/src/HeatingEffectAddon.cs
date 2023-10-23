@@ -24,8 +24,15 @@ namespace ModularWorkshop
                 // Loop through the specified FirearmHeatingEffects and configure them.
                 foreach (var HeatingEffect in FirearmHeatingEffects)
                 {
-                    HeatingEffect.FireArm = value;
-                    HeatingEffect.Reload();
+                    if (HeatingEffect != null)
+                    {
+                        HeatingEffect.FireArm = value;
+                        HeatingEffect.Reload();
+                    }
+                    else
+                    {
+                        OpenScripts2_BepInExPlugin.LogWarning(this, $"FirearmHeatingEffects list contains null entry!");
+                    }
                 }
 
                 // Also, configure any FirearmHeatingEffects attached to this game object.

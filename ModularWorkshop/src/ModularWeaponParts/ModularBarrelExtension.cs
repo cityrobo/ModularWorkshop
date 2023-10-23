@@ -125,6 +125,7 @@ namespace ModularWorkshop
                     {
                         chamber.RoundType = CustomRoundType;
                     }
+                    _firearm.ObjectWrapper.RoundType = CustomRoundType;
                 }
                 if (ChangesRecoilProfile)
                 {
@@ -222,6 +223,7 @@ namespace ModularWorkshop
                         {
                             chamber.RoundType = _barrel.CustomRoundType;
                         }
+                        _firearm.ObjectWrapper.RoundType = _barrel.CustomRoundType;
                     }
                     else
                     {
@@ -230,6 +232,7 @@ namespace ModularWorkshop
                         {
                             chamber.RoundType = modularFireArm.OrigRoundType;
                         }
+                        _firearm.ObjectWrapper.RoundType = modularFireArm.OrigRoundType;
                     }
                 }
                 if (ChangesRecoilProfile)
