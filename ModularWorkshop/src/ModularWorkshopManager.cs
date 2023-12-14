@@ -12,7 +12,7 @@ using System.Linq;
 
 namespace ModularWorkshop
 {
-    [BepInPlugin("h3vr.cityrobo.ModularWorkshopManager", "Modular Workshop Manager", "1.1.1")]
+    [BepInPlugin("h3vr.cityrobo.ModularWorkshopManager", "Modular Workshop Manager", "1.1.2")]
     [BepInDependency("h3vr.OpenScripts2")]
     public class ModularWorkshopManager : BaseUnityPlugin
     {
@@ -60,6 +60,7 @@ namespace ModularWorkshop
             Harmony.CreateAndPatchAll(typeof(ReceiverSkinSystem));
             Harmony.CreateAndPatchAll(typeof(ModularFVRPhysicalObject));
             Harmony.CreateAndPatchAll(typeof(ModularMagazineExtension));
+            Harmony.CreateAndPatchAll(typeof(SnappyTriggerAddon));
         }
 
         public void OnDestroy()

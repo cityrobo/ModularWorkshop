@@ -122,15 +122,30 @@ namespace ModularWorkshop
         public void ConfigureAll()
         {
             string selectedPart;
-            foreach (ModularWeaponPartsAttachmentPoint attachmentPoint in ModularWeaponPartsAttachmentPoints)
+            foreach (ModularWeaponPartsAttachmentPoint modularWeaponPartsAttachmentPoint in ModularWeaponPartsAttachmentPoints)
             {
-                if (attachmentPoint.IsPointDisabled) continue;
+                if (modularWeaponPartsAttachmentPoint.IsPointDisabled) continue;
 
-                if (ModularWorkshopManager.ModularWorkshopPartsGroupsDictionary.TryGetValue(attachmentPoint.ModularPartsGroupID, out ModularWorkshopPartsDefinition prefabs) && prefabs.PartsDictionary.Count > 0)
+                if (ModularWorkshopManager.ModularWorkshopPartsGroupsDictionary.TryGetValue(modularWeaponPartsAttachmentPoint.ModularPartsGroupID, out ModularWorkshopPartsDefinition prefabs) && prefabs.PartsDictionary.Count > 0)
                 {
-                    selectedPart = IsInTakeAndHold && !WasUnvaulted && !attachmentPoint.DisallowTakeAndHoldRandomization ? ModularWorkshopManager.ModularWorkshopPartsGroupsDictionary[attachmentPoint.ModularPartsGroupID].GetRandomPart() : attachmentPoint.SelectedModularWeaponPart;
+                    selectedPart = IsInTakeAndHold && !WasUnvaulted && !modularWeaponPartsAttachmentPoint.DisallowTakeAndHoldRandomization ? ModularWorkshopManager.ModularWorkshopPartsGroupsDictionary[modularWeaponPartsAttachmentPoint.ModularPartsGroupID].GetRandomPart() : modularWeaponPartsAttachmentPoint.SelectedModularWeaponPart;
 
-                    ConfigureModularWeaponPart(attachmentPoint, selectedPart, IsInTakeAndHold);
+                    ConfigureModularWeaponPart(modularWeaponPartsAttachmentPoint, selectedPart, IsInTakeAndHold);
+                }
+                else if (ModularWorkshopManager.ModularWorkshopPartsGroupsDictionary.ContainsKey(modularWeaponPartsAttachmentPoint.ModularPartsGroupID) && prefabs.PartsDictionary.Count == 0)
+                {
+                    OpenScripts2_BepInExPlugin.LogError(this, $"PartsAttachmentPoint Error: Parts group \"{modularWeaponPartsAttachmentPoint.ModularPartsGroupID}\" found in ModularWorkshopManager dictionary, but it is empty!");
+                    modularWeaponPartsAttachmentPoint.IsPointDisabled = true;
+                }
+                else if (!ModularWorkshopManager.ModularWorkshopPartsGroupsDictionary.ContainsKey(modularWeaponPartsAttachmentPoint.ModularPartsGroupID) && modularWeaponPartsAttachmentPoint.UsesExternalParts)
+                {
+                    OpenScripts2_BepInExPlugin.Log(this, $"PartsAttachmentPoint Info: Parts group \"{modularWeaponPartsAttachmentPoint.ModularPartsGroupID}\" disabled due to using external parts and no external parts found.");
+                    modularWeaponPartsAttachmentPoint.IsPointDisabled = true;
+                }
+                else if (!ModularWorkshopManager.ModularWorkshopPartsGroupsDictionary.ContainsKey(modularWeaponPartsAttachmentPoint.ModularPartsGroupID))
+                {
+                    OpenScripts2_BepInExPlugin.LogWarning(this, $"PartsAttachmentPoint Warning: Parts group \"{modularWeaponPartsAttachmentPoint.ModularPartsGroupID}\" not found in ModularWorkshopManager dictionary! Disabling part point!");
+                    modularWeaponPartsAttachmentPoint.IsPointDisabled = true;
                 }
             }
         }
@@ -280,6 +295,12 @@ namespace ModularWorkshop
                     OpenScripts2_BepInExPlugin.LogError(MainObject, $"PartsAttachmentPoint Error: Parts group \"{modularWeaponPartsAttachmentPoint.ModularPartsGroupID}\" does not contain part with name \"{selectedPart}\"");
                     return null;
                 }
+            }
+            else if (selectedPart != string.Empty && modularWeaponPartsAttachmentPoint.UsesExternalParts)
+            {
+                OpenScripts2_BepInExPlugin.Log(this, $"PartsAttachmentPoint Info: Parts group \"{modularWeaponPartsAttachmentPoint.ModularPartsGroupID}\" disabled due to using external parts and no external parts found.");
+                modularWeaponPartsAttachmentPoint.IsPointDisabled = true;
+                return null;
             }
             else if (selectedPart != string.Empty)
             {

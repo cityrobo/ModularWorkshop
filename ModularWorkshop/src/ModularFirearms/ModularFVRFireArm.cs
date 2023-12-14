@@ -7,6 +7,7 @@ using System.Linq;
 using OpenScripts2;
 using HarmonyLib;
 using static ModularWorkshop.ModularWorkshopSkinsDefinition;
+using System.Net;
 
 namespace ModularWorkshop
 {
@@ -104,6 +105,7 @@ namespace ModularWorkshop
         private const string c_modularHandguardKey = "ModulHandguard";
         private const string c_modularStockKey = "ModulStock";
 
+        private const string c_modularChambering = "ModulChamber";
 
         [HideInInspector]
         public FVRFireArm FireArm;
@@ -299,6 +301,16 @@ namespace ModularWorkshop
             FireArm.AttachmentMounts.RemoveAll(mounts.Contains);
             FireArm.AttachmentMounts.AddRange(mounts);
 
+            if (f.TryGetValue(c_modularChambering, out string chamberingString))
+            {
+                FireArmRoundClass chambering = MiscUtilities.ParseEnum<FireArmRoundClass>(chamberingString);
+
+                foreach (var chamber in fireArm.FChambers)
+                {
+                    chamber.Autochamber(chambering);
+                }
+            }
+
             WasUnvaulted = true;
         }
 
@@ -336,6 +348,12 @@ namespace ModularWorkshop
             FireArm.AttachmentMounts.RemoveAll(mounts.Contains);
             FireArm.AttachmentMounts.AddRange(mounts);
 
+            if (FireArm.FChambers[0].IsFull && FireArm.FChambers[0].RoundType != FireArm.ObjectWrapper.RoundType)
+            {
+                flagDic.Add(c_modularChambering, FireArm.FChambers[0].GetRound().RoundClass.ToString());
+                FireArm.FChambers.ForEach(c => c.SetRound(null));
+            }
+
             return flagDic;
         }
 
@@ -348,6 +366,12 @@ namespace ModularWorkshop
                     OpenScripts2_BepInExPlugin.LogError(FireArm, $"PartsAttachmentPoint Error: Parts group \"{modularWeaponPartsAttachmentPoint.ModularPartsGroupID}\" does not contain part with name \"{selectedPart}\"");
                     return null;
                 }
+            }
+            else if (selectedPart != string.Empty && modularWeaponPartsAttachmentPoint.UsesExternalParts)
+            {
+                OpenScripts2_BepInExPlugin.Log(FireArm, $"PartsAttachmentPoint Info: Parts group \"{modularWeaponPartsAttachmentPoint.ModularPartsGroupID}\" disabled due to using external parts and no external parts found.");
+                modularWeaponPartsAttachmentPoint.IsPointDisabled = true;
+                return null;
             }
             else if (selectedPart != string.Empty)
             {
@@ -464,7 +488,7 @@ namespace ModularWorkshop
                     {
                         chamber.RoundType = OrigRoundType;
                     }
-                    FireArm.ObjectWrapper.RoundType = OrigRoundType;
+                    //FireArm.ObjectWrapper.RoundType = OrigRoundType;
                 }
                 if (oldPart.ChangesRecoilProfile)
                 {

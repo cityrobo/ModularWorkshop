@@ -87,8 +87,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="src\FireModeAddon.cs" />
-    <Compile Include="src\InteractionVisualEffectAddon.cs" />
+    <Compile Include="src\PartAddons\FireModeAddon.cs" />
+    <Compile Include="src\PartAddons\BoltAndSlideManipAddon.cs" />
+    <Compile Include="src\PartAddons\SnappyTriggerAddon.cs" />
+    <Compile Include="src\PartAddons\InteractionVisualEffectAddon.cs" />
     <Compile Include="src\ModularFirearms\ModularBreakActionWeapon.cs" />
     <Compile Include="src\ModularFirearms\ModularTubeFedShotgun.cs" />
     <Compile Include="src\ModularWeaponParts\ModularMagazineExtension.cs" />
@@ -100,16 +102,16 @@
     <Compile Include="src\ModularPreattachedAttachments.cs" />
     <Compile Include="src\ModularPreattachedForeignAttachments.cs" />
     <Compile Include="src\ModularWorkshopSkinsDefinition.cs" />
-    <Compile Include="src\FirearmModificationAddon.cs" />
-    <Compile Include="src\ScopeAddon.cs" />
-    <Compile Include="src\ReflexSightAddon.cs" />
+    <Compile Include="src\PartAddons\FirearmModificationAddon.cs" />
+    <Compile Include="src\PartAddons\ScopeAddon.cs" />
+    <Compile Include="src\PartAddons\ReflexSightAddon.cs" />
     <Compile Include="src\ModularFirearms\ModularBoltActionRifle.cs" />
     <Compile Include="src\ModularFirearms\ModularOpenBoltReceiver.cs" />
     <Compile Include="src\ModularFirearms\ModularHandgun.cs" />
     <Compile Include="src\ModularFirearms\ModularFVRFireArm.cs" />
     <Compile Include="src\IPartFireArmRequirement.cs" />
     <Compile Include="src\ModularFirearms\IModularWeapon.cs" />
-    <Compile Include="src\HeatingEffectAddon.cs" />
+    <Compile Include="src\PartAddons\HeatingEffectAddon.cs" />
     <Compile Include="src\ModularWeaponParts\ModularBarrelExtension.cs" />
     <Compile Include="src\ModularWeaponParts\ModularStockExtension.cs" />
     <Compile Include="src\ModularWeaponPartsAttachmentPoint.cs" />

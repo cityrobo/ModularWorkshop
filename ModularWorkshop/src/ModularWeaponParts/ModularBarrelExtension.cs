@@ -223,7 +223,7 @@ namespace ModularWorkshop
                         {
                             chamber.RoundType = _barrel.CustomRoundType;
                         }
-                        _firearm.ObjectWrapper.RoundType = _barrel.CustomRoundType;
+                        //_firearm.ObjectWrapper.RoundType = _barrel.CustomRoundType;
                     }
                     else
                     {

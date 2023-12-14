@@ -18,8 +18,11 @@ namespace ModularWorkshop
         [HideInInspector]
         public TransformProxy ModularPartUIPointProxy;
         public string SelectedModularWeaponPart;
-
+        
         public bool DisallowTakeAndHoldRandomization = false;
+
+        [Tooltip("Check this box if this point is intended to use parts from a different mod only, aka you don't include any parts for this point yourself in your package.")]
+        public bool UsesExternalParts = false;
 
         [HideInInspector]
         public bool IsPointDisabled = false;
