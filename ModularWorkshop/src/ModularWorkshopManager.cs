@@ -9,10 +9,11 @@ using UnityEngine;
 using Valve.VR;
 using HarmonyLib;
 using System.Linq;
+using BepInEx.Logging;
 
 namespace ModularWorkshop
 {
-    [BepInPlugin("h3vr.cityrobo.ModularWorkshopManager", "Modular Workshop Manager", "1.1.2")]
+    [BepInPlugin("h3vr.cityrobo.ModularWorkshopManager", "Modular Workshop Manager", "1.1.4")]
     [BepInDependency("h3vr.OpenScripts2")]
     public class ModularWorkshopManager : BaseUnityPlugin
     {
@@ -29,6 +30,10 @@ namespace ModularWorkshop
 
         public static ConfigEntry<int> MaximumNumberOfTries;
         public static ConfigEntry<bool> ReloadDatabase;
+
+        public static ModularWorkshopManager Instance;
+
+        public ManualLogSource Logging => Logger;
 
         private int _lastNumberOfPartsDefinitions = 0;
         private int _lastNumberOfSkinsDefinitions = 0;
@@ -61,6 +66,8 @@ namespace ModularWorkshop
             Harmony.CreateAndPatchAll(typeof(ModularFVRPhysicalObject));
             Harmony.CreateAndPatchAll(typeof(ModularMagazineExtension));
             Harmony.CreateAndPatchAll(typeof(SnappyTriggerAddon));
+
+            Instance = this;
         }
 
         public void OnDestroy()
@@ -103,12 +110,12 @@ namespace ModularWorkshop
                         {
                             if (partDefinition.DisplayName == string.Empty) partDefinition.DisplayName = partDefinition.ModularPartsGroupID;
                             ModularWorkshopPartsGroupsDictionary.Add(partDefinition.ModularPartsGroupID, partDefinition);
-                            Logger.LogInfo($"Loaded ModularWorkshopPartsDefinition {partDefinition.name} with ModularPartsGroupID {partDefinition.ModularPartsGroupID}.");
+                            Logger.LogInfo($"Loaded ModularWorkshopPartsDefinition \"{partDefinition.name}\" with ModularPartsGroupID \"{partDefinition.ModularPartsGroupID}\".");
                         }
                         else
                         {
                             partsDefinitionOld.ModularPrefabs.AddRange(partDefinition.ModularPrefabs);
-                            Logger.LogInfo($"Added more parts from ModularWorkshopPartsDefinition {partDefinition.name} to ModularPartsGroupID {partDefinition.ModularPartsGroupID}.");
+                            Logger.LogInfo($"Added more parts from ModularWorkshopPartsDefinition \"{partDefinition.name}\" to ModularPartsGroupID \"{partDefinition.ModularPartsGroupID}\".");
                         }
                     }
                 }
@@ -149,7 +156,7 @@ namespace ModularWorkshop
                         if (ModularWorkshopSkinsDictionary.TryGetValue(skinPath, out ModularWorkshopSkinsDefinition skinsDefinitionOld))
                         {
                             skinsDefinitionOld.SkinDefinitions.AddRange(skinDefinition.SkinDefinitions);
-                            Logger.LogInfo($"Added more skins from ModularWorkshopSkinsDefinition {skinDefinition.name} to ModularSkin {skinPath}.");
+                            Logger.LogInfo($"Added more skins from ModularWorkshopSkinsDefinition \"{skinDefinition.name}\" to ModularSkin \"{skinPath}\".");
                         }
                         else
                         {
@@ -159,7 +166,7 @@ namespace ModularWorkshop
                             }
 
                             ModularWorkshopSkinsDictionary.Add(skinPath, skinDefinition);
-                            Logger.LogInfo($"Loaded ModularWorkshopSkinsDefinition {skinDefinition.name} with ModularSkin {skinPath}.");
+                            Logger.LogInfo($"Loaded ModularWorkshopSkinsDefinition \"{skinDefinition.name}\" with ModularSkin \"{skinPath}\".");
                         }
                     }
                 }
@@ -230,5 +237,34 @@ namespace ModularWorkshop
         //    _loadingSkinDatabase = false;
         //    Logger.LogInfo($"Finished loading with {_lastNumberOfSkinsDefinitions} ModularWorkshopSkinsDefinition total and {ModularWorkshopSkinsDictionary.Values.Where(d => !d.AutomaticallyCreated).Count()} in Dictionary.");
         //}
+
+        public static void Log(MonoBehaviour plugin, string message)
+        {
+            Instance.Logging.LogMessage($"{plugin}: {message}");
+        }
+        public static void Log(string message)
+        {
+            Instance.Logging.LogMessage(message);
+        }
+        public static void LogWarning(MonoBehaviour plugin, string message)
+        {
+            Instance.Logging.LogWarning($"{plugin}: {message}");
+        }
+        public static void LogWarning(string message)
+        {
+            Instance.Logging.LogWarning(message);
+        }
+        public static void LogError(MonoBehaviour plugin, string message)
+        {
+            Instance.Logging.LogError($"{plugin}: {message}");
+        }
+        public static void LogError(string message)
+        {
+            Instance.Logging.LogError(message);
+        }
+        public static void LogException(MonoBehaviour plugin, Exception e)
+        {
+            Instance.Logging.LogError($"{plugin}: {e.Message}");
+        }
     }
 }

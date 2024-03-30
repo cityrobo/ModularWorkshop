@@ -102,7 +102,7 @@ namespace ModularWorkshop
             }
             else
             {
-                // OpenScripts2_BepInExPlugin.LogError(this, $"PartsAttachmentPoint Error: Parts group \"{ModularFVRFireArm.ModularBarrelAttachmentPoint.ModularPartsGroupID}\" does not contain part with name \"{selectedPart}\"");
+                // ModularWorkshopManager.LogError(this, $"PartsAttachmentPoint Error: Parts group \"{ModularFVRFireArm.ModularBarrelAttachmentPoint.ModularPartsGroupID}\" does not contain part with name \"{selectedPart}\"");
             }
             if (ModularHandguardPartsID != string.Empty)
             {

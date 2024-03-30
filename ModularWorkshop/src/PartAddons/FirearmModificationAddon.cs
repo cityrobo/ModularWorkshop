@@ -61,6 +61,9 @@ namespace ModularWorkshop
         [Header("Magazine Release")]
         [Tooltip("Affects the cylinder release lever on revolvers")]
         public Transform MagazineRelease;
+        [Tooltip("For UniversalAdvancedMagazineGrabTrigger")]
+        public Transform SecondaryMagazineRelease;
+        private Transform _origSecondaryMagazineRelease;
 
         [Header("Bolt")]
         public Transform BoltRotatingPiece;
@@ -131,6 +134,7 @@ namespace ModularWorkshop
                     if (FireSelector != null) ModifyFireSelector(true);
                     if (FireSelector2 != null) ModifyFireSelector2(true);
                     if (MagazineRelease != null) ModifyMagazineRelease(true);
+                    if (SecondaryMagazineRelease != null) ModifySecondaryMagazineRelease(true);
 
                     if (BoltRotatingPiece != null) ModifyBoltRotatingPiece(true);
                     if (BoltZRotPiece != null) ModifyBoltZRotPiece(true);
@@ -159,6 +163,7 @@ namespace ModularWorkshop
                     if (FireSelector != null) ModifyFireSelector(false);
                     if (FireSelector2 != null) ModifyFireSelector2(false);
                     if (MagazineRelease != null) ModifyMagazineRelease(false);
+                    if (SecondaryMagazineRelease != null) ModifySecondaryMagazineRelease(false);
 
                     if (BoltRotatingPiece != null) ModifyBoltRotatingPiece(false);
                     if (BoltZRotPiece != null) ModifyBoltZRotPiece(false);
@@ -498,6 +503,21 @@ namespace ModularWorkshop
                         w.CylinderReleaseButton = null;
                         break;
                 }
+            }
+        }
+
+        // Magazine Release Object
+        private void ModifySecondaryMagazineRelease(bool activate)
+        {
+            UniversalAdvancedMagazineGrabTrigger grabTrigger = _firearm.GetComponentInChildren<UniversalAdvancedMagazineGrabTrigger>();
+            if (activate)
+            {
+                _origSecondaryMagazineRelease = grabTrigger.SecondaryMagazineRelease;
+                grabTrigger.SecondaryMagazineRelease = SecondaryMagazineRelease;
+            }
+            else
+            {
+                grabTrigger.SecondaryMagazineRelease = _origSecondaryMagazineRelease;
             }
         }
 

@@ -59,7 +59,7 @@ namespace ModularWorkshop
 				{
 					if (spawnedAttachment.Type != attachmentMount.Type)
 					{
-						OpenScripts2_BepInExPlugin.LogWarning(this, $"Incompatible mount type found! Dropping attachment!");
+						ModularWorkshopManager.LogWarning(this, $"Incompatible mount type found! Dropping attachment!");
 						spawnedAttachment.transform.SetParent(null);
 					}
 					else
@@ -76,8 +76,8 @@ namespace ModularWorkshop
 			}
             else
             {
-                if (ModularPartsGroupID == string.Empty) OpenScripts2_BepInExPlugin.LogWarning(this, $"No mounts on Modular Weapon found! Dropping attachment!");
-                else OpenScripts2_BepInExPlugin.LogWarning(this, $"No mounts on Modular Weapon Part on point \"{ModularPartsGroupID}\" found! Dropping Attachment!");
+                if (ModularPartsGroupID == string.Empty) ModularWorkshopManager.LogWarning(this, $"No mounts on Modular Weapon found! Dropping attachment!");
+                else ModularWorkshopManager.LogWarning(this, $"No mounts on Modular Weapon Part on point \"{ModularPartsGroupID}\" found! Dropping Attachment!");
 
                 foreach (var attachment in _spawnedAttachments)
                 {

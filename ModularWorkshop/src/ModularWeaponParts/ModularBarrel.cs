@@ -8,7 +8,7 @@ namespace ModularWorkshop
 {
     public class ModularBarrel : ModularWeaponPart
     {
-        [Header("Default Barrel Parameters")]
+        [Header("Barrel Config")]
         public Transform MuzzlePosition;
         [HideInInspector]
         public TransformProxy MuzzlePosProxy;

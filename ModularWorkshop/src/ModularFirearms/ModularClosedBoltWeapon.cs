@@ -124,17 +124,17 @@ namespace ModularWorkshop
                 }
                 else if (ModularWorkshopManager.ModularWorkshopPartsGroupsDictionary.ContainsKey(attachmentPoint.ModularPartsGroupID) && prefabs.PartsDictionary.Count == 0)
                 {
-                    OpenScripts2_BepInExPlugin.LogError(this, $"PartsAttachmentPoint Error: Parts group \"{attachmentPoint.ModularPartsGroupID}\" found in ModularWorkshopManager dictionary, but it is empty!");
+                    ModularWorkshopManager.LogError(this, $"PartsAttachmentPoint Error: Parts group \"{attachmentPoint.ModularPartsGroupID}\" found in ModularWorkshopManager dictionary, but it is empty!");
                     attachmentPoint.IsPointDisabled = true;
                 }
                 else if (!ModularWorkshopManager.ModularWorkshopPartsGroupsDictionary.ContainsKey(attachmentPoint.ModularPartsGroupID) && attachmentPoint.UsesExternalParts)
                 {
-                    OpenScripts2_BepInExPlugin.Log(this, $"PartsAttachmentPoint Info: Parts group \"{attachmentPoint.ModularPartsGroupID}\" disabled due to using external parts and no external parts found.");
+                    ModularWorkshopManager.Log(this, $"PartsAttachmentPoint Info: Parts group \"{attachmentPoint.ModularPartsGroupID}\" disabled due to using external parts and no external parts found.");
                     attachmentPoint.IsPointDisabled = true;
                 }
                 else if (!ModularWorkshopManager.ModularWorkshopPartsGroupsDictionary.ContainsKey(attachmentPoint.ModularPartsGroupID))
                 {
-                    OpenScripts2_BepInExPlugin.LogWarning(this, $"PartsAttachmentPoint Warning: Parts group \"{attachmentPoint.ModularPartsGroupID}\" not found in ModularWorkshopManager dictionary! Disabling part point!");
+                    ModularWorkshopManager.LogWarning(this, $"PartsAttachmentPoint Warning: Parts group \"{attachmentPoint.ModularPartsGroupID}\" not found in ModularWorkshopManager dictionary! Disabling part point!");
                     attachmentPoint.IsPointDisabled = true;
                 }
             }

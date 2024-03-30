@@ -50,7 +50,7 @@ namespace ModularWorkshop
                 if (ModularWorkshopManager.ModularWorkshopSkinsDictionary.TryGetValue(SkinPath, out ModularWorkshopSkinsDefinition skinsDefinition)) return skinsDefinition;
                 else
                 {
-                    OpenScripts2_BepInExPlugin.LogError(MainObject, $"No Receiver SkinsDefinition found for {SkinPath}!");
+                    ModularWorkshopManager.LogError(MainObject, $"No Receiver SkinsDefinition found for {SkinPath}!");
                     return null;
                 }
             }
@@ -70,7 +70,7 @@ namespace ModularWorkshop
                     }
                     catch (Exception)
                     {
-                        OpenScripts2_BepInExPlugin.LogError(MainObject, $"PartPoint for ModularPartsGroupID {point.ModularPartsGroupID} already in AllAttachmentPoints dictionary!");
+                        ModularWorkshopManager.LogError(MainObject, $"PartPoint for ModularPartsGroupID {point.ModularPartsGroupID} already in AllAttachmentPoints dictionary!");
                     }
                 }
                 foreach (var subPoint in SubAttachmentPoints)
@@ -81,7 +81,7 @@ namespace ModularWorkshop
                     }
                     catch (Exception)
                     {
-                        OpenScripts2_BepInExPlugin.LogError(MainObject, $"SubPartPoint for ModularPartsGroupID {subPoint.ModularPartsGroupID} already in AllAttachmentPoints dictionary!");
+                        ModularWorkshopManager.LogError(MainObject, $"SubPartPoint for ModularPartsGroupID {subPoint.ModularPartsGroupID} already in AllAttachmentPoints dictionary!");
                     }
                 }
 
@@ -134,17 +134,17 @@ namespace ModularWorkshop
                 }
                 else if (ModularWorkshopManager.ModularWorkshopPartsGroupsDictionary.ContainsKey(modularWeaponPartsAttachmentPoint.ModularPartsGroupID) && prefabs.PartsDictionary.Count == 0)
                 {
-                    OpenScripts2_BepInExPlugin.LogError(this, $"PartsAttachmentPoint Error: Parts group \"{modularWeaponPartsAttachmentPoint.ModularPartsGroupID}\" found in ModularWorkshopManager dictionary, but it is empty!");
+                    ModularWorkshopManager.LogError(this, $"PartsAttachmentPoint Error: Parts group \"{modularWeaponPartsAttachmentPoint.ModularPartsGroupID}\" found in ModularWorkshopManager dictionary, but it is empty!");
                     modularWeaponPartsAttachmentPoint.IsPointDisabled = true;
                 }
                 else if (!ModularWorkshopManager.ModularWorkshopPartsGroupsDictionary.ContainsKey(modularWeaponPartsAttachmentPoint.ModularPartsGroupID) && modularWeaponPartsAttachmentPoint.UsesExternalParts)
                 {
-                    OpenScripts2_BepInExPlugin.Log(this, $"PartsAttachmentPoint Info: Parts group \"{modularWeaponPartsAttachmentPoint.ModularPartsGroupID}\" disabled due to using external parts and no external parts found.");
+                    ModularWorkshopManager.Log(this, $"PartsAttachmentPoint Info: Parts group \"{modularWeaponPartsAttachmentPoint.ModularPartsGroupID}\" disabled due to using external parts and no external parts found.");
                     modularWeaponPartsAttachmentPoint.IsPointDisabled = true;
                 }
                 else if (!ModularWorkshopManager.ModularWorkshopPartsGroupsDictionary.ContainsKey(modularWeaponPartsAttachmentPoint.ModularPartsGroupID))
                 {
-                    OpenScripts2_BepInExPlugin.LogWarning(this, $"PartsAttachmentPoint Warning: Parts group \"{modularWeaponPartsAttachmentPoint.ModularPartsGroupID}\" not found in ModularWorkshopManager dictionary! Disabling part point!");
+                    ModularWorkshopManager.LogWarning(this, $"PartsAttachmentPoint Warning: Parts group \"{modularWeaponPartsAttachmentPoint.ModularPartsGroupID}\" not found in ModularWorkshopManager dictionary! Disabling part point!");
                     modularWeaponPartsAttachmentPoint.IsPointDisabled = true;
                 }
             }
@@ -171,10 +171,10 @@ namespace ModularWorkshop
                 }
                 catch (Exception)
                 {
-                    Debug.LogError($"Number of DifferentSkinnedMeshPieces in SkinDefinition {skinDefinition.ModularSkinID} does not match number of meshes on Receiver! ({ReceiverMeshRenderers.Length} vs {skinDefinition.DifferentSkinnedMeshPieces.Length})");
+                    ModularWorkshopManager.LogError(this, $"Number of DifferentSkinnedMeshPieces in SkinDefinition \"{skinDefinition.ModularSkinID}\" does not match number of meshes on Receiver! ({ReceiverMeshRenderers.Length} vs {skinDefinition.DifferentSkinnedMeshPieces.Length})");
                 }
             }
-            else Debug.LogError($"Skin with name {skinName} not found in SkinsDefinition {ReceiverSkinsDefinition.name}!");
+            else ModularWorkshopManager.LogError(this, $"Skin with name \"{skinName}\" not found in SkinsDefinition \"{ReceiverSkinsDefinition.name}\"!");
         }
 
         public void CheckForDefaultReceiverSkin(FVRPhysicalObject physicalObject)
@@ -248,7 +248,7 @@ namespace ModularWorkshop
             }
             else if (CurrentSelectedReceiverSkinID != "Default" && !ModularWorkshopManager.ModularWorkshopSkinsDictionary.ContainsKey(SkinPath))
             {
-                Debug.LogWarning($"No SkinsDefinition found for receiver skin path {SkinPath}, but part receiver {physicalObject.gameObject.name} set to skin name {CurrentSelectedReceiverSkinID}. Naming error?");
+                ModularWorkshopManager.LogWarning(this, $"No SkinsDefinition found for receiver skin path \"{SkinPath}\", but part receiver \"{physicalObject.gameObject.name}\" set to skin name \"{CurrentSelectedReceiverSkinID}\". Naming error?");
             }
         }
 
@@ -292,24 +292,24 @@ namespace ModularWorkshop
             {
                 if (!partsDefinition.PartsDictionary.ContainsKey(selectedPart))
                 {
-                    OpenScripts2_BepInExPlugin.LogError(MainObject, $"PartsAttachmentPoint Error: Parts group \"{modularWeaponPartsAttachmentPoint.ModularPartsGroupID}\" does not contain part with name \"{selectedPart}\"");
+                    ModularWorkshopManager.LogError(this, $"PartsAttachmentPoint Error: Parts group \"{modularWeaponPartsAttachmentPoint.ModularPartsGroupID}\" does not contain part with name \"{selectedPart}\"");
                     return null;
                 }
             }
             else if (selectedPart != string.Empty && modularWeaponPartsAttachmentPoint.UsesExternalParts)
             {
-                OpenScripts2_BepInExPlugin.Log(this, $"PartsAttachmentPoint Info: Parts group \"{modularWeaponPartsAttachmentPoint.ModularPartsGroupID}\" disabled due to using external parts and no external parts found.");
+                ModularWorkshopManager.Log(this, $"PartsAttachmentPoint Info: Parts group \"{modularWeaponPartsAttachmentPoint.ModularPartsGroupID}\" disabled due to using external parts and no external parts found.");
                 modularWeaponPartsAttachmentPoint.IsPointDisabled = true;
                 return null;
             }
             else if (selectedPart != string.Empty)
             {
-                OpenScripts2_BepInExPlugin.LogError(MainObject, $"PartsAttachmentPoint Error: Parts group \"{modularWeaponPartsAttachmentPoint.ModularPartsGroupID}\" not found in ModularWorkshopManager dictionary!");
+                ModularWorkshopManager.LogError(this, $"PartsAttachmentPoint Error: Parts group \"{modularWeaponPartsAttachmentPoint.ModularPartsGroupID}\" not found in ModularWorkshopManager dictionary!");
                 return null;
             }
             else if (selectedPart == string.Empty || modularWeaponPartsAttachmentPoint.SelectedModularWeaponPart == string.Empty)
             {
-                OpenScripts2_BepInExPlugin.LogWarning(MainObject, $"PartsAttachmentPoint Warning: Parts group \"{modularWeaponPartsAttachmentPoint.ModularPartsGroupID}\" not found in ModularWorkshopManager dictionary, but current part name also empty. Treating as future attachment point!");
+                ModularWorkshopManager.LogWarning(this, $"PartsAttachmentPoint Warning: Parts group \"{modularWeaponPartsAttachmentPoint.ModularPartsGroupID}\" not found in ModularWorkshopManager dictionary, but current part name also empty. Treating as future attachment point!");
                 modularWeaponPartsAttachmentPoint.IsPointDisabled = true;
                 return null;
             }
@@ -345,7 +345,7 @@ namespace ModularWorkshop
             newPart.AdjustScale(modularWeaponPartsAttachmentPoint);
 
             modularWeaponPartsAttachmentPoint.SelectedModularWeaponPart = selectedPart;
-            UpdateFireArm(oldPart, newPart);
+            UpdateMainObject(oldPart, newPart);
 
             UnityEngine.Object.Destroy(modularWeaponPartsAttachmentPoint.ModularPartPoint.gameObject);
             modularWeaponPartsAttachmentPoint.ModularPartPoint = newPart.transform;
@@ -537,13 +537,13 @@ namespace ModularWorkshop
                         }
                     }
 
-                    UnityEngine.Object.Destroy(pointToDisable.ModularPartPoint.gameObject);
+                    Destroy(pointToDisable.ModularPartPoint.gameObject);
                     pointToDisable.ModularPartPoint = temp.transform;
                 }
             }
         }
 
-        private void UpdateFireArm(ModularWeaponPart oldPart, ModularWeaponPart newPart)
+        private void UpdateMainObject(ModularWeaponPart oldPart, ModularWeaponPart newPart)
         {
             IPartFireArmRequirement[] partFireArmRequirements;
             if (oldPart != null)
@@ -574,6 +574,16 @@ namespace ModularWorkshop
             MainObject.m_colliders = MainObject.GetComponentsInChildren<Collider>(true);
 
             if (MainObject.m_quickbeltSlot != null) MainObject.SetAllCollidersToLayer(false, "NoCol");
+
+            switch (MainObject)
+            {
+                case Handgun w:
+                    w.m_slideCols.Clear();
+                    w.InitSlideCols();
+                    break;
+                default:
+                    break;
+            }
 
             partFireArmRequirements = newPart.GetComponents<IPartFireArmRequirement>();
             foreach (var item in partFireArmRequirements)
@@ -648,7 +658,7 @@ namespace ModularWorkshop
             if (ReceiverSkinUIPoint != null) ReceiverSkinUIPointProxy = new(ReceiverSkinUIPoint, true);
             else
             {
-                GameObject uiPoint = new("temp");
+                GameObject uiPoint = new("UIPoint");
                 uiPoint.transform.SetParent(MainObject.transform);
                 uiPoint.transform.position = MainObject.transform.position + -MainObject.transform.right * 0.1f;
                 uiPoint.transform.rotation = MainObject.transform.rotation * Quaternion.Euler(new Vector3(0f, 90f, 0f));
@@ -663,15 +673,26 @@ namespace ModularWorkshop
         [HarmonyPostfix]
         public static void GetFlagDicPatch(FVRPhysicalObject __instance, ref Dictionary<string, string> __result)
         {
-            if (_existingModularPhysicalObjects.TryGetValue(__instance, out ModularFVRPhysicalObject skinSystem))
+            if (_existingModularPhysicalObjects.TryGetValue(__instance, out ModularFVRPhysicalObject modularPhysicalObject))
             {
-                __result = skinSystem.GetFlagDic(__result);
+                __result = modularPhysicalObject.GetFlagDic(__result);
             }
         }
 
         [HarmonyPatch(typeof(FVRPhysicalObject), nameof(FVRPhysicalObject.ConfigureFromFlagDic))]
         [HarmonyPostfix]
         public static void ConfigureFromFlagDicPatch(FVRPhysicalObject __instance, Dictionary<string, string> f)
+        {
+            if (_existingModularPhysicalObjects.TryGetValue(__instance, out ModularFVRPhysicalObject modularPhysicalObject))
+            {
+                modularPhysicalObject.ConfigureFromFlagDic(f);
+            }
+        }
+
+        // TEMPORARY WHILE ANTON FIXES HIS SHITTTT
+        [HarmonyPatch(typeof(FVRFireArmAttachment), nameof(FVRFireArmAttachment.ConfigureFromFlagDic))]
+        [HarmonyPostfix]
+        public static void ConfigureFromFlagDicPatch_Attachment(FVRPhysicalObject __instance, Dictionary<string, string> f)
         {
             if (_existingModularPhysicalObjects.TryGetValue(__instance, out ModularFVRPhysicalObject modularPhysicalObject))
             {
@@ -694,6 +715,8 @@ namespace ModularWorkshop
             string selectedPart;
             string selectedSkin;
 
+            WasUnvaulted = true;
+
             foreach (var modularWeaponPartsAttachmentPoint in ModularWeaponPartsAttachmentPoints)
             {
                 if (!modularWeaponPartsAttachmentPoint.IsPointDisabled && f.TryGetValue("Modul" + modularWeaponPartsAttachmentPoint.ModularPartsGroupID, out selectedPart)) ConfigureModularWeaponPart(modularWeaponPartsAttachmentPoint, selectedPart);
@@ -703,7 +726,10 @@ namespace ModularWorkshop
                 if (!SubAttachmentPoints[i].IsPointDisabled && f.TryGetValue("Modul" + SubAttachmentPoints.ElementAt(i).ModularPartsGroupID, out selectedPart)) ConfigureModularWeaponPart(SubAttachmentPoints.ElementAt(i), selectedPart);
             }
 
-            if (SkinPath != null && f.TryGetValue(SkinPath, out selectedSkin)) ApplyReceiverSkin(selectedSkin);
+            if (SkinPath != null && f.TryGetValue(SkinPath, out selectedSkin))
+            {
+                ApplyReceiverSkin(selectedSkin);
+            }
 
             List<ModularWeaponPartsAttachmentPoint> points = AllAttachmentPoints.Values.ToList();
             points.Sort((x, y) => string.Compare(x.ModularPartsGroupID, y.ModularPartsGroupID));
@@ -721,8 +747,6 @@ namespace ModularWorkshop
 
             MainObject.AttachmentMounts.RemoveAll(mounts.Contains);
             MainObject.AttachmentMounts.AddRange(mounts);
-
-            WasUnvaulted = true;
         }
 
         public Dictionary<string, string> GetFlagDic(Dictionary<string, string> flagDic)
@@ -762,6 +786,7 @@ namespace ModularWorkshop
         public GameObject DuplicateFromSpawnLock(GameObject copy)
         {
             ModularFVRPhysicalObject modularPhysicalObject = copy.GetComponentInChildren<ModularFVRPhysicalObject>();
+            modularPhysicalObject.WasUnvaulted = true;
 
             foreach (var partsPoint in AllAttachmentPoints)
             {
@@ -787,8 +812,6 @@ namespace ModularWorkshop
             //        if (copyMag.LoadedRounds[i] != null) copyMag.LoadedRounds[i] = new();
             //    }
             //}
-
-            modularPhysicalObject.WasUnvaulted = true;
             return copy;
         }
     }

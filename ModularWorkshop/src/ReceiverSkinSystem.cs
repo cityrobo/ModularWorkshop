@@ -53,10 +53,11 @@ namespace ModularWorkshop
         {
             get
             {
+                if ((SkinPath == null || SkinPath == string.Empty) && MainObject != null && MainObject.ObjectWrapper != null) SkinPath = MainObject.ObjectWrapper.ItemID + "/" + "Receiver";
                 if (ModularWorkshopManager.ModularWorkshopSkinsDictionary.TryGetValue(SkinPath, out ModularWorkshopSkinsDefinition skinsDefinition)) return skinsDefinition;
                 else
                 {
-                    OpenScripts2_BepInExPlugin.LogError(MainObject, $"No Receiver SkinsDefinition found for {SkinPath}!");
+                    ModularWorkshopManager.LogError(this, $"No Receiver SkinsDefinition found for \"{SkinPath}\"!");
                     return null;
                 }
             }
@@ -101,7 +102,7 @@ namespace ModularWorkshop
                 ReceiverSkinUIPointProxy = new(uiPoint.transform, true);
             }
 
-            // Set SkinPath if non is provided
+            // Set SkinPath if none is provided
             if (SkinPath == null || SkinPath == string.Empty) SkinPath = MainObject.ObjectWrapper.ItemID + "/" + "Receiver";
             // Create a new default skin if a default skin does not exist
             CheckForDefaultReceiverSkin(MainObject);
@@ -137,10 +138,10 @@ namespace ModularWorkshop
                 }
                 catch (Exception)
                 {
-                    Debug.LogError($"Number of DifferentSkinnedMeshPieces in SkinDefinition {skinDefinition.ModularSkinID} does not match number of meshes on Receiver! ({ReceiverMeshRenderers.Length} vs {skinDefinition.DifferentSkinnedMeshPieces.Length})");
+                    ModularWorkshopManager.LogError(this, $"Number of DifferentSkinnedMeshPieces in SkinDefinition \"{skinDefinition.ModularSkinID}\" does not match number of meshes on Receiver! ({ReceiverMeshRenderers.Length} vs {skinDefinition.DifferentSkinnedMeshPieces.Length})");
                 }
             }
-            else Debug.LogError($"Skin with name {skinName} not found in SkinsDefinition {ReceiverSkinsDefinition.name}!");
+            else ModularWorkshopManager.LogError(this,$"Skin with name \"{skinName}\" not found in SkinsDefinition \"{ReceiverSkinsDefinition.name}\"!");
         }
 
         /// <summary>
@@ -219,7 +220,7 @@ namespace ModularWorkshop
             }
             else if (CurrentSelectedReceiverSkinID != "Default" && !ModularWorkshopManager.ModularWorkshopSkinsDictionary.ContainsKey(SkinPath))
             {
-                Debug.LogWarning($"No SkinsDefinition found for receiver skin path {SkinPath}, but part receiver {fireArm.gameObject.name} set to skin name {CurrentSelectedReceiverSkinID}. Naming error?");
+                ModularWorkshopManager.LogWarning(this, $"No SkinsDefinition found for receiver skin path \"{SkinPath}\", but part receiver \"{fireArm.gameObject.name}\" set to skin name \"{CurrentSelectedReceiverSkinID}\". Naming error?");
             }
         }
 

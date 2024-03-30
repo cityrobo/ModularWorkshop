@@ -31,7 +31,7 @@ namespace ModularWorkshop
                     }
                     else
                     {
-                        OpenScripts2_BepInExPlugin.LogWarning(this, $"FirearmHeatingEffects list contains null entry!");
+                        ModularWorkshopManager.LogWarning(this, $"FirearmHeatingEffects list contains null entry!");
                     }
                 }
 

@@ -110,7 +110,7 @@ namespace ModularWorkshop
             }
             catch (Exception)
             {
-                Debug.LogError($"Number of DifferentSkinnedMeshPieces in SkinDefinition {skinDefinition.ModularSkinID} does not match number of meshes on ModularWeaponPart {Name}! ({MeshRenderers.Length} vs {skinDefinition.DifferentSkinnedMeshPieces.Length})");
+                ModularWorkshopManager.LogError(this, $"Number of DifferentSkinnedMeshPieces in SkinDefinition \"{skinDefinition.ModularSkinID}\" does not match number of meshes on ModularWeaponPart \"{Name}\"! ({MeshRenderers.Length} vs {skinDefinition.DifferentSkinnedMeshPieces.Length})");
             }
         }
 

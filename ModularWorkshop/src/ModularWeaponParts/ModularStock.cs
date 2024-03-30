@@ -8,6 +8,7 @@ namespace ModularWorkshop
 {
     public class ModularStock : ModularWeaponPart
     {
+        [Header("Stock Config")]
         public bool ActsLikeStock = true;
         public Transform StockPoint;
         public ShotgunMoveableStock CollapsingStock;

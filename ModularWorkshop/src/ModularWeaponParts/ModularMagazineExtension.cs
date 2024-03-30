@@ -10,6 +10,7 @@ namespace ModularWorkshop
 {
     public class ModularMagazineExtension : ModularWeaponPart
     {
+        [Header("Magazine Extension Config")]
         [Tooltip("This part will add (or subtract, with a negative number) this number of rounds to the capacity of magazine first found in the object hierarchy. (This is not the number of total rounds, but additional rounds. A true magazine extension!)")]
         public int AdditionalNumberOfRoundsInMagazine = 0;
 
@@ -82,7 +83,7 @@ namespace ModularWorkshop
             }
             else if (_magazine == null)
             {
-                 OpenScripts2_BepInExPlugin.LogWarning(this, "Magazine not found! ModularMagazineExtension disabled!");
+                 ModularWorkshopManager.LogWarning(this, "Magazine not found! ModularMagazineExtension disabled!");
             }
         }
 
@@ -134,7 +135,7 @@ namespace ModularWorkshop
             }
             else if (_magazine == null)
             {
-                OpenScripts2_BepInExPlugin.LogWarning(this, "Magazine not found! ModularMagazineExtension couldn't be disabled!");
+                ModularWorkshopManager.LogWarning(this, "Magazine not found! ModularMagazineExtension couldn't be disabled!");
             }
         }
 

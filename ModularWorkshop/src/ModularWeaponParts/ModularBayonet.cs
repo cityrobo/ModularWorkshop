@@ -9,6 +9,7 @@ namespace ModularWorkshop
 {
     public class ModularBayonet : ModularWeaponPart
     {
+        [Header("Bayonet Config")]
         [Tooltip("HandPoint will be automatically set to the old hand point.")]
         public FVRPhysicalObject.MeleeParams MeleeParams;
         private FVRPhysicalObject.MeleeParams _origMeleeParams;
@@ -30,7 +31,7 @@ namespace ModularWorkshop
             }
             else
             {
-                if (_physicalObject == null) OpenScripts2_BepInExPlugin.LogWarning(this, "Firearm not found! ModularBayonet disabled!");
+                if (_physicalObject == null) ModularWorkshopManager.LogWarning(this, "Firearm not found! ModularBayonet disabled!");
             }
         }
 

@@ -56,7 +56,7 @@ namespace ModularWorkshop
                     }
                     catch (ArgumentException)
                     {
-                        Debug.LogWarning($"Skin with name {SkinName} already in skin dictionary \"{name}\" with SkinPath {ModularPartsGroupID}/{PartName}! Skipping duplicate skin!");
+                        ModularWorkshopManager.LogWarning($"Skin with name {SkinName} already in skin dictionary \"{name}\" with SkinPath \"{ModularPartsGroupID}/{PartName}\"! Skipping duplicate skin!");
                     }
                 }
                 return keyValuePairs;

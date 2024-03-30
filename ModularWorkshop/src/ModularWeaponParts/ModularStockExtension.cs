@@ -8,7 +8,7 @@ namespace ModularWorkshop
 {
     public class ModularStockExtension : ModularWeaponPart
     {
-        [Header("Stock Behavior")]
+        [Header("Stock Extension Config")]
         public bool ModifiesStockBehavior;
         public bool ActsLikeStock = true;
         public Transform StockPoint;
@@ -73,8 +73,8 @@ namespace ModularWorkshop
             }
             else
             {
-                if (_firearm == null) OpenScripts2_BepInExPlugin.LogWarning(this, "Firearm not found! ModularStockExtension disabled!");
-                if (_stock == null) OpenScripts2_BepInExPlugin.LogWarning(this, "ModularStock not found! ModularStockExtension disabled!");
+                if (_firearm == null) ModularWorkshopManager.LogWarning(this, "Firearm not found! ModularStockExtension disabled!");
+                if (_stock == null) ModularWorkshopManager.LogWarning(this, "ModularStock not found! ModularStockExtension disabled!");
             }
         }
 
@@ -127,8 +127,8 @@ namespace ModularWorkshop
             }
             else
             {
-                if (_firearm == null) OpenScripts2_BepInExPlugin.LogWarning(this, "Firearm not found! ModularStockExtension disabled!");
-                if (_stock == null) OpenScripts2_BepInExPlugin.LogWarning(this, "ModularStock not found! ModularStockExtension disabled!");
+                if (_firearm == null) ModularWorkshopManager.LogWarning(this, "Firearm not found! ModularStockExtension disabled!");
+                if (_stock == null) ModularWorkshopManager.LogWarning(this, "ModularStock not found! ModularStockExtension disabled!");
             }
         }
     }

@@ -9,6 +9,7 @@ namespace ModularWorkshop
 {
     public class ModularBarrelExtension : ModularWeaponPart
     {
+        [Header("Barrel Extension Config")]
         [Header("Muzzle Position")]
         public bool ChangesMuzzlePosition = false;
         public Transform MuzzlePosition;
@@ -155,8 +156,8 @@ namespace ModularWorkshop
             }
             else
             {
-                if (_firearm == null) OpenScripts2_BepInExPlugin.LogWarning(this, "Firearm not found! ModularBarrelExtension disabled!");
-                if (_barrel == null) OpenScripts2_BepInExPlugin.LogWarning(this, "ModularBarrel not found! ModularBarrelExtension disabled!");
+                if (_firearm == null) ModularWorkshopManager.LogWarning(this, "Firearm not found! ModularBarrelExtension disabled!");
+                if (_barrel == null) ModularWorkshopManager.LogWarning(this, "ModularBarrel not found! ModularBarrelExtension disabled!");
             }
         }
 
@@ -301,8 +302,8 @@ namespace ModularWorkshop
             }
             else
             {
-                if (_firearm == null) OpenScripts2_BepInExPlugin.LogWarning(this, "Firearm not found! ModularBarrelExtension couldn't be disabled!");
-                if (_barrel == null) OpenScripts2_BepInExPlugin.LogWarning(this, "ModularBarrel not found! ModularBarrelExtension couldn't be disabled!");
+                if (_firearm == null) ModularWorkshopManager.LogWarning(this, "Firearm not found! ModularBarrelExtension couldn't be disabled!");
+                if (_barrel == null) ModularWorkshopManager.LogWarning(this, "ModularBarrel not found! ModularBarrelExtension couldn't be disabled!");
             }
         }
     }

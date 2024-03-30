@@ -28,7 +28,7 @@ namespace ModularWorkshop
                     }
                     catch (ArgumentException)
                     {
-                        Debug.LogWarning($"Part with name {Name} already in category parts dictionary! Skipping part!");
+                        ModularWorkshopManager.LogWarning($"Part with name \"{Name}\" already in category parts dictionary! Skipping duplicate part!");
                     }
                 }
                 return keyValuePairs;

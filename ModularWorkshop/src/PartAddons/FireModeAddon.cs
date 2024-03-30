@@ -15,22 +15,26 @@ namespace ModularWorkshop
             Safe,
             Single,
             Burst,
-            FullAuto
+            FullAuto,
+            SuperFastBurst
         }
 
         [Serializable]
         public class FireSelectorMode
         {
             public float SelectorPosition;
-
             public FireSelectorModeType ModeType;
-
             public int BurstAmount = 3;
+            [Tooltip("Only works for closed bolt weapons")]
+            public bool ARStyleBurst = false;
+            public float EngagementDelay;
         }
 
         public FireSelectorMode[] FireSelectorModes;
 
         private FVRFireArm _firearm;
+        private object[] _originalFireModes;
+
         public FVRFireArm FireArm
         { 
             set 
@@ -42,21 +46,38 @@ namespace ModularWorkshop
                     switch(_firearm)
                     {
                         case ClosedBoltWeapon w:
+                            _originalFireModes = w.FireSelector_Modes;
                             ModifyClosedBoltFireModes(w); 
                             break;
                         case OpenBoltReceiver w:
+                            _originalFireModes = w.FireSelector_Modes;
                             ModifyOpenBoltFireModes(w);
                             break;
                         case Handgun w:
+                            _originalFireModes = w.FireSelectorModes;
                             ModifyHandgunFireModes(w);
                             break;
                     }
                 }
                 else if (value == null && _firearm != null)
                 {
+                    _firearm = value;
 
+                    switch (_firearm)
+                    {
+                        case ClosedBoltWeapon w:
+                            w.FireSelector_Modes = (ClosedBoltWeapon.FireSelectorMode[])_originalFireModes;
+                            break;
+                        case OpenBoltReceiver w:
+                            w.FireSelector_Modes = (OpenBoltReceiver.FireSelectorMode[])_originalFireModes;
+                            break;
+                        case Handgun w:
+                            w.FireSelectorModes = (Handgun.FireSelectorMode[])_originalFireModes;
+                            break;
+                    }
                 }
             }
+            get => _firearm;
         }
 
         private void ModifyClosedBoltFireModes(ClosedBoltWeapon w)
@@ -71,8 +92,10 @@ namespace ModularWorkshop
                         SelectorPosition = fireSelectorMode.SelectorPosition,
                         ModeType = fireSelectorMode.ModeType.ConvertToClosedBolt(),
                         BurstAmount = fireSelectorMode.BurstAmount,
+                        ARStyleBurst = fireSelectorMode.ARStyleBurst,
+                        EngagementDelay = fireSelectorMode.EngagementDelay
                     }
-                    );
+                );
 
             }
             w.FireSelector_Modes = fireSelectorModes.ToArray();
@@ -89,9 +112,10 @@ namespace ModularWorkshop
                     {
                         SelectorPosition = fireSelectorMode.SelectorPosition,
                         ModeType = fireSelectorMode.ModeType.ConvertToOpenBolt(),
-                        //BurstAmount = fireSelectorMode.BurstAmount,
+                        BurstAmount = fireSelectorMode.BurstAmount,
+                        EngagementDelay = fireSelectorMode.EngagementDelay
                     }
-                    );
+                );
             }
             w.FireSelector_Modes = fireSelectorModes.ToArray();
             w.FireSelector_Modes2 = fireSelectorModes.ToArray();
@@ -108,8 +132,9 @@ namespace ModularWorkshop
                         SelectorPosition = fireSelectorMode.SelectorPosition,
                         ModeType = fireSelectorMode.ModeType.ConvertToHandgun(),
                         BurstAmount = fireSelectorMode.BurstAmount,
+                        EngagementDelay = fireSelectorMode.EngagementDelay
                     }
-                    );
+                );
             }
             w.FireSelectorModes = fireSelectorModes.ToArray();
         }
@@ -125,6 +150,7 @@ namespace ModularWorkshop
                 FireModeAddon.FireSelectorModeType.Single => ClosedBoltWeapon.FireSelectorModeType.Single,
                 FireModeAddon.FireSelectorModeType.Burst => ClosedBoltWeapon.FireSelectorModeType.Burst,
                 FireModeAddon.FireSelectorModeType.FullAuto => ClosedBoltWeapon.FireSelectorModeType.FullAuto,
+                FireModeAddon.FireSelectorModeType.SuperFastBurst => ClosedBoltWeapon.FireSelectorModeType.SuperFastBurst,
                 _ => ClosedBoltWeapon.FireSelectorModeType.Safe,
             };
         }
@@ -136,6 +162,7 @@ namespace ModularWorkshop
                 FireModeAddon.FireSelectorModeType.Single => OpenBoltReceiver.FireSelectorModeType.Single,
                 FireModeAddon.FireSelectorModeType.Burst => OpenBoltReceiver.FireSelectorModeType.Burst,
                 FireModeAddon.FireSelectorModeType.FullAuto => OpenBoltReceiver.FireSelectorModeType.FullAuto,
+                FireModeAddon.FireSelectorModeType.SuperFastBurst => OpenBoltReceiver.FireSelectorModeType.SuperFastBurst,
                 _ => OpenBoltReceiver.FireSelectorModeType.Safe,
             };
         }
@@ -147,6 +174,7 @@ namespace ModularWorkshop
                 FireModeAddon.FireSelectorModeType.Single => Handgun.FireSelectorModeType.Single,
                 FireModeAddon.FireSelectorModeType.Burst => Handgun.FireSelectorModeType.Burst,
                 FireModeAddon.FireSelectorModeType.FullAuto => Handgun.FireSelectorModeType.FullAuto,
+                FireModeAddon.FireSelectorModeType.SuperFastBurst => Handgun.FireSelectorModeType.Burst,
                 _ => Handgun.FireSelectorModeType.Safe,
             };
         }

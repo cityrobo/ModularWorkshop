@@ -8,6 +8,7 @@ namespace ModularWorkshop
 {
     public class ModularHandguard : ModularWeaponPart
     {
+        [Header("Handguard Config")]
         public bool ActsLikeForeGrip;
         [Tooltip("If this is an active foregrip: This GameObject defines where the transform of the AltGrip in the FireArm will end up. It should contain a trigger to define what the new handguard interaction zone looks like. Gets removed on load for performance reasons, so don't put anything below it.")]
         public GameObject ForeGripDefinition;
@@ -63,13 +64,13 @@ namespace ModularWorkshop
                         ColliderType = EColliderType.Box;
                         break;
                     case null:
-                        OpenScripts2_BepInExPlugin.LogWarning(this, $"ForeGripDefinition {ForeGripDefinition.name} doesn't contain a collider you goofus! Shit's about to break!");
+                        ModularWorkshopManager.LogWarning(this, $"ForeGripDefinition {ForeGripDefinition.name} doesn't contain a collider you goofus! Shit's about to break!");
                         break;
                 }
 
                 Destroy(ForeGripDefinition);
             }
-            else if (ActsLikeForeGrip && ForeGripDefinition == null) OpenScripts2_BepInExPlugin.LogWarning(this, $"ForeGripDefinition is empty but you want this to be a functional foregrip you goofus! Shit's about to break!");
+            else if (ActsLikeForeGrip && ForeGripDefinition == null) ModularWorkshopManager.LogWarning(this, $"ForeGripDefinition is empty but you want this to be a functional foregrip you goofus! Shit's about to break!");
         }
     }
 }

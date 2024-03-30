@@ -9,6 +9,7 @@ namespace ModularWorkshop
 {
     public class ModularHandguardExtension : ModularWeaponPart
     {
+        [Header("Handguard Extension Config")]
         [Tooltip("This GameObject defines where the extension of the AltGrip trigger will end up. It should contain a trigger to define what the new handguard interaction zone looks like. Gets removed on load for performance reasons, so don't put anything below it.")]
         public GameObject ForeGripExtensionDefinition;
 
@@ -66,13 +67,13 @@ namespace ModularWorkshop
                         ColliderType = EColliderType.Box;
                         break;
                     case null:
-                        OpenScripts2_BepInExPlugin.LogWarning(this, $"ForeGripDefinition {ForeGripExtensionDefinition.name} doesn't contain a collider you goofus! Shit's about to break!");
+                        ModularWorkshopManager.LogWarning(this, $"ForeGripDefinition {ForeGripExtensionDefinition.name} doesn't contain a collider you goofus! Shit's about to break!");
                         break;
                 }
 
                 Destroy(ForeGripExtensionDefinition);
             }
-            else if (ForeGripExtensionDefinition == null) OpenScripts2_BepInExPlugin.LogError(this, $"ForeGripExtensionDefinition is empty but you want this to be a functional foregrip extension you goofus! Shit's about to break!");
+            else if (ForeGripExtensionDefinition == null) ModularWorkshopManager.LogError(this, $"ForeGripExtensionDefinition is empty but you want this to be a functional foregrip extension you goofus! Shit's about to break!");
         }
 
         public override void EnablePart()
@@ -108,7 +109,7 @@ namespace ModularWorkshop
             }
             else
             {
-                if (_firearm == null) OpenScripts2_BepInExPlugin.LogWarning(this, "Firearm not found! ModularHandguardExtension disabled!");
+                if (_firearm == null) ModularWorkshopManager.LogWarning(this, "Firearm not found! ModularHandguardExtension disabled!");
             }
         }
 
