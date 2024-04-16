@@ -14,27 +14,27 @@ namespace ModularWorkshop
     /// </summary>
     public class ReceiverSkinSystem : MonoBehaviour
     {
-        // Reference to the main physical object.
+        [Tooltip("Reference to the main physical object.")]
         public FVRPhysicalObject MainObject;
 
-        // Prefab for the user interface (UI).
+        [Tooltip("Prefab for the user interface (UI).")]
         public GameObject UIPrefab;
 
         [Header("Receiver Skins")]
         [Tooltip("This is a combination of ModularPartsGroupID and PartName of a Skins definition, with a \"/\" in between. A requirement of the system. You should choose ModularPartsGroupID and PartName so that it doesn't conflict with anything else. Formatting Example: \"ModularPartsGroupID/PartName\". I would personally recommend something like \"ItemID/ItemName\" as a standard.")]
         public string SkinPath;
 
-        // Transform where the receiver skin UI is attached.
+        [Tooltip("Transform defining the location of the UI.")]
         public Transform ReceiverSkinUIPoint;
 
+        // More efficient UIPoint proxy
         [HideInInspector]
         public TransformProxy ReceiverSkinUIPointProxy;
 
-        // The currently selected receiver skin ID.
+        [Tooltip("The currently selected receiver skin ID.")]
         public string CurrentSelectedReceiverSkinID = "Default";
 
-        // Mesh renderers for the receiver.
-        [Tooltip("Can be populated with the context menu on the gun.")]
+        [Tooltip("Mesh renderers for the receiver.\nCan be populated with the context menu on the gun.")]
         public MeshRenderer[] ReceiverMeshRenderers;
 
         // Collection of existing ReceiverSkinSystem instances.
@@ -64,36 +64,39 @@ namespace ModularWorkshop
         }
 
         /// <summary>
-        /// Awake method called when the script instance is being loaded.
+        /// Awake method called when the component instance is being loaded is instantiated or the gameobject is enabled.
         /// </summary>
         public void Awake()
         {
+            // Find main object if it wasn't set
             if (MainObject == null) MainObject = GetComponent<FVRPhysicalObject>();
-            _existingReceiverSkinSystems.Add(MainObject, this);
-            if (ReceiverMeshRenderers == null || ReceiverMeshRenderers.Length == 0) GetReceiverMeshRenderers();
 
-            // Check for TnH
-            if (GM.TNH_Manager != null)
-            {
-                IsInTakeAndHold = ModularWorkshopManager.EnableTNHRandomization.Value;
-            }
-        }
-
-        /// <summary>
-        /// Start method called when the script starts running.
-        /// </summary>
-        public void Start()
-        {
-            // If there's no ObjectWrapper assigned (required for vaulting) delete this component.
-            if (MainObject.ObjectWrapper == null)
+            // If there's no MainObject found or ObjectWrapper assigned to it (required for vaulting) delete this component.
+            if (MainObject == null || MainObject.ObjectWrapper == null)
             {
                 Destroy(this);
                 return;
             }
+
+            _existingReceiverSkinSystems.Add(MainObject, this);
+            if (ReceiverMeshRenderers == null || ReceiverMeshRenderers.Length == 0) GetReceiverMeshRenderers();
+
+            // Check for TnH and enable TnH randomization if found
+            if (GM.TNH_Manager != null)
+            {
+                IsInTakeAndHold = ModularWorkshopManager.EnableTNHRandomization.Value;
+            }
+
+            // Set SkinPath if none is provided
+            if (SkinPath == null || SkinPath == string.Empty) SkinPath = MainObject.ObjectWrapper.ItemID + "/" + "Receiver";
+            // Create a new default skin if a default skin does not exist
+            CheckForDefaultReceiverSkin();
+
+            // Turn UI point into a more efficient proxy
             if (ReceiverSkinUIPoint != null) ReceiverSkinUIPointProxy = new(ReceiverSkinUIPoint, true);
+            // Create a UI point if none is provided.
             else
             {
-                // Create a temporary UI point if none is provided.
                 GameObject uiPoint = new("temp");
                 uiPoint.transform.SetParent(MainObject.transform);
                 uiPoint.transform.position = MainObject.transform.position + -MainObject.transform.right * 0.1f;
@@ -101,24 +104,26 @@ namespace ModularWorkshop
 
                 ReceiverSkinUIPointProxy = new(uiPoint.transform, true);
             }
+        }
 
-            // Set SkinPath if none is provided
-            if (SkinPath == null || SkinPath == string.Empty) SkinPath = MainObject.ObjectWrapper.ItemID + "/" + "Receiver";
-            // Create a new default skin if a default skin does not exist
-            CheckForDefaultReceiverSkin(MainObject);
+        /// <summary>
+        /// Start method called when the compenent has been initiated by Unity. Runs after Awake but not straight after it.
+        /// </summary>
+        public void Start()
+        {
             // Apply currently selected skin
             if (!WasUnvaulted) ApplyReceiverSkin(IsInTakeAndHold ? ReceiverSkinsDefinition.GetRandomSkin() : CurrentSelectedReceiverSkinID);
         }
 
         /// <summary>
-        /// OnDestroy method called when the script is being destroyed.
+        /// OnDestroy method called when the component is being destroyed.
         /// </summary>
         public void OnDestroy()
         {
             _existingReceiverSkinSystems.Remove(MainObject);
         }
 
-        // Receiver Skins
+        #region Receiver Skin Operations
 
         /// <summary>
         /// Applies the selected receiver skin.
@@ -147,8 +152,7 @@ namespace ModularWorkshop
         /// <summary>
         /// Checks for the default receiver skin and creates it if not found.
         /// </summary>
-        /// <param name="fireArm">The FVRPhysicalObject representing the firearm.</param>
-        public void CheckForDefaultReceiverSkin(FVRPhysicalObject fireArm)
+        public void CheckForDefaultReceiverSkin()
         {
             // Check if the default skin is selected and create it if not found.
             if (CurrentSelectedReceiverSkinID == "Default" && ModularWorkshopManager.ModularWorkshopSkinsDictionary.TryGetValue(SkinPath, out ModularWorkshopSkinsDefinition skinsDefinition))
@@ -220,7 +224,7 @@ namespace ModularWorkshop
             }
             else if (CurrentSelectedReceiverSkinID != "Default" && !ModularWorkshopManager.ModularWorkshopSkinsDictionary.ContainsKey(SkinPath))
             {
-                ModularWorkshopManager.LogWarning(this, $"No SkinsDefinition found for receiver skin path \"{SkinPath}\", but part receiver \"{fireArm.gameObject.name}\" set to skin name \"{CurrentSelectedReceiverSkinID}\". Naming error?");
+                ModularWorkshopManager.LogWarning(this, $"No SkinsDefinition found for receiver skin path \"{SkinPath}\", but part receiver \"{MainObject.gameObject.name}\" set to skin name \"{CurrentSelectedReceiverSkinID}\". Naming error?");
             }
         }
 
@@ -264,8 +268,9 @@ namespace ModularWorkshop
         {
             GetReceiverMeshRenderers();
         }
+        #endregion
 
-        // Harmony Patches for vaulting
+        #region Harmony Patches for vaulting and spawnlock duplication
 
         /// <summary>
         /// Harmony patch for the GetFlagDic method of FVRPhysicalObject.
@@ -278,6 +283,18 @@ namespace ModularWorkshop
             {
                 __result = skinSystem.GetFlagDic(__result);
             }
+        }
+
+        /// <summary>
+        /// Gets the flag dictionary for the receiver skin.
+        /// </summary>
+        /// <param name="flagDic">The existing flag dictionary.</param>
+        /// <returns>The updated flag dictionary.</returns>
+        public Dictionary<string, string> GetFlagDic(Dictionary<string, string> flagDic)
+        {
+            flagDic.Add(SkinPath, CurrentSelectedReceiverSkinID);
+
+            return flagDic;
         }
 
         /// <summary>
@@ -294,6 +311,17 @@ namespace ModularWorkshop
         }
 
         /// <summary>
+        /// Configures the receiver skin from a flag dictionary.
+        /// </summary>
+        /// <param name="f">The flag dictionary containing skin information.</param>
+        public void ConfigureFromFlagDic(Dictionary<string, string> f)
+        {
+            if (SkinPath != null && f.TryGetValue(SkinPath, out string selectedSkin)) ApplyReceiverSkin(selectedSkin);
+
+            WasUnvaulted = true;
+        }
+
+        /// <summary>
         /// Harmony patch for the DuplicateFromSpawnLock method of FVRPhysicalObject.
         /// </summary>
         [HarmonyPatch(typeof(FVRPhysicalObject), nameof(FVRPhysicalObject.DuplicateFromSpawnLock))]
@@ -304,31 +332,6 @@ namespace ModularWorkshop
             {
                 __result = skinSystem.DuplicateFromSpawnLock(__result);
             }
-        }
-
-        /// <summary>
-        /// Configures the receiver skin from a flag dictionary.
-        /// </summary>
-        /// <param name="f">The flag dictionary containing skin information.</param>
-        public void ConfigureFromFlagDic(Dictionary<string, string> f)
-        {
-            if (SkinPath == null && MainObject != null && MainObject.ObjectWrapper != null) SkinPath = MainObject.ObjectWrapper.ItemID + "/" + "Receiver";
-
-            if (SkinPath != null && f.TryGetValue(SkinPath, out string selectedSkin)) ApplyReceiverSkin(selectedSkin);
-
-            WasUnvaulted = true;
-        }
-
-        /// <summary>
-        /// Gets the flag dictionary for the receiver skin.
-        /// </summary>
-        /// <param name="flagDic">The existing flag dictionary.</param>
-        /// <returns>The updated flag dictionary.</returns>
-        public Dictionary<string, string> GetFlagDic(Dictionary<string, string> flagDic)
-        {
-            flagDic.Add(SkinPath, CurrentSelectedReceiverSkinID);
-
-            return flagDic;
         }
 
         /// <summary>
@@ -345,5 +348,6 @@ namespace ModularWorkshop
             WasUnvaulted = true;
             return copy;
         }
+        #endregion
     }
 }

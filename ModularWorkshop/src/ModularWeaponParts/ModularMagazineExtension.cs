@@ -153,5 +153,20 @@ namespace ModularWorkshop
                 }
             }
         }
+
+        [HarmonyPatch(typeof(MultiCaliberMagazineMWCompatibility), nameof(MultiCaliberMagazineMWCompatibility.AdditionalRoundsFromMagExtension))]
+        [HarmonyPostfix]
+        public static void AdditionalRoundsFromMagExtensionPatch(MultiCaliberMagazine multiCaliberMagazine, ref int __result)
+        {
+            if (_existingMagazineExtensions.Contains(multiCaliberMagazine.Magazine))
+            {
+                ModularMagazineExtension[] modularMagazineExtension = multiCaliberMagazine.Magazine.GetComponentsInChildren<ModularMagazineExtension>();
+
+                for (int i = 0; i < modularMagazineExtension.Length; i++)
+                {
+                    __result += modularMagazineExtension[i].AdditionalNumberOfRoundsInMagazine;
+                }
+            }
+        }
     }
 }
