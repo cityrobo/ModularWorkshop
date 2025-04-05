@@ -245,31 +245,44 @@ namespace ModularWorkshop
 
         public void InitializeArrays()
         {
+            //ModularWeaponPartsAttachmentPoint point = ModularWeapon.AllAttachmentPoints[ModularPartsGroupID];
+            //bool isWhitelist = point.BlacklistActsLikeWhitelistInstead;
+            //List<string> partsBlacklist = point.PartsBlacklist;
             switch (PartType)
             {
                 case EPartType.Barrel:
                     _partDictionary = ModularWeapon.ModularBarrelPrefabsDictionary;
+                    //if (isWhitelist) _partDictionary = _partDictionary.Where(entry => partsBlacklist.Contains(entry.Key)).ToDictionary(x => x.Key, x => x.Value);
+                    //else _partDictionary = _partDictionary.Where(entry => !partsBlacklist.Contains(entry.Key)).ToDictionary(x => x.Key, x => x.Value);
                     _partNames = _partDictionary.Select(prefab => prefab.Key).ToArray();
                     _selectedPart = Array.IndexOf(_partNames, ModularWeapon.SelectedModularBarrel);
                     break;
                 case EPartType.Handguard:
                     _partDictionary = ModularWeapon.ModularHandguardPrefabsDictionary;
+                    //if (isWhitelist) _partDictionary = _partDictionary.Where(entry => partsBlacklist.Contains(entry.Key)).ToDictionary(x => x.Key, x => x.Value);
+                    //else _partDictionary = _partDictionary.Where(entry => !partsBlacklist.Contains(entry.Key)).ToDictionary(x => x.Key, x => x.Value);
                     _partNames = _partDictionary.Select(prefab => prefab.Key).ToArray();
                     _selectedPart = Array.IndexOf(_partNames, ModularWeapon.SelectedModularHandguard);
                     break;
                 case EPartType.Stock:
                     _partDictionary = ModularWeapon.ModularStockPrefabsDictionary;
+                    //if (isWhitelist) _partDictionary = _partDictionary.Where(entry => partsBlacklist.Contains(entry.Key)).ToDictionary(x => x.Key, x => x.Value);
+                    //else _partDictionary = _partDictionary.Where(entry => !partsBlacklist.Contains(entry.Key)).ToDictionary(x => x.Key, x => x.Value);
                     _partNames = _partDictionary.Select(prefab => prefab.Key).ToArray();
                     _selectedPart = Array.IndexOf(_partNames, ModularWeapon.SelectedModularStock);
                     break;
                 case EPartType.MainWeaponGeneralAttachmentPoint:
                     _partDictionary = ModularWorkshopManager.ModularWorkshopPartsGroupsDictionary[ModularPartsGroupID].PartsDictionary;
+                    //if (isWhitelist) _partDictionary = _partDictionary.Where(entry => partsBlacklist.Contains(entry.Key)).ToDictionary(x => x.Key, x => x.Value);
+                    //else _partDictionary = _partDictionary.Where(entry => !partsBlacklist.Contains(entry.Key)).ToDictionary(x => x.Key, x => x.Value);
                     _partNames = _partDictionary.Select(prefab => prefab.Key).ToArray();
                     if (ModularWeapon != null) _selectedPart = Array.IndexOf(_partNames, ModularWeapon.ModularWeaponPartsAttachmentPoints.Single(obj => obj.ModularPartsGroupID == ModularPartsGroupID).SelectedModularWeaponPart);
                     else if (ModularPhysicalObject != null) _selectedPart = Array.IndexOf(_partNames, ModularPhysicalObject.ModularWeaponPartsAttachmentPoints.Single(obj => obj.ModularPartsGroupID == ModularPartsGroupID).SelectedModularWeaponPart);
                     break; 
                 case EPartType.SubAttachmentPoint:
                     _partDictionary = ModularWorkshopManager.ModularWorkshopPartsGroupsDictionary[ModularPartsGroupID].PartsDictionary;
+                    //if (isWhitelist) _partDictionary = _partDictionary.Where(entry => partsBlacklist.Contains(entry.Key)).ToDictionary(x => x.Key, x => x.Value);
+                    //else _partDictionary = _partDictionary.Where(entry => !partsBlacklist.Contains(entry.Key)).ToDictionary(x => x.Key, x => x.Value);
                     _partNames = _partDictionary.Select(prefab => prefab.Key).ToArray();
                     if (ModularWeapon != null) _selectedPart = Array.IndexOf(_partNames, ModularWeapon.SubAttachmentPoints.Single(obj => obj.ModularPartsGroupID == ModularPartsGroupID).SelectedModularWeaponPart);
                     else if (ModularPhysicalObject != null) _selectedPart = Array.IndexOf(_partNames, ModularPhysicalObject.SubAttachmentPoints.Single(obj => obj.ModularPartsGroupID == ModularPartsGroupID).SelectedModularWeaponPart);

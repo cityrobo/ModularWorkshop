@@ -18,8 +18,12 @@ namespace ModularWorkshop
         [HideInInspector]
         public TransformProxy ModularPartUIPointProxy;
         public string SelectedModularWeaponPart;
-        
+
+        [Header("Take & Hold")]
         public bool DisallowTakeAndHoldRandomization = false;
+        //[Header("Parts Blacklist/Whitelist")]
+        //public bool BlacklistActsLikeWhitelistInstead = false;
+        //public List<string> PartsBlacklist = new();
 
         [Tooltip("Check this box if this point is intended to use parts from a different mod only, aka you don't include any parts for this point yourself in your package.")]
         public bool UsesExternalParts = false;

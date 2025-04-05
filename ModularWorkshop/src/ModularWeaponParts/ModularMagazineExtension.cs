@@ -11,7 +11,7 @@ namespace ModularWorkshop
     public class ModularMagazineExtension : ModularWeaponPart
     {
         [Header("Magazine Extension Config")]
-        [Tooltip("This part will add (or subtract, with a negative number) this number of rounds to the capacity of magazine first found in the object hierarchy. (This is not the number of total rounds, but additional rounds. A true magazine extension!)")]
+        [Tooltip("This part will add (or subtract, with a negative number) this number of rounds to the capacity of magazine first found in the object hierarchy above this game object. \n(This is not the number of total rounds, but additional rounds. A true magazine extension!)")]
         public int AdditionalNumberOfRoundsInMagazine = 0;
 
         protected FVRFireArmMagazine _magazine;
@@ -27,12 +27,11 @@ namespace ModularWorkshop
 
         public override void OnDestroy()
         {
-            _magazine = transform.GetComponentInParent<FVRFireArmMagazine>();
-            _existingMagazineExtensions.Remove(_magazine);
+            //_magazine = transform.GetComponentInParent<FVRFireArmMagazine>();
+            if (_magazine != null) _existingMagazineExtensions.Remove(_magazine);
 
             base.OnDestroy();
         }
-
 
         public override void EnablePart()
         {
@@ -83,7 +82,8 @@ namespace ModularWorkshop
             }
             else if (_magazine == null)
             {
-                 ModularWorkshopManager.LogWarning(this, "Magazine not found! ModularMagazineExtension disabled!");
+                ModularWorkshopManager.LogWarning(this, "Magazine not found! ModularMagazineExtension disabled!");
+                Destroy(this);
             }
         }
 
@@ -143,10 +143,10 @@ namespace ModularWorkshop
         [HarmonyPostfix]
         public static void DuplicateFromSpawnLockPatch(FVRPhysicalObject __instance, ref GameObject __result)
         {
-            if (_existingMagazineExtensions.Contains(__instance as FVRFireArmMagazine))
+            FVRFireArmMagazine mag = __instance.GetComponentInParent<FVRFireArmMagazine>();
+            if (mag != null && _existingMagazineExtensions.Contains(mag))
             {
-                FVRFireArmMagazine mag = __instance.GetComponent<FVRFireArmMagazine>();
-                FVRFireArmMagazine copyMag = __result.GetComponent<FVRFireArmMagazine>();
+                FVRFireArmMagazine copyMag = __result.GetComponentInParent<FVRFireArmMagazine>();
                 for (int i = 0; i < Mathf.Min(mag.LoadedRounds.Length, copyMag.LoadedRounds.Length); i++)
                 {
                     if (copyMag.LoadedRounds[i] == null) copyMag.LoadedRounds[i] = new();

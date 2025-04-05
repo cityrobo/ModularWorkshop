@@ -56,11 +56,14 @@ namespace ModularWorkshop
         [Header("Fire Selectors")]
         [Tooltip("Also called Safety on some weapons.")]
         public Transform FireSelector;
+        private Transform _origFireSelector;
         [Tooltip("For Handguns this changes the FireSelector object")]
         public Transform FireSelector2;
+        private Transform _origFireSelector2;
         [Header("Magazine Release")]
         [Tooltip("Affects the cylinder release lever on revolvers")]
         public Transform MagazineRelease;
+        private Transform _origMagazineRelease;
         [Tooltip("For UniversalAdvancedMagazineGrabTrigger")]
         public Transform SecondaryMagazineRelease;
         private Transform _origSecondaryMagazineRelease;
@@ -81,6 +84,10 @@ namespace ModularWorkshop
         public Vector3 BoltHandleRotatingPartLeftEulers = Vector3.zero;
         public Vector3 BoltHandleRotatingPartNeutralEulers = Vector3.zero;
         public Vector3 BoltHandleRotatingPartRightEulers = Vector3.zero;
+
+        [Header("Bolt Release / Slide Release")]
+        public Transform BoltRelease;
+        private Transform _origBoltRelease;
 
         [Header("Handgun Slide")]
         public Transform TiltinBarrel;
@@ -123,7 +130,7 @@ namespace ModularWorkshop
                 {
                     _firearm = value;
 
-                    if (BoltReleaseButton != E_ModificationMode.Ignore) ModifyBoltRelease(ModeToBool(BoltReleaseButton));
+                    if (BoltReleaseButton != E_ModificationMode.Ignore) ModifyBoltReleaseBehaviour(ModeToBool(BoltReleaseButton));
                     if (MagazineReleaseButton != E_ModificationMode.Ignore) ModifyMagReleaseButton(ModeToBool(MagazineReleaseButton));
 
                     //if (ChangesFireSelectorModes) ModifyFireControl(true);
@@ -141,6 +148,8 @@ namespace ModularWorkshop
 
                     if (BoltHandleRotatingPiece != null) ModifyBoltHandleRotatingPiece(true);
 
+                    if (BoltRelease != null) ModifyBoltRelease(true);
+                    
                     if (TiltinBarrel != null) ModifyTiltingBarrel(true);
 
                     if (AdjustsBoltActionBoltBaseRotOffset) ModifyBoltHandleBaseRotOffset(true);
@@ -170,6 +179,8 @@ namespace ModularWorkshop
 
                     if (BoltHandleRotatingPiece != null) ModifyBoltHandleRotatingPiece(false);
 
+                    if (BoltRelease != null) ModifyBoltRelease(false);
+
                     if (TiltinBarrel != null) ModifyTiltingBarrel(false);
 
                     if (AdjustsBoltActionBoltBaseRotOffset) ModifyBoltHandleBaseRotOffset(false);
@@ -181,6 +192,8 @@ namespace ModularWorkshop
                     if (Bipod != null) AddBipod(false);
 
                     if (AdjustsFireRate) ModifyFireRate(false);
+
+                    _firearm = null;
                 }
             }
         }
@@ -250,7 +263,7 @@ namespace ModularWorkshop
 
 
         // Bolt/Slide
-        private void ModifyBoltRelease(bool mode)
+        private void ModifyBoltReleaseBehaviour(bool mode)
         {
             switch (_firearm) 
             {
@@ -479,12 +492,15 @@ namespace ModularWorkshop
                 switch (_firearm)
                 {
                     case ClosedBoltWeapon w:
+                        _origMagazineRelease = w.MagazineReleaseButton;
                         w.MagazineReleaseButton = MagazineRelease;
                         break;
                     case Handgun w:
+                        _origMagazineRelease = w.MagazineReleaseButton;
                         w.MagazineReleaseButton = MagazineRelease;
                         break;
                     case Revolver w:
+                        _origMagazineRelease = w.CylinderReleaseButton;
                         w.CylinderReleaseButton = MagazineRelease;
                         break;
                 }
@@ -494,13 +510,13 @@ namespace ModularWorkshop
                 switch (_firearm)
                 {
                     case ClosedBoltWeapon w:
-                        w.MagazineReleaseButton = null;
+                        w.MagazineReleaseButton = _origMagazineRelease;
                         break;
                     case Handgun w:
-                        w.MagazineReleaseButton = null;
+                        w.MagazineReleaseButton = _origMagazineRelease;
                         break;
                     case Revolver w:
-                        w.CylinderReleaseButton = null;
+                        w.CylinderReleaseButton = _origMagazineRelease;
                         break;
                 }
             }
@@ -529,18 +545,23 @@ namespace ModularWorkshop
                 switch (_firearm)
                 {
                     case ClosedBoltWeapon w:
+                        _origFireSelector = w.FireSelectorSwitch;
                         w.FireSelectorSwitch = FireSelector;
                         break;
                     case Handgun w:
+                        _origFireSelector = w.Safety;
                         w.Safety = FireSelector;
                         break;
                     case OpenBoltReceiver w:
+                        _origFireSelector = w.FireSelectorSwitch;
                         w.FireSelectorSwitch = FireSelector;
                         break;
                     case BoltActionRifle w:
+                        _origFireSelector = w.FireSelector_Display;
                         w.FireSelector_Display = FireSelector;
                         break;
                     case TubeFedShotgun w:
+                        _origFireSelector = w.Safety;
                         w.Safety = FireSelector;
                         break;
                 }
@@ -550,19 +571,19 @@ namespace ModularWorkshop
                 switch (_firearm)
                 {
                     case ClosedBoltWeapon w:
-                        w.FireSelectorSwitch = null;
+                        w.FireSelectorSwitch = _origFireSelector;
                         break;
                     case Handgun w:
-                        w.Safety = null;
+                        w.Safety = _origFireSelector;
                         break;
                     case OpenBoltReceiver w:
-                        w.FireSelectorSwitch = null;
+                        w.FireSelectorSwitch = _origFireSelector;
                         break;
                     case BoltActionRifle w:
-                        w.FireSelector_Display = null;
+                        w.FireSelector_Display = _origFireSelector;
                         break;
                     case TubeFedShotgun w:
-                        w.Safety = FireSelector;
+                        w.Safety = _origFireSelector;
                         break;
                 }
             }
@@ -576,15 +597,19 @@ namespace ModularWorkshop
                 switch (_firearm)
                 {
                     case ClosedBoltWeapon w:
+                        _origFireSelector2 = w.FireSelectorSwitch2;
                         w.FireSelectorSwitch2 = FireSelector2;
                         break;
                     case Handgun w:
+                        _origFireSelector2 = w.FireSelector;
                         w.FireSelector = FireSelector2;
                         break;
                     case OpenBoltReceiver w:
+                        _origFireSelector2 = w.FireSelectorSwitch2;
                         w.FireSelectorSwitch2 = FireSelector2;
                         break;
                     case BoltActionRifle w:
+                        _origFireSelector2 = w.FireSelector_Display_Secondary;
                         w.FireSelector_Display_Secondary = FireSelector2;
                         break;
                 }
@@ -594,16 +619,16 @@ namespace ModularWorkshop
                 switch (_firearm)
                 {
                     case ClosedBoltWeapon w:
-                        w.FireSelectorSwitch2 = null;
+                        w.FireSelectorSwitch2 = _origFireSelector2;
                         break;
                     case Handgun w:
-                        w.FireSelector = null;
+                        w.FireSelector = _origFireSelector2;
                         break;
                     case OpenBoltReceiver w:
-                        w.FireSelectorSwitch2 = null;
+                        w.FireSelectorSwitch2 = _origFireSelector2;
                         break;
                     case BoltActionRifle w:
-                        w.FireSelector_Display_Secondary = null;
+                        w.FireSelector_Display_Secondary = _origFireSelector2;
                         break;
                 }
             }
@@ -697,6 +722,36 @@ namespace ModularWorkshop
                         w.Handle.RotatingPartLeftEulers = Vector3.zero;
                         w.Handle.RotatingPartNeutralEulers = Vector3.zero;
                         w.Handle.RotatingPartRightEulers = Vector3.zero;
+                        break;
+                }
+            }
+        }
+
+        private void ModifyBoltRelease(bool activate)
+        {
+            if (activate)
+            {
+                switch (_firearm)
+                {
+                    case ClosedBoltWeapon w:
+                        _origBoltRelease = w.BoltCatch;
+                        w.BoltCatch = BoltRelease;
+                        break;
+                    case Handgun w:
+                        _origBoltRelease = w.SlideRelease;
+                        w.SlideRelease = BoltRelease;
+                        break;
+                }
+            }
+            else
+            {
+                switch (_firearm)
+                {
+                    case ClosedBoltWeapon w:
+                        w.BoltCatch = _origBoltRelease;
+                        break;
+                    case Handgun w:
+                        w.SlideRelease = _origBoltRelease;
                         break;
                 }
             }

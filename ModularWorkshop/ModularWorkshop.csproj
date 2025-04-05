@@ -87,8 +87,16 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="src\ModularFirearms\ModularLeverActionFirearm.cs" />
+    <Compile Include="src\PartAddons\NonReciprocatingSlideHandleAddon.cs" />
+    <Compile Include="src\PartAddons\BoltAndSlideInteractionVisualEffectAddon.cs" />
     <Compile Include="src\PartAddons\FireModeAddon.cs" />
     <Compile Include="src\PartAddons\BoltAndSlideManipAddon.cs" />
+    <Compile Include="src\PartAddons\MagazineCompatibilityAddon.cs" />
+    <Compile Include="src\PartAddons\BoltGrabPointAddon.cs" />
+    <Compile Include="src\PartAddons\AltGripAddon.cs" />
+    <Compile Include="src\PartAddons\RecoilModificationAddon.cs" />
+    <Compile Include="src\PartAddons\MagazineWellAddon.cs" />
     <Compile Include="src\PartAddons\SnappyTriggerAddon.cs" />
     <Compile Include="src\PartAddons\InteractionVisualEffectAddon.cs" />
     <Compile Include="src\ModularFirearms\ModularBreakActionWeapon.cs" />

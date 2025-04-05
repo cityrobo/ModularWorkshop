@@ -345,7 +345,7 @@ namespace ModularWorkshop
 
             receiverSkinSystem.ApplyReceiverSkin(CurrentSelectedReceiverSkinID);
 
-            WasUnvaulted = true;
+            receiverSkinSystem.WasUnvaulted = true;
             return copy;
         }
         #endregion
