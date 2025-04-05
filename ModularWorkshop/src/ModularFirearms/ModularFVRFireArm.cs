@@ -237,13 +237,19 @@ namespace ModularWorkshop
             WorkshopPlatform?.CreateUIForPoint(subPoint);
         }
 
-        public void RemoveSubAttachmentPoint(ModularWeaponPartsAttachmentPoint subPoint, FVRFireArm fireArm, Dictionary<string,string> oldSubParts)
+        public void RemoveSubAttachmentPoint(ModularWeaponPartsAttachmentPoint subPoint, FVRFireArm fireArm, Dictionary<string,string> oldSubParts, Dictionary<string, string> oldSkins)
         {
             SubAttachmentPoints.Remove(subPoint);
 
             ModularWeaponPart part = subPoint.ModularPartPoint.GetComponent<ModularWeaponPart>();
             if (part != null)
             {
+                IPartFireArmRequirement[] addons = part.GetComponents<IPartFireArmRequirement>();
+                foreach (var addon in addons)
+                {
+                    addon.FireArm = null;
+                }
+
                 part.DisablePart();
 
                 foreach (var mount in part.AttachmentMounts)
@@ -256,8 +262,9 @@ namespace ModularWorkshop
                 foreach (var subSubPoint in part.SubAttachmentPoints)
                 {
                     oldSubParts.Add(subSubPoint.ModularPartsGroupID, subSubPoint.SelectedModularWeaponPart);
+                    oldSkins.AddOrReplace(subPoint.ModularPartsGroupID, subPoint.CurrentSkin);
 
-                    RemoveSubAttachmentPoint(subSubPoint, fireArm, oldSubParts);
+                    RemoveSubAttachmentPoint(subSubPoint, fireArm, oldSubParts, oldSkins);
                 }
             }
             WorkshopPlatform?.RemoveUIFromPoint(subPoint);
@@ -405,7 +412,7 @@ namespace ModularWorkshop
                     oldSubParts.Add(point.ModularPartsGroupID, point.SelectedModularWeaponPart);
                     oldSkins.Add(point.ModularPartsGroupID, point.CurrentSkin);
 
-                    RemoveSubAttachmentPoint(point, FireArm, oldSubParts);
+                    RemoveSubAttachmentPoint(point, FireArm, oldSubParts, oldSkins);
                 }
             }
 
@@ -470,7 +477,7 @@ namespace ModularWorkshop
                     oldSubParts.Add(point.ModularPartsGroupID, point.SelectedModularWeaponPart);
                     oldSkins.Add(point.ModularPartsGroupID, point.CurrentSkin);
 
-                    RemoveSubAttachmentPoint(point, FireArm, oldSubParts);
+                    RemoveSubAttachmentPoint(point, FireArm, oldSubParts, oldSkins);
                 }
                 if (oldPart.HasCustomMuzzleEffects)
                 {
@@ -626,16 +633,42 @@ namespace ModularWorkshop
                     oldSubParts.Add(point.ModularPartsGroupID, point.SelectedModularWeaponPart);
                     oldSkins.Add(point.ModularPartsGroupID, point.CurrentSkin);
 
-                    RemoveSubAttachmentPoint(point, FireArm, oldSubParts);
+                    RemoveSubAttachmentPoint(point, FireArm, oldSubParts, oldSkins);
                 }
 
                 RemovePartPointOccupation(oldPart, oldSubParts, oldSkins);
             }
 
             ModularHandguardAttachmentPoint.SelectedModularWeaponPart = selectedPart;
+
+            // New handguard operations
             ModularHandguard newPart = modularHandguardPrefab.GetComponent<ModularHandguard>();
             newPart.AdjustScale(ModularHandguardAttachmentPoint);
 
+            ModularHandguardOperations(newPart);
+
+            UpdateFireArm(oldPart, newPart);
+
+            UnityEngine.Object.Destroy(ModularHandguardAttachmentPoint.ModularPartPoint.gameObject);
+            ModularHandguardAttachmentPoint.ModularPartPoint = modularHandguardPrefab.transform;
+
+            newPart.EnablePart();
+
+            ApplyPartPointOccupation(newPart, oldSubParts, oldSkins);
+
+            TryApplyOldSkin(ModularHandguardAttachmentPoint, selectedPart, oldSkins, isRandomized);
+
+            ConfigureNewSubParts(newPart, oldSubParts, oldSkins, isRandomized);
+
+            PartAdded?.Invoke(ModularHandguardAttachmentPoint, newPart);
+
+            FireArm.ResetClampCOM();
+
+            return newPart;
+        }
+
+        private void ModularHandguardOperations(ModularHandguard newPart)
+        {
             FireArm.Foregrip.gameObject.SetActive(newPart.ActsLikeForeGrip);
             if (newPart.ActsLikeForeGrip)
             {
@@ -793,25 +826,6 @@ namespace ModularWorkshop
                         break;
                 }
             }
-
-            UpdateFireArm(oldPart, newPart);
-
-            UnityEngine.Object.Destroy(ModularHandguardAttachmentPoint.ModularPartPoint.gameObject);
-            ModularHandguardAttachmentPoint.ModularPartPoint = modularHandguardPrefab.transform;
-
-            newPart.EnablePart();
-
-            ApplyPartPointOccupation(newPart, oldSubParts, oldSkins);
-
-            TryApplyOldSkin(ModularHandguardAttachmentPoint, selectedPart, oldSkins, isRandomized);
-
-            ConfigureNewSubParts(newPart, oldSubParts, oldSkins, isRandomized);
-
-            PartAdded?.Invoke(ModularHandguardAttachmentPoint, newPart);
-
-            FireArm.ResetClampCOM();
-
-            return newPart;
         }
 
         public ModularStock ConfigureModularStock(string selectedPart, bool isRandomized)
@@ -845,10 +859,10 @@ namespace ModularWorkshop
 
                 foreach (var point in oldPart.SubAttachmentPoints)
                 {
-                    oldSubParts.Add(point.ModularPartsGroupID, point.SelectedModularWeaponPart);
-                    oldSkins.Add(point.ModularPartsGroupID, point.CurrentSkin);
+                    oldSubParts.AddOrReplace(point.ModularPartsGroupID, point.SelectedModularWeaponPart);
+                    oldSkins.AddOrReplace(point.ModularPartsGroupID, point.CurrentSkin);
 
-                    RemoveSubAttachmentPoint(point, FireArm, oldSubParts);
+                    RemoveSubAttachmentPoint(point, FireArm, oldSubParts, oldSkins);
                 }
 
                 if (oldPart.ChangesPosePosition)
@@ -1009,6 +1023,7 @@ namespace ModularWorkshop
                 ModularWorkshopManager.LogWarning(FireArm, $"No SkinsDefinition found for receiver skin path \"{SkinPath}\", but part receiver \"{FireArm.gameObject.name}\" set to skin name \"{CurrentSelectedReceiverSkinID}\". Naming error?");
             }
         }
+        
         public void GetReceiverMeshRenderers(FVRFireArm fireArm)
         {
             List<MeshRenderer> ignoredMeshRenderers = new();
@@ -1180,7 +1195,7 @@ namespace ModularWorkshop
                             oldSubParts.AddOrReplace(subPoint.ModularPartsGroupID, subPoint.SelectedModularWeaponPart);
                             oldSkins.AddOrReplace(subPoint.ModularPartsGroupID, subPoint.CurrentSkin);
 
-                            RemoveSubAttachmentPoint(subPoint, FireArm, oldSubParts);
+                            RemoveSubAttachmentPoint(subPoint, FireArm, oldSubParts, oldSkins);
                         }
                     }
 

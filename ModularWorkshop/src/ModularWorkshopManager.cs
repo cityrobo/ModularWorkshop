@@ -13,7 +13,7 @@ using BepInEx.Logging;
 
 namespace ModularWorkshop
 {
-    [BepInPlugin("h3vr.cityrobo.ModularWorkshopManager", "Modular Workshop Manager", "1.1.5")]
+    [BepInPlugin("h3vr.cityrobo.ModularWorkshopManager", "Modular Workshop Manager", "1.2.0")]
     [BepInDependency("h3vr.OpenScripts2")]
     public class ModularWorkshopManager : BaseUnityPlugin
     {
@@ -39,11 +39,11 @@ namespace ModularWorkshop
         private int _lastNumberOfSkinsDefinitions = 0;
         private int _lastNumberOfCategoryDefinitions = 0;
         private int _numberOfPartsTries = 0;
-        private int _numberOfSkinTries = 0;
+        private int _numberOfSkinsTries = 0;
         private int _numberOfCategoryTries = 0;
-        private bool _loadingPartDatabase = false;
-        private bool _loadingSkinDatabase = false;
-        private bool _loadingCategoryDatabase = false;
+        private bool _loadingPartsDatabase = false;
+        private bool _loadingSkinsDatabase = false;
+        private bool _loadingCategoriesDatabase = false;
 
         public ModularWorkshopManager()
         {
@@ -54,7 +54,7 @@ namespace ModularWorkshop
 
         public void Awake()
         {
-            if (!_loadingPartDatabase && !_loadingSkinDatabase)
+            if (!_loadingPartsDatabase && !_loadingSkinsDatabase)
             {
                 StartCoroutine(UpdatePartsDatabase());
                 StartCoroutine(UpdateSkinDatabase());
@@ -66,6 +66,7 @@ namespace ModularWorkshop
             Harmony.CreateAndPatchAll(typeof(ModularFVRPhysicalObject));
             Harmony.CreateAndPatchAll(typeof(ModularMagazineExtension));
             Harmony.CreateAndPatchAll(typeof(SnappyTriggerAddon));
+            Harmony.CreateAndPatchAll(typeof(MagazineCompatibilityAddon));
 
             Instance = this;
         }
@@ -79,7 +80,7 @@ namespace ModularWorkshop
         {
             if (ReloadDatabase.Value)
             {
-                if (!_loadingPartDatabase && !_loadingSkinDatabase)
+                if (!_loadingPartsDatabase && !_loadingSkinsDatabase)
                 {
                     StartCoroutine(UpdatePartsDatabase());
                     StartCoroutine(UpdateSkinDatabase());
@@ -91,7 +92,7 @@ namespace ModularWorkshop
 
         private IEnumerator UpdatePartsDatabase()
         {
-            _loadingPartDatabase = true;
+            _loadingPartsDatabase = true;
             s_foundModularPartsDefinitions.Clear();
             ModularWorkshopPartsGroupsDictionary.Clear();
             while (_numberOfPartsTries < MaximumNumberOfTries.Value)
@@ -131,16 +132,16 @@ namespace ModularWorkshop
                 yield return new WaitForSeconds(1f);
             }
 
-            _loadingPartDatabase = false;
+            _loadingPartsDatabase = false;
             Logger.LogInfo($"Finished loading with {_lastNumberOfPartsDefinitions} ModularWorkshopPartsDefinitions total and {ModularWorkshopPartsGroupsDictionary.Count} in Dictionary.");
         }
 
         private IEnumerator UpdateSkinDatabase()
         {
-            _loadingSkinDatabase = true;
+            _loadingSkinsDatabase = true;
             s_foundModularPartsDefinitions.Clear();
             ModularWorkshopSkinsDictionary.Clear();
-            while (_numberOfSkinTries < MaximumNumberOfTries.Value)
+            while (_numberOfSkinsTries < MaximumNumberOfTries.Value)
             {
                 ModularWorkshopSkinsDefinition[] skinsDefinitions = Resources.FindObjectsOfTypeAll<ModularWorkshopSkinsDefinition>().Where(d => !d.AutomaticallyCreated).ToArray();
 
@@ -174,15 +175,15 @@ namespace ModularWorkshop
                 if (_lastNumberOfSkinsDefinitions != skinsDefinitions.Length)
                 {
                     _lastNumberOfSkinsDefinitions = skinsDefinitions.Length;
-                    _numberOfSkinTries = 0;
+                    _numberOfSkinsTries = 0;
                     Logger.LogInfo($"Loaded {_lastNumberOfSkinsDefinitions} ModularWorkshopSkinsDefinition.");
                 }
-                else _numberOfSkinTries++;
+                else _numberOfSkinsTries++;
 
                 yield return new WaitForSeconds(1f);
             }
 
-            _loadingSkinDatabase = false;
+            _loadingSkinsDatabase = false;
             Logger.LogInfo($"Finished loading with {_lastNumberOfSkinsDefinitions} ModularWorkshopSkinsDefinition total and {ModularWorkshopSkinsDictionary.Values.Where(d=>!d.AutomaticallyCreated).Count()} in Dictionary.");
         }
 
@@ -193,7 +194,7 @@ namespace ModularWorkshop
         //    ModularWorkshopCategoryDictionary.Clear();
         //    while (_numberOfSkinTries < MaximumNumberOfTries.Value)
         //    {
-        //        //ModularWorkshopCategoryDefinition[] skinsDefinitions = Resources.FindObjectsOfTypeAll<ModularWorkshopCategoryDefinition>().Where(d => !d.AutomaticallyCreated).ToArray();
+        //        //ModularWorkshopCategoryDefinition[] categoriesDefinitions = Resources.FindObjectsOfTypeAll<ModularWorkshopCategoryDefinition>().Where(d => !d.AutomaticallyCreated).ToArray();
         //        ModularWorkshopCategoryDefinition[] categoryDefinitions = Resources.FindObjectsOfTypeAll<ModularWorkshopCategoryDefinition>();
 
         //        foreach (var categoryDefinition in categoryDefinitions)
@@ -205,10 +206,10 @@ namespace ModularWorkshop
         //                //if (partDefinition.ModularPartsGroupID == null) Logger.LogError($"{partDefinition.name} has null ModularPartsGroupID field!");
         //                string skinPath = categoryDefinition.ModularPartsGroupID + "/" + categoryDefinition.PartName;
 
-        //                if (ModularWorkshopSkinsDictionary.TryGetValue(skinPath, out ModularWorkshopSkinsDefinition skinsDefinitionOld))
+        //                if (ModularWorkshopCategoriesDictionary.TryGetValue(skinPath, out ModularWorkshopCategoriesDefinition categoriesDefinitionOld))
         //                {
-        //                    skinsDefinitionOld.SkinDefinitions.AddRange(categoryDefinition.SkinDefinitions);
-        //                    Logger.LogInfo($"Added more skins from ModularWorkshopSkinsDefinition {categoryDefinition.name} to ModularSkin {skinPath}.");
+        //                    categoriesDefinitionOld.SkinDefinitions.AddRange(categoryDefinition.SkinDefinitions);
+        //                    Logger.LogInfo($"Added more categories from ModularWorkshopCategoriesDefinition {categoryDefinition.name} to ModularSkin {skinPath}.");
         //                }
         //                else
         //                {
@@ -217,25 +218,25 @@ namespace ModularWorkshop
         //                        if (skin.DisplayName == string.Empty) skin.DisplayName = skin.ModularSkinID;
         //                    }
 
-        //                    ModularWorkshopSkinsDictionary.Add(skinPath, categoryDefinition);
-        //                    Logger.LogInfo($"Loaded ModularWorkshopSkinsDefinition {categoryDefinition.name} with ModularSkin {skinPath}.");
+        //                    ModularWorkshopCategoriesDictionary.Add(skinPath, categoryDefinition);
+        //                    Logger.LogInfo($"Loaded ModularWorkshopCategoriesDefinition {categoryDefinition.name} with ModularSkin {skinPath}.");
         //                }
         //            }
         //        }
 
-        //        if (_lastNumberOfSkinsDefinitions != categoryDefinitions.Length)
+        //        if (_lastNumberOfCategoriesDefinitions != categoryDefinitions.Length)
         //        {
-        //            _lastNumberOfSkinsDefinitions = categoryDefinitions.Length;
+        //            _lastNumberOfCategoriesDefinitions = categoryDefinitions.Length;
         //            _numberOfSkinTries = 0;
-        //            Logger.LogInfo($"Loaded {_lastNumberOfSkinsDefinitions} ModularWorkshopSkinsDefinition.");
+        //            Logger.LogInfo($"Loaded {_lastNumberOfCategoriesDefinitions} ModularWorkshopCategoriesDefinition.");
         //        }
         //        else _numberOfSkinTries++;
 
         //        yield return new WaitForSeconds(1f);
         //    }
 
-        //    _loadingSkinDatabase = false;
-        //    Logger.LogInfo($"Finished loading with {_lastNumberOfSkinsDefinitions} ModularWorkshopSkinsDefinition total and {ModularWorkshopSkinsDictionary.Values.Where(d => !d.AutomaticallyCreated).Count()} in Dictionary.");
+        //    _loadingCategoriesDatabase = false;
+        //    Logger.LogInfo($"Finished loading with {_lastNumberOfCategoriesDefinitions} ModularWorkshopCategoriesDefinition total and {ModularWorkshopCategoriesDictionary.Values.Where(d => !d.AutomaticallyCreated).Count()} in Dictionary.");
         //}
 
         public static void Log(MonoBehaviour plugin, string message)

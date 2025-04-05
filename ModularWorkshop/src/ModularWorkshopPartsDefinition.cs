@@ -29,6 +29,11 @@ namespace ModularWorkshop
                 Dictionary<string, GameObject> keyValuePairs = new();
                 foreach (var prefab in ModularPrefabs)
                 {
+                    if (prefab == null)
+                    {
+                        ModularWorkshopManager.LogWarning($"Null entry in ModularPrefabs list in ModularPartsGroupID \"{ModularPartsGroupID}\"! Remove empty space or make sure the prefab is not also in the Otherloader Build Item!");
+                        continue;
+                    }
                     string Name = prefab.GetComponent<ModularWeaponPart>().Name;
                     try
                     {

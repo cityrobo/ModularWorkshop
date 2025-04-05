@@ -61,20 +61,23 @@ namespace ModularWorkshop
                 }
                 else if (value == null && _firearm != null)
                 {
-                    _firearm = value;
-
                     switch (_firearm)
                     {
                         case ClosedBoltWeapon w:
                             w.FireSelector_Modes = (ClosedBoltWeapon.FireSelectorMode[])_originalFireModes;
+                            if (w.m_fireSelectorMode >= w.FireSelector_Modes.Length) w.m_fireSelectorMode = w.FireSelector_Modes.Length - 1;
                             break;
                         case OpenBoltReceiver w:
                             w.FireSelector_Modes = (OpenBoltReceiver.FireSelectorMode[])_originalFireModes;
+                            if (w.m_fireSelectorMode >= w.FireSelector_Modes.Length) w.m_fireSelectorMode = w.FireSelector_Modes.Length - 1;
                             break;
                         case Handgun w:
                             w.FireSelectorModes = (Handgun.FireSelectorMode[])_originalFireModes;
+                            if (w.m_fireSelectorMode >= w.FireSelectorModes.Length) w.m_fireSelectorMode = w.FireSelectorModes.Length - 1;
                             break;
                     }
+
+                    _firearm = null;
                 }
             }
             get => _firearm;

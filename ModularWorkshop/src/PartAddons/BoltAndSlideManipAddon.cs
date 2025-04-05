@@ -19,10 +19,10 @@ namespace ModularWorkshop
                 {
                     switch (value)
                     {
-                        case Handgun _handgun:
+                        case Handgun w:
                             foreach (var group in ManipulateTransform.TransformGroups)
                             {
-                                group.ObservedTransform = _handgun.Slide.transform;
+                                group.ObservedTransform = w.Slide.transform;
                             }
                             break;
                         case ClosedBoltWeapon w:
