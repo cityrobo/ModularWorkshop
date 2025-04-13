@@ -47,7 +47,7 @@ namespace ModularWorkshop
                 if (collider.gameObject.tag == "FVRFireArmReloadTriggerWell")
                 {
                     FVRFireArmReloadTriggerWell reloadTriggerWell = collider.gameObject.GetComponent<FVRFireArmReloadTriggerWell>();
-                    if (reloadTriggerWell != null && _existingMagazineCompatibilityAddons.TryGetValue(reloadTriggerWell.FireArm, out MagazineCompatibilityAddon magazineCompatibilityAddon))
+                    if (reloadTriggerWell != null && reloadTriggerWell.FireArm != null && _existingMagazineCompatibilityAddons.TryGetValue(reloadTriggerWell.FireArm, out MagazineCompatibilityAddon magazineCompatibilityAddon))
                     {
                         if (reloadTriggerWell.IsAttachableWell && reloadTriggerWell.AFireArm != null && reloadTriggerWell.AFireArm.Magazine == null)
                         {
