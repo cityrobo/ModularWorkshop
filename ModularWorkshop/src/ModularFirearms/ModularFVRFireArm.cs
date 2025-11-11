@@ -244,10 +244,15 @@ namespace ModularWorkshop
             ModularWeaponPart part = subPoint.ModularPartPoint.GetComponent<ModularWeaponPart>();
             if (part != null)
             {
-                IPartFireArmRequirement[] addons = part.GetComponents<IPartFireArmRequirement>();
-                foreach (var addon in addons)
+                IPartFireArmRequirement[] partFireArmRequiremen = part.GetComponents<IPartFireArmRequirement>();
+                foreach (var addon in partFireArmRequiremen)
                 {
                     addon.FireArm = null;
+                }
+                IPartPhysicalObjectRequirement[] partPhysicalObjectRequirement = part.GetComponents<IPartPhysicalObjectRequirement>();
+                foreach (var addon in partPhysicalObjectRequirement)
+                {
+                    addon.PhysicalObject = null;
                 }
 
                 part.DisablePart();
@@ -1084,6 +1089,7 @@ namespace ModularWorkshop
         private void UpdateFireArm(ModularWeaponPart oldPart, ModularWeaponPart newPart)
         {
             IPartFireArmRequirement[] partFireArmRequirements;
+            IPartPhysicalObjectRequirement[] partPhysicalObjectRequirement;
             if (oldPart != null)
             {
                 foreach (var mount in oldPart.AttachmentMounts)
@@ -1099,7 +1105,13 @@ namespace ModularWorkshop
                 {
                     item.FireArm = null;
                 }
+                partPhysicalObjectRequirement = oldPart.GetComponents<IPartPhysicalObjectRequirement>();
+                foreach (var item in partPhysicalObjectRequirement)
+                {
+                    item.PhysicalObject = null;
+                }
             }
+
             FireArm.AttachmentMounts.AddRange(newPart.AttachmentMounts);
             foreach (var mount in newPart.AttachmentMounts)
             {
@@ -1127,6 +1139,11 @@ namespace ModularWorkshop
             foreach (var item in partFireArmRequirements)
             {
                 item.FireArm = FireArm;
+            }
+            partPhysicalObjectRequirement = newPart.GetComponents<IPartPhysicalObjectRequirement>();
+            foreach (var item in partPhysicalObjectRequirement)
+            {
+                item.PhysicalObject = FireArm;
             }
         }
 
@@ -1187,6 +1204,11 @@ namespace ModularWorkshop
                         foreach (var addon in partFireArmRequirements)
                         {
                             addon.FireArm = null;
+                        }
+                        IPartPhysicalObjectRequirement[] partPhysicalObjectRequirement = partToRemove.GetComponents<IPartPhysicalObjectRequirement>();
+                        foreach (var addon in partPhysicalObjectRequirement)
+                        {
+                            addon.PhysicalObject = null;
                         }
 
                         ModularWeaponPartsAttachmentPoint[] subPoints = partToRemove.SubAttachmentPoints;

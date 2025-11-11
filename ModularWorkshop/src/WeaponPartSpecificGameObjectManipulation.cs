@@ -10,7 +10,7 @@ namespace ModularWorkshop
 {
     public class WeaponPartSpecificGameObjectManipulation : MonoBehaviour, IPartFireArmRequirement
     {
-        [Tooltip("Use this when you want to toggle something on the gun itself, leave empty when toggling something on a part. This component needs to be put next to the ModularWeaponPart component in that case.")]
+        [Tooltip("Use this when you want to move something on the gun itself, leave empty when moving something on a part. This component needs to be put next to the ModularWeaponPart component in that case.")]
         public GameObject ModularWeapon;
         private IModularWeapon _modularWeapon;
 

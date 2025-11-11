@@ -15,6 +15,7 @@ namespace ModularWorkshop
         public FVRFoldingStockXAxis FoldingStockX;
         public FVRFoldingStockYAxis FoldingStockY;
 
+        [Header("Pose Position")]
         public bool ChangesPosePosition = false;
         public Transform CustomPoseOverride;
         [HideInInspector]

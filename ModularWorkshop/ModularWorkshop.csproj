@@ -88,6 +88,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="src\ModularFirearms\ModularLeverActionFirearm.cs" />
+    <Compile Include="src\ModularFirearms\ModularSingleActionRevolver.cs" />
+    <Compile Include="src\PartAddons\GameObjectDictionaryMoveToAddon.cs" />
+    <Compile Include="src\PartAddons\PicatinnyForwardStopAddon.cs" />
+    <Compile Include="src\PartAddons\AttachmentMountTypeChangeAddon.cs" />
+    <Compile Include="src\PartAddons\IPartPhysicalObjectRequirement.cs" />
     <Compile Include="src\PartAddons\NonReciprocatingSlideHandleAddon.cs" />
     <Compile Include="src\PartAddons\BoltAndSlideInteractionVisualEffectAddon.cs" />
     <Compile Include="src\PartAddons\FireModeAddon.cs" />
@@ -106,6 +111,7 @@
     <Compile Include="src\ModularWeaponParts\ModularHandguardExtension.cs" />
     <Compile Include="src\ModularWorkshopCategoryDefinition.cs" />
     <Compile Include="src\ModularFVRPhysicalObject.cs" />
+    <Compile Include="src\PartAddons\GameObjectBasedManipAddon.cs" />
     <Compile Include="src\ReceiverSkinSystem.cs" />
     <Compile Include="src\ModularPreattachedAttachments.cs" />
     <Compile Include="src\ModularPreattachedForeignAttachments.cs" />
@@ -117,7 +123,7 @@
     <Compile Include="src\ModularFirearms\ModularOpenBoltReceiver.cs" />
     <Compile Include="src\ModularFirearms\ModularHandgun.cs" />
     <Compile Include="src\ModularFirearms\ModularFVRFireArm.cs" />
-    <Compile Include="src\IPartFireArmRequirement.cs" />
+    <Compile Include="src\PartAddons\IPartFireArmRequirement.cs" />
     <Compile Include="src\ModularFirearms\IModularWeapon.cs" />
     <Compile Include="src\PartAddons\HeatingEffectAddon.cs" />
     <Compile Include="src\ModularWeaponParts\ModularBarrelExtension.cs" />

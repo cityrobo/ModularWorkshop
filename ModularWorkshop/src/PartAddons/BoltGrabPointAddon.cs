@@ -10,7 +10,7 @@ namespace ModularWorkshop
     public class BoltGrabPointAddon : MonoBehaviour , IPartFireArmRequirement
     {
         public enum EBoltType {Bolt, BoltHandle }
-
+        [Header("Allows adding a new interaction zone to a bolt or handle.")]
         public EBoltType BoltType;
 
         public GameObject ColliderReference;
@@ -21,6 +21,8 @@ namespace ModularWorkshop
         private FVRFireArm _firearm;
 
         private Collider _origCollider;
+        private string _origLayer = string.Empty;
+        private const string INTERACTABLE_LAYER = "Interactable";
 
         private Collider _addedCollider;
 
@@ -112,13 +114,26 @@ namespace ModularWorkshop
                             break;
                     }
 
+                    if (bolt == null)
+                    {
+                        ModularWorkshopManager.LogError(this, $"Firearm type not supported!");
+                        _firearm = null;
+                        return;
+                    }
+
+                    if (bolt.gameObject.layer != LayerMask.NameToLayer(INTERACTABLE_LAYER))
+                    {
+                        _origLayer = LayerMask.LayerToName(bolt.gameObject.layer);
+                        bolt.gameObject.layer = LayerMask.NameToLayer(INTERACTABLE_LAYER);
+                    }
+
                     Vector3 transformedCenterGlobal = _colliderReferenceProxy.parent.TransformPoint(_colliderReferenceProxy.localPosition + _addedColliderCenter.MultiplyComponentWise(_colliderReferenceProxy.localScale));
                     Vector3 transformedCenterLocal = bolt.InverseTransformPoint(transformedCenterGlobal);
 
                     if (ReplaceExistingCollider)
                     {
                         _origCollider = bolt.GetComponent<Collider>();
-                        _origCollider.enabled = false;
+                        _origCollider?.enabled = false;
                     }
 
                     switch (_addedColliderType)
@@ -147,7 +162,12 @@ namespace ModularWorkshop
                 {
                     if (ReplaceExistingCollider)
                     {
-                        _origCollider.enabled = true;
+                        _origCollider?.enabled = true;
+                    }
+
+                    if (_origLayer != string.Empty)
+                    {
+                        _addedCollider.gameObject.layer = LayerMask.NameToLayer(_origLayer);
                     }
 
                     Destroy(_addedCollider);

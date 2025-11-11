@@ -812,7 +812,7 @@ namespace ModularWorkshop
         // Dust Cover
         public void ModifyDustCover(bool activate)
         {
-            ClosedBoltReceiverDustCoverTrigger closedBoltReceiverDustCoverTrigger = DustCover.GetComponent<ClosedBoltReceiverDustCoverTrigger>();
+            ClosedBoltReceiverDustCoverTrigger closedBoltDustCover = DustCover.GetComponent<ClosedBoltReceiverDustCoverTrigger>();
             OpenBoltDustCover openBoltDustCover = DustCover.GetComponent<OpenBoltDustCover>();
 
             if (activate)
@@ -821,14 +821,14 @@ namespace ModularWorkshop
                 {
                     case ClosedBoltWeapon w:
                         if (openBoltDustCover != null) Destroy(openBoltDustCover);
-                        closedBoltReceiverDustCoverTrigger.Bolt = w.Bolt;
+                        closedBoltDustCover?.Bolt = w.Bolt;
                         break;
                     case OpenBoltReceiver w:
-                        if (closedBoltReceiverDustCoverTrigger != null) Destroy(closedBoltReceiverDustCoverTrigger);
-                        openBoltDustCover.Bolt = w.Bolt;
+                        if (closedBoltDustCover != null) Destroy(closedBoltDustCover);
+                        openBoltDustCover?.Bolt = w.Bolt;
                         break;
                     default:
-                        if (closedBoltReceiverDustCoverTrigger != null) Destroy(closedBoltReceiverDustCoverTrigger);
+                        if (closedBoltDustCover != null) Destroy(closedBoltDustCover);
                         if (openBoltDustCover != null) Destroy(openBoltDustCover);
                         break;
                 }
