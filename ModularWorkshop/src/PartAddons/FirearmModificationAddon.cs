@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using System.Linq;
 using FistVR;
 using OpenScripts2;
-using System.Linq;
+using UnityEngine;
 
 namespace ModularWorkshop
 {
     [RequireComponent(typeof(ModularWeaponPart))]
-    public class FirearmModificationAddon : MonoBehaviour , IPartFireArmRequirement
+    public class FirearmModificationAddon : MonoBehaviour, IPartFireArmRequirement
     {
         public enum E_ModificationMode
         {
@@ -123,8 +121,8 @@ namespace ModularWorkshop
 
         private FVRFireArm _firearm;
         public FVRFireArm FireArm
-        { 
-            set 
+        {
+            set
             {
                 if (value != null)
                 {
@@ -149,7 +147,7 @@ namespace ModularWorkshop
                     if (BoltHandleRotatingPiece != null) ModifyBoltHandleRotatingPiece(true);
 
                     if (BoltRelease != null) ModifyBoltRelease(true);
-                    
+
                     if (TiltinBarrel != null) ModifyTiltingBarrel(true);
 
                     if (AdjustsBoltActionBoltBaseRotOffset) ModifyBoltHandleBaseRotOffset(true);
@@ -265,7 +263,7 @@ namespace ModularWorkshop
         // Bolt/Slide
         private void ModifyBoltReleaseBehaviour(bool mode)
         {
-            switch (_firearm) 
+            switch (_firearm)
             {
                 case ModularClosedBoltWeapon w:
                     if (w.AllowExternalBoltReleaseButtonModification)
@@ -487,8 +485,8 @@ namespace ModularWorkshop
         // Magazine Release Object
         private void ModifyMagazineRelease(bool activate)
         {
-            if (activate) 
-            { 
+            if (activate)
+            {
                 switch (_firearm)
                 {
                     case ClosedBoltWeapon w:
@@ -710,6 +708,17 @@ namespace ModularWorkshop
                         w.Handle.RotatingPartNeutralEulers = BoltHandleRotatingPartNeutralEulers;
                         w.Handle.RotatingPartRightEulers = BoltHandleRotatingPartRightEulers;
                         break;
+                    case OpenBoltReceiver o:
+                        OpenBoltChargingHandle _openCharge = o.GetComponentInChildren<OpenBoltChargingHandle>(true);
+                        if (_openCharge != null)
+                        {
+                            _openCharge.HasRotatingPart = true;
+                            _openCharge.RotatingPart = BoltHandleRotatingPiece;
+                            _openCharge.RotatingPartLeftEulers = BoltHandleRotatingPartLeftEulers;
+                            _openCharge.RotatingPartNeutralEulers = BoltHandleRotatingPartNeutralEulers;
+                            _openCharge.RotatingPartRightEulers = BoltHandleRotatingPartRightEulers;
+                        }
+                        break;
                 }
             }
             else
@@ -722,6 +731,17 @@ namespace ModularWorkshop
                         w.Handle.RotatingPartLeftEulers = Vector3.zero;
                         w.Handle.RotatingPartNeutralEulers = Vector3.zero;
                         w.Handle.RotatingPartRightEulers = Vector3.zero;
+                        break;
+                    case OpenBoltReceiver o:
+                        OpenBoltChargingHandle _openCharge = o.GetComponentInChildren<OpenBoltChargingHandle>(true);
+                        if (_openCharge != null)
+                        {
+                            _openCharge.HasRotatingPart = false;
+                            _openCharge.RotatingPart = null;
+                            _openCharge.RotatingPartLeftEulers = Vector3.zero;
+                            _openCharge.RotatingPartNeutralEulers = Vector3.zero;
+                            _openCharge.RotatingPartRightEulers = Vector3.zero;
+                        }
                         break;
                 }
             }
