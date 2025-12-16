@@ -710,6 +710,17 @@ namespace ModularWorkshop
                         w.Handle.RotatingPartNeutralEulers = BoltHandleRotatingPartNeutralEulers;
                         w.Handle.RotatingPartRightEulers = BoltHandleRotatingPartRightEulers;
                         break;
+                    case OpenBoltReceiver o:
+                        OpenBoltChargingHandle _openCharge = o.GetComponentInChildren<OpenBoltChargingHandle>(true);
+                        if (_openCharge != null)
+                        {
+                            _openCharge.HasRotatingPart = true;
+                            _openCharge.RotatingPart = BoltHandleRotatingPiece;
+                            _openCharge.RotatingPartLeftEulers = BoltHandleRotatingPartLeftEulers;
+                            _openCharge.RotatingPartNeutralEulers = BoltHandleRotatingPartNeutralEulers;
+                            _openCharge.RotatingPartRightEulers = BoltHandleRotatingPartRightEulers;
+                        }
+                        break;
                 }
             }
             else
@@ -722,6 +733,17 @@ namespace ModularWorkshop
                         w.Handle.RotatingPartLeftEulers = Vector3.zero;
                         w.Handle.RotatingPartNeutralEulers = Vector3.zero;
                         w.Handle.RotatingPartRightEulers = Vector3.zero;
+                        break;
+                    case OpenBoltReceiver o:
+                        OpenBoltChargingHandle _openCharge = o.GetComponentInChildren<OpenBoltChargingHandle>(true);
+                        if (_openCharge != null)
+                        {
+                            _openCharge.HasRotatingPart = false;
+                            _openCharge.RotatingPart = null;
+                            _openCharge.RotatingPartLeftEulers = Vector3.zero;
+                            _openCharge.RotatingPartNeutralEulers = Vector3.zero;
+                            _openCharge.RotatingPartRightEulers = Vector3.zero;
+                        }
                         break;
                 }
             }
