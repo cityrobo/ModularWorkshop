@@ -148,12 +148,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>if $(ConfigurationName) == Release copy $(TargetPath) $(ProjectDir)$(TargetName).dll
-if $(ConfigurationName) == Release copy $(TargetDir)ModularWorkshop.pdb $(ProjectDir)ModularWorkshop.pdb
-if $(ConfigurationName) == Release $(ProjectDir)pdb2mdb.exe $(ProjectDir)ModularWorkshop.dll
-if $(ConfigurationName) == Release copy $(ProjectDir)ModularWorkshop.dll "C:\Users\Cityrobo\AppData\Roaming\r2modmanPlus-local\H3VR\profiles\Creating Mods Stratum\BepInEx\plugins\cityrobo-ModularWorkshop\ModularWorkshop.dll"
-if $(ConfigurationName) == Release copy $(ProjectDir)ModularWorkshop.dll.mdb "C:\Users\Cityrobo\AppData\Roaming\r2modmanPlus-local\H3VR\profiles\Creating Mods Stratum\BepInEx\plugins\cityrobo-ModularWorkshop\ModularWorkshop.dll.mdb"
-if $(ConfigurationName) == Release copy $(ProjectDir)ModularWorkshop.dll "C:\Users\Cityrobo\AppData\Roaming\r2modmanPlus-local\H3VR\profiles\ModularWorkshop\BepInEx\plugins\cityrobo-ModularWorkshop\ModularWorkshop.dll"
-if $(ConfigurationName) == Release copy $(ProjectDir)ModularWorkshop.dll.mdb "C:\Users\Cityrobo\AppData\Roaming\r2modmanPlus-local\H3VR\profiles\\ModularWorkshop\BepInEx\plugins\cityrobo-ModularWorkshop\ModularWorkshop.dll.mdb"</PostBuildEvent>
+    <PostBuildEvent>
+</PostBuildEvent>
   </PropertyGroup>
 </Project>
