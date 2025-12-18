@@ -89,6 +89,8 @@ namespace ModularWorkshop
             }
         }
 
+        private readonly List<string> _occupiedPartsPoints = new();
+
         public void Awake()
         {
             if (MainObject == null) MainObject = GetComponent<FVRPhysicalObject>();
@@ -377,7 +379,7 @@ namespace ModularWorkshop
             {
                 oldPart.DisablePart();
 
-                RemovePartPointOccupation(oldPart, oldSubParts, oldSkins);
+                RemovePartsPointOccupation(oldPart, oldSubParts, oldSkins);
 
                 if (!oldSkins.ContainsKey(modularWeaponPartsAttachmentPoint.ModularPartsGroupID)) oldSkins.Add(modularWeaponPartsAttachmentPoint.ModularPartsGroupID, modularWeaponPartsAttachmentPoint.CurrentSkin);
 
@@ -396,6 +398,19 @@ namespace ModularWorkshop
 
                     MainObject.AttachmentMounts.Remove(mount);
                 }
+
+                switch (MainObject)
+                {
+                    // If the main object is a attachment, we need to remove the submounts from its attachment interface
+                    case FVRFireArmAttachment o:
+                        List<FVRFireArmAttachmentMount> tempSubMountList = o.AttachmentInterface.SubMounts.ToList();
+                        tempSubMountList.RemoveAll(o => oldPart.AttachmentMounts.Contains(o));
+                        o.AttachmentInterface.SubMounts = tempSubMountList.ToArray();
+                        break;
+                    default:
+                        break;
+                }
+
                 MainObject.Slots = MainObject.Slots.Where(s => !oldPart.SubQuickBeltSlots.Contains(s)).ToArray();
 
                 // Addon Operations
@@ -428,7 +443,7 @@ namespace ModularWorkshop
 
             newPart.EnablePart();
 
-            ApplyPartPointOccupation(newPart, oldSubParts, oldSkins);
+            ApplyPartsPointOccupation(newPart, oldSubParts, oldSkins);
 
             MainObject.AttachmentMounts.AddRange(newPart.AttachmentMounts);
             foreach (var mount in newPart.AttachmentMounts)
@@ -446,9 +461,16 @@ namespace ModularWorkshop
             // Fix handgun slide colliders
             switch (MainObject)
             {
-                case Handgun w:
-                    w.m_slideCols.Clear();
-                    w.InitSlideCols();
+                // If the main object is a handgun, we need to reinitialize the slide colliders, so that physics based racking can work properly
+                case Handgun o:
+                    o.m_slideCols.Clear();
+                    o.InitSlideCols();
+                    break;
+                // If the main object is a attachment, we need to add the submounts to its attachment interface
+                case FVRFireArmAttachment o:
+                    List<FVRFireArmAttachmentMount> tempSubMountList = o.AttachmentInterface.SubMounts.ToList();
+                    tempSubMountList.AddRange(newPart.AttachmentMounts);
+                    o.AttachmentInterface.SubMounts = tempSubMountList.ToArray();
                     break;
                 default:
                     break;
@@ -469,76 +491,78 @@ namespace ModularWorkshop
             return newPart;
         }
 
-        private void UpdateMainObject(ModularWeaponPart oldPart, ModularWeaponPart newPart)
-        {
-            IPartFireArmRequirement[] partFireArmRequirements;
-            IPartPhysicalObjectRequirement[] partPhysicalObjectRequirement;
-            if (oldPart != null)
-            {
-                foreach (var mount in oldPart.AttachmentMounts)
-                {
-                    DetachAllAttachmentsFromMount(mount);
+        //private void UpdateMainObject(ModularWeaponPart oldPart, ModularWeaponPart newPart)
+        //{
+        //    IPartFireArmRequirement[] partFireArmRequirements;
+        //    IPartPhysicalObjectRequirement[] partPhysicalObjectRequirement;
+        //    if (oldPart != null)
+        //    {
+        //        foreach (var mount in oldPart.AttachmentMounts)
+        //        {
+        //            DetachAllAttachmentsFromMount(mount);
 
-                    MainObject.AttachmentMounts.Remove(mount);
-                }
-                MainObject.Slots = MainObject.Slots.Where(s => !oldPart.SubQuickBeltSlots.Contains(s)).ToArray();
+        //            MainObject.AttachmentMounts.Remove(mount);
+        //        }
+        //        MainObject.Slots = MainObject.Slots.Where(s => !oldPart.SubQuickBeltSlots.Contains(s)).ToArray();
 
-                partFireArmRequirements = oldPart.GetComponents<IPartFireArmRequirement>();
-                foreach (var item in partFireArmRequirements)
-                {
-                    item.FireArm = null;
-                }
-                partPhysicalObjectRequirement = oldPart.GetComponents<IPartPhysicalObjectRequirement>();
-                foreach (var item in partPhysicalObjectRequirement)
-                {
-                    item.PhysicalObject = null;
-                }
-            }
+        //        partFireArmRequirements = oldPart.GetComponents<IPartFireArmRequirement>();
+        //        foreach (var item in partFireArmRequirements)
+        //        {
+        //            item.FireArm = null;
+        //        }
+        //        partPhysicalObjectRequirement = oldPart.GetComponents<IPartPhysicalObjectRequirement>();
+        //        foreach (var item in partPhysicalObjectRequirement)
+        //        {
+        //            item.PhysicalObject = null;
+        //        }
+        //    }
 
-            MainObject.AttachmentMounts.AddRange(newPart.AttachmentMounts);
-            foreach (var mount in newPart.AttachmentMounts)
-            {
-                mount.Parent = MainObject;
-                mount.MyObject = MainObject;
-            }
+        //    MainObject.AttachmentMounts.AddRange(newPart.AttachmentMounts);
+        //    foreach (var mount in newPart.AttachmentMounts)
+        //    {
+        //        mount.Parent = MainObject;
+        //        mount.MyObject = MainObject;
+        //    }
 
-            MainObject.Slots.AddRangeToArray(newPart.SubQuickBeltSlots);
+        //    MainObject.Slots.AddRangeToArray(newPart.SubQuickBeltSlots);
 
-            MainObject.m_colliders = MainObject.GetComponentsInChildren<Collider>(true);
+        //    MainObject.m_colliders = MainObject.GetComponentsInChildren<Collider>(true);
 
-            if (MainObject.m_quickbeltSlot != null) MainObject.SetAllCollidersToLayer(false, "NoCol");
+        //    if (MainObject.m_quickbeltSlot != null) MainObject.SetAllCollidersToLayer(false, "NoCol");
 
-            switch (MainObject)
-            {
-                case Handgun w:
-                    w.m_slideCols.Clear();
-                    w.InitSlideCols();
-                    break;
-                default:
-                    break;
-            }
+        //    switch (MainObject)
+        //    {
+        //        case Handgun o:
+        //            o.m_slideCols.Clear();
+        //            o.InitSlideCols();
+        //            break;
+        //        default:
+        //            break;
+        //    }
 
-            partFireArmRequirements = newPart.GetComponents<IPartFireArmRequirement>();
-            foreach (var item in partFireArmRequirements)
-            {
-                item.FireArm = MainObject as FVRFireArm;
-            }
-            partPhysicalObjectRequirement = newPart.GetComponents<IPartPhysicalObjectRequirement>();
-            foreach (var item in partPhysicalObjectRequirement)
-            {
-                item.PhysicalObject = MainObject;
-            }
-        }
+        //    partFireArmRequirements = newPart.GetComponents<IPartFireArmRequirement>();
+        //    foreach (var item in partFireArmRequirements)
+        //    {
+        //        item.FireArm = MainObject as FVRFireArm;
+        //    }
+        //    partPhysicalObjectRequirement = newPart.GetComponents<IPartPhysicalObjectRequirement>();
+        //    foreach (var item in partPhysicalObjectRequirement)
+        //    {
+        //        item.PhysicalObject = MainObject;
+        //    }
+        //}
 
-        public void AddSubAttachmentPoint(ModularWeaponPartsAttachmentPoint subPoint, FVRPhysicalObject fireArm, Dictionary<string, string> oldSubParts, Dictionary<string, string> oldSkins, string selectedPart)
+        public void AddSubAttachmentPoint(ModularWeaponPartsAttachmentPoint subPoint, FVRPhysicalObject mainObject, Dictionary<string, string> oldSubParts, Dictionary<string, string> oldSkins, string selectedPart)
         {
             SubAttachmentPoints.Add(subPoint);
-            ConfigureModularWeaponPart(subPoint, selectedPart, fireArm, oldSubParts, oldSkins);
+            ConfigureModularWeaponPart(subPoint, selectedPart, mainObject, oldSubParts, oldSkins);
 
             WorkshopPlatform?.CreateUIForPoint(subPoint);
+
+            if (_occupiedPartsPoints.Contains(subPoint.ModularPartsGroupID)) DisablePartsPoint(subPoint, oldSubParts, oldSkins);
         }
 
-        public void RemoveSubAttachmentPoint(ModularWeaponPartsAttachmentPoint subPoint, FVRPhysicalObject fireArm, Dictionary<string, string> oldSubParts, Dictionary<string, string> oldSkins)
+        public void RemoveSubAttachmentPoint(ModularWeaponPartsAttachmentPoint subPoint, FVRPhysicalObject mainObject, Dictionary<string, string> oldSubParts, Dictionary<string, string> oldSkins)
         {
             SubAttachmentPoints.Remove(subPoint);
 
@@ -562,7 +586,7 @@ namespace ModularWorkshop
                 {
                     DetachAllAttachmentsFromMount(mount);
 
-                    fireArm.AttachmentMounts.Remove(mount);
+                    mainObject.AttachmentMounts.Remove(mount);
                 }
 
                 foreach (var subSubPoint in part.SubAttachmentPoints)
@@ -570,7 +594,7 @@ namespace ModularWorkshop
                     oldSubParts.Add(subSubPoint.ModularPartsGroupID, subSubPoint.SelectedModularWeaponPart);
                     oldSkins.AddOrReplace(subPoint.ModularPartsGroupID, subPoint.CurrentSkin);
 
-                    RemoveSubAttachmentPoint(subSubPoint, fireArm, oldSubParts, oldSkins);
+                    RemoveSubAttachmentPoint(subSubPoint, mainObject, oldSubParts, oldSkins);
                 }
             }
             WorkshopPlatform?.RemoveUIFromPoint(subPoint);
@@ -592,68 +616,80 @@ namespace ModularWorkshop
             }
         }
 
-        private void RemovePartPointOccupation(ModularWeaponPart part, Dictionary<string, string> oldSubParts, Dictionary<string, string> oldSkins)
-        {
-            foreach (var alsoOccupiesPointWithModularPartsGroupID in part.AlsoOccupiesPointWithModularPartsGroupIDs)
-            {
-                if (AllAttachmentPoints.TryGetValue(alsoOccupiesPointWithModularPartsGroupID, out ModularWeaponPartsAttachmentPoint disabledPoint))
-                {
-                    disabledPoint.IsPointDisabled = false;
-                    ConfigureModularWeaponPart(disabledPoint, disabledPoint.SelectedModularWeaponPart, false, oldSubParts, oldSkins);
-
-                    if (!SubAttachmentPoints.Contains(disabledPoint)) WorkshopPlatform?.CreateUIForPoint(disabledPoint, ModularWorkshopUI.EPartType.MainWeaponGeneralAttachmentPoint);
-                    else WorkshopPlatform?.CreateUIForPoint(disabledPoint);
-                }
-            }
-        }
-
-        private void ApplyPartPointOccupation(ModularWeaponPart part, Dictionary<string, string> oldSubParts, Dictionary<string, string> oldSkins)
+        private void ApplyPartsPointOccupation(ModularWeaponPart part, Dictionary<string, string> oldSubParts, Dictionary<string, string> oldSkins)
         {
             foreach (var alsoOccupiesPointWithModularPartsGroupID in part.AlsoOccupiesPointWithModularPartsGroupIDs)
             {
                 if (AllAttachmentPoints.TryGetValue(alsoOccupiesPointWithModularPartsGroupID, out ModularWeaponPartsAttachmentPoint pointToDisable))
                 {
-                    WorkshopPlatform?.RemoveUIFromPoint(pointToDisable);
+                    _occupiedPartsPoints.Add(alsoOccupiesPointWithModularPartsGroupID);
 
-                    pointToDisable.IsPointDisabled = true;
-                    GameObject temp = new(pointToDisable.ModularPartsGroupID + "_TempPoint");
-                    temp.transform.position = pointToDisable.ModularPartPoint.position;
-                    temp.transform.rotation = pointToDisable.ModularPartPoint.rotation;
-                    temp.transform.parent = pointToDisable.ModularPartPoint.parent;
+                    DisablePartsPoint(pointToDisable, oldSubParts, oldSkins);
+                }
+            }
+        }
 
-                    if (pointToDisable.ModularPartPoint.TryGetComponent(out ModularWeaponPart partToRemove))
+        private void DisablePartsPoint(ModularWeaponPartsAttachmentPoint pointToDisable, Dictionary<string, string> oldSubParts, Dictionary<string, string> oldSkins)
+        {
+            WorkshopPlatform?.RemoveUIFromPoint(pointToDisable);
+
+            pointToDisable.IsPointDisabled = true;
+            GameObject temp = new(pointToDisable.ModularPartsGroupID + "_TempPoint");
+            temp.transform.position = pointToDisable.ModularPartPoint.position;
+            temp.transform.rotation = pointToDisable.ModularPartPoint.rotation;
+            temp.transform.parent = pointToDisable.ModularPartPoint.parent;
+
+            if (pointToDisable.ModularPartPoint.TryGetComponent(out ModularWeaponPart partToRemove))
+            {
+                foreach (var mount in partToRemove.AttachmentMounts)
+                {
+                    DetachAllAttachmentsFromMount(mount);
+
+                    MainObject.AttachmentMounts.Remove(mount);
+                }
+                MainObject.Slots = MainObject.Slots.Where(s => !partToRemove.SubQuickBeltSlots.Contains(s)).ToArray();
+
+                IPartFireArmRequirement[] partFireArmRequirements = partToRemove.GetComponents<IPartFireArmRequirement>();
+                foreach (var addon in partFireArmRequirements)
+                {
+                    addon.FireArm = null;
+                }
+                IPartPhysicalObjectRequirement[] partPhysicalObjectRequirement = partToRemove.GetComponents<IPartPhysicalObjectRequirement>();
+                foreach (var addon in partPhysicalObjectRequirement)
+                {
+                    addon.PhysicalObject = null;
+                }
+
+                ModularWeaponPartsAttachmentPoint[] subPoints = partToRemove.SubAttachmentPoints;
+                foreach (var subPoint in subPoints)
+                {
+                    oldSubParts.AddOrReplace(subPoint.ModularPartsGroupID, subPoint.SelectedModularWeaponPart);
+                    oldSkins.AddOrReplace(subPoint.ModularPartsGroupID, subPoint.CurrentSkin);
+
+                    RemoveSubAttachmentPoint(subPoint, MainObject, oldSubParts, oldSkins);
+                }
+            }
+
+            Destroy(pointToDisable.ModularPartPoint.gameObject);
+            pointToDisable.ModularPartPoint = temp.transform;
+        }
+
+        private void RemovePartsPointOccupation(ModularWeaponPart part, Dictionary<string, string> oldSubParts, Dictionary<string, string> oldSkins)
+        {
+            foreach (var alsoOccupiesPointWithModularPartsGroupID in part.AlsoOccupiesPointWithModularPartsGroupIDs)
+            {
+                if (AllAttachmentPoints.TryGetValue(alsoOccupiesPointWithModularPartsGroupID, out ModularWeaponPartsAttachmentPoint disabledPoint))
+                {
+                    _occupiedPartsPoints.Remove(alsoOccupiesPointWithModularPartsGroupID);
+
+                    if (!_occupiedPartsPoints.Contains(alsoOccupiesPointWithModularPartsGroupID))
                     {
-                        foreach (var mount in partToRemove.AttachmentMounts)
-                        {
-                            DetachAllAttachmentsFromMount(mount);
+                        disabledPoint.IsPointDisabled = false;
+                        ConfigureModularWeaponPart(disabledPoint, disabledPoint.SelectedModularWeaponPart, false, oldSubParts, oldSkins);
 
-                            MainObject.AttachmentMounts.Remove(mount);
-                        }
-                        MainObject.Slots = MainObject.Slots.Where(s => !partToRemove.SubQuickBeltSlots.Contains(s)).ToArray();
-
-                        IPartFireArmRequirement[] partFireArmRequirements = partToRemove.GetComponents<IPartFireArmRequirement>();
-                        foreach (var addon in partFireArmRequirements)
-                        {
-                            addon.FireArm = null;
-                        }
-                        IPartPhysicalObjectRequirement[] partPhysicalObjectRequirement = partToRemove.GetComponents<IPartPhysicalObjectRequirement>();
-                        foreach (var addon in partPhysicalObjectRequirement)
-                        {
-                            addon.PhysicalObject = null;
-                        }
-
-                        ModularWeaponPartsAttachmentPoint[] subPoints = partToRemove.SubAttachmentPoints;
-                        foreach (var subPoint in subPoints)
-                        {
-                            oldSubParts.AddOrReplace(subPoint.ModularPartsGroupID, subPoint.SelectedModularWeaponPart);
-                            oldSkins.AddOrReplace(subPoint.ModularPartsGroupID, subPoint.CurrentSkin);
-
-                            RemoveSubAttachmentPoint(subPoint, MainObject, oldSubParts, oldSkins);
-                        }
+                        if (!SubAttachmentPoints.Contains(disabledPoint)) WorkshopPlatform?.CreateUIForPoint(disabledPoint, ModularWorkshopUI.EPartType.MainWeaponGeneralAttachmentPoint);
+                        else WorkshopPlatform?.CreateUIForPoint(disabledPoint);
                     }
-
-                    Destroy(pointToDisable.ModularPartPoint.gameObject);
-                    pointToDisable.ModularPartPoint = temp.transform;
                 }
             }
         }
