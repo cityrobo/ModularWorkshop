@@ -13,7 +13,7 @@ using BepInEx.Logging;
 
 namespace ModularWorkshop
 {
-    [BepInPlugin("h3vr.cityrobo.ModularWorkshopManager", "Modular Workshop Manager", "1.3.0")]
+    [BepInPlugin("h3vr.cityrobo.ModularWorkshopManager", "Modular Workshop Manager", "1.3.1")]
     [BepInDependency("h3vr.OpenScripts2")]
     public class ModularWorkshopManager : BaseUnityPlugin
     {

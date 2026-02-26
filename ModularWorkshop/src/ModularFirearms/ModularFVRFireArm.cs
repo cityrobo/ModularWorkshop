@@ -231,7 +231,7 @@ namespace ModularWorkshop
             }
         }
 
-        public void AddSubAttachmentPoint(ModularWeaponPartsAttachmentPoint subPoint, FVRFireArm fireArm, Dictionary<string,string> oldSubParts, Dictionary<string, string> oldSkins, string selectedPart, bool isRandomized = false)
+        public void AddSubAttachmentPoint(ModularWeaponPartsAttachmentPoint subPoint, Dictionary<string,string> oldSubParts, Dictionary<string, string> oldSkins, string selectedPart, bool isRandomized = false)
         {
             SubAttachmentPoints.Add(subPoint);
             ConfigureModularWeaponPart(subPoint, selectedPart, isRandomized, oldSubParts, oldSkins);
@@ -241,15 +241,15 @@ namespace ModularWorkshop
             if (_occupiedPartsPoints.Contains(subPoint.ModularPartsGroupID)) DisablePartsPoint(subPoint, oldSubParts, oldSkins);
         }
 
-        public void RemoveSubAttachmentPoint(ModularWeaponPartsAttachmentPoint subPoint, FVRFireArm fireArm, Dictionary<string,string> oldSubParts, Dictionary<string, string> oldSkins)
+        public void RemoveSubAttachmentPoint(ModularWeaponPartsAttachmentPoint subPoint, Dictionary<string,string> oldSubParts, Dictionary<string, string> oldSkins)
         {
             SubAttachmentPoints.Remove(subPoint);
 
-            ModularWeaponPart part = subPoint.ModularPartPoint.GetComponent<ModularWeaponPart>();
+            ModularWeaponPart part = subPoint.ModularPartPoint.GetComponentInChildren<ModularWeaponPart>();
             if (part != null)
             {
-                IPartFireArmRequirement[] partFireArmRequiremen = part.GetComponents<IPartFireArmRequirement>();
-                foreach (var addon in partFireArmRequiremen)
+                IPartFireArmRequirement[] partFireArmRequirement = part.GetComponents<IPartFireArmRequirement>();
+                foreach (var addon in partFireArmRequirement)
                 {
                     addon.FireArm = null;
                 }
@@ -265,7 +265,7 @@ namespace ModularWorkshop
                 {
                     DetachAllAttachmentsFromMount(mount);
 
-                    fireArm.AttachmentMounts.Remove(mount);
+                    FireArm.AttachmentMounts.Remove(mount);
                 }
 
                 foreach (var subSubPoint in part.SubAttachmentPoints)
@@ -273,7 +273,7 @@ namespace ModularWorkshop
                     oldSubParts.Add(subSubPoint.ModularPartsGroupID, subSubPoint.SelectedModularWeaponPart);
                     oldSkins.AddOrReplace(subPoint.ModularPartsGroupID, subPoint.CurrentSkin);
 
-                    RemoveSubAttachmentPoint(subSubPoint, fireArm, oldSubParts, oldSkins);
+                    RemoveSubAttachmentPoint(subSubPoint, oldSubParts, oldSkins);
                 }
             }
             WorkshopPlatform?.RemoveUIFromPoint(subPoint);
@@ -421,7 +421,7 @@ namespace ModularWorkshop
                     oldSubParts.Add(point.ModularPartsGroupID, point.SelectedModularWeaponPart);
                     oldSkins.Add(point.ModularPartsGroupID, point.CurrentSkin);
 
-                    RemoveSubAttachmentPoint(point, FireArm, oldSubParts, oldSkins);
+                    RemoveSubAttachmentPoint(point, oldSubParts, oldSkins);
                 }
             }
 
@@ -486,7 +486,7 @@ namespace ModularWorkshop
                     oldSubParts.Add(point.ModularPartsGroupID, point.SelectedModularWeaponPart);
                     oldSkins.Add(point.ModularPartsGroupID, point.CurrentSkin);
 
-                    RemoveSubAttachmentPoint(point, FireArm, oldSubParts, oldSkins);
+                    RemoveSubAttachmentPoint(point, oldSubParts, oldSkins);
                 }
                 if (oldPart.HasCustomMuzzleEffects)
                 {
@@ -642,7 +642,7 @@ namespace ModularWorkshop
                     oldSubParts.Add(point.ModularPartsGroupID, point.SelectedModularWeaponPart);
                     oldSkins.Add(point.ModularPartsGroupID, point.CurrentSkin);
 
-                    RemoveSubAttachmentPoint(point, FireArm, oldSubParts, oldSkins);
+                    RemoveSubAttachmentPoint(point, oldSubParts, oldSkins);
                 }
 
                 RemovePartsPointOccupation(oldPart, oldSubParts, oldSkins);
@@ -871,7 +871,7 @@ namespace ModularWorkshop
                     oldSubParts.AddOrReplace(point.ModularPartsGroupID, point.SelectedModularWeaponPart);
                     oldSkins.AddOrReplace(point.ModularPartsGroupID, point.CurrentSkin);
 
-                    RemoveSubAttachmentPoint(point, FireArm, oldSubParts, oldSkins);
+                    RemoveSubAttachmentPoint(point, oldSubParts, oldSkins);
                 }
 
                 if (oldPart.ChangesPosePosition)
@@ -1215,7 +1215,7 @@ namespace ModularWorkshop
                     oldSubParts.AddOrReplace(subPoint.ModularPartsGroupID, subPoint.SelectedModularWeaponPart);
                     oldSkins.AddOrReplace(subPoint.ModularPartsGroupID, subPoint.CurrentSkin);
 
-                    RemoveSubAttachmentPoint(subPoint, FireArm, oldSubParts, oldSkins);
+                    RemoveSubAttachmentPoint(subPoint, oldSubParts, oldSkins);
                 }
             }
 
@@ -1284,12 +1284,15 @@ namespace ModularWorkshop
         {
             foreach (var subPoint in newPart.SubAttachmentPoints)
             {
-                if (!isRandomized && oldSubParts.TryGetValue(subPoint.ModularPartsGroupID, out string oldSelectedPart) && oldSelectedPart != subPoint.SelectedModularWeaponPart) AddSubAttachmentPoint(subPoint, FireArm, oldSubParts, oldSkins, oldSelectedPart);
+                if (!isRandomized && oldSubParts.TryGetValue(subPoint.ModularPartsGroupID, out string oldSelectedPart) && oldSelectedPart != subPoint.SelectedModularWeaponPart)
+                {
+                    AddSubAttachmentPoint(subPoint, oldSubParts, oldSkins, oldSelectedPart);
+                }
                 else
                 {
                     string selectedSubPart = isRandomized ? ModularWorkshopManager.ModularWorkshopPartsGroupsDictionary[subPoint.ModularPartsGroupID].GetRandomPart() : subPoint.SelectedModularWeaponPart;
 
-                    AddSubAttachmentPoint(subPoint, FireArm, oldSubParts, oldSkins, selectedSubPart, isRandomized);
+                    AddSubAttachmentPoint(subPoint, oldSubParts, oldSkins, selectedSubPart, isRandomized);
                 }
             }
         }

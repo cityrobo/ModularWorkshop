@@ -710,8 +710,8 @@ namespace ModularWorkshop
                         w.Handle.RotatingPartNeutralEulers = BoltHandleRotatingPartNeutralEulers;
                         w.Handle.RotatingPartRightEulers = BoltHandleRotatingPartRightEulers;
                         break;
-                    case OpenBoltReceiver o:
-                        OpenBoltChargingHandle _openCharge = o.GetComponentInChildren<OpenBoltChargingHandle>(true);
+                    case OpenBoltReceiver w:
+                        OpenBoltChargingHandle _openCharge = w.GetComponentInChildren<OpenBoltChargingHandle>(true);
                         if (_openCharge != null)
                         {
                             _openCharge.HasRotatingPart = true;
@@ -734,8 +734,8 @@ namespace ModularWorkshop
                         w.Handle.RotatingPartNeutralEulers = Vector3.zero;
                         w.Handle.RotatingPartRightEulers = Vector3.zero;
                         break;
-                    case OpenBoltReceiver o:
-                        OpenBoltChargingHandle _openCharge = o.GetComponentInChildren<OpenBoltChargingHandle>(true);
+                    case OpenBoltReceiver w:
+                        OpenBoltChargingHandle _openCharge = w.GetComponentInChildren<OpenBoltChargingHandle>(true);
                         if (_openCharge != null)
                         {
                             _openCharge.HasRotatingPart = false;

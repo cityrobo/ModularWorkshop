@@ -79,14 +79,17 @@ namespace ModularWorkshop
         {
             return ModularFVRFireArm.ConfigureModularWeaponPart(modularWeaponPartsAttachmentPoint, selectedPart, isRandomized);
         }
+
         public ModularBarrel ConfigureModularBarrel(string selectedPart, bool isRandomized = false)
         {
             return ModularFVRFireArm.ConfigureModularBarrel(selectedPart, isRandomized);
         }
+
         public ModularHandguard ConfigureModularHandguard(string selectedPart, bool isRandomized = false)
         {
             return ModularFVRFireArm.ConfigureModularHandguard(selectedPart, isRandomized);
         }
+
         public ModularStock ConfigureModularStock(string selectedPart, bool isRandomized = false)
         {
             return ModularFVRFireArm.ConfigureModularStock(selectedPart, isRandomized);
@@ -97,18 +100,21 @@ namespace ModularWorkshop
             string selectedPart;
             if (ModularBarrelPartsID != string.Empty)
             {
-                selectedPart = ModularFVRFireArm.IsInTakeAndHold && !ModularFVRFireArm.WasUnvaulted && !ModularFVRFireArm.ModularBarrelAttachmentPoint.DisallowTakeAndHoldRandomization ? ModularWorkshopManager.ModularWorkshopPartsGroupsDictionary[ModularBarrelPartsID].GetRandomPart() : SelectedModularBarrel;
+                selectedPart = ModularFVRFireArm.IsInTakeAndHold && !ModularFVRFireArm.WasUnvaulted && 
+                    !ModularFVRFireArm.ModularBarrelAttachmentPoint.DisallowTakeAndHoldRandomization ? ModularWorkshopManager.ModularWorkshopPartsGroupsDictionary[ModularBarrelPartsID].GetRandomPart() : SelectedModularBarrel;
                 ConfigureModularBarrel(selectedPart);
             }
             if (ModularHandguardPartsID != string.Empty)
             {
-                selectedPart = ModularFVRFireArm.IsInTakeAndHold && !ModularFVRFireArm.WasUnvaulted && !ModularFVRFireArm.ModularHandguardAttachmentPoint.DisallowTakeAndHoldRandomization ? ModularWorkshopManager.ModularWorkshopPartsGroupsDictionary[ModularHandguardPartsID].GetRandomPart() : SelectedModularHandguard;
+                selectedPart = ModularFVRFireArm.IsInTakeAndHold && !ModularFVRFireArm.WasUnvaulted && 
+                    !ModularFVRFireArm.ModularHandguardAttachmentPoint.DisallowTakeAndHoldRandomization ? ModularWorkshopManager.ModularWorkshopPartsGroupsDictionary[ModularHandguardPartsID].GetRandomPart() : SelectedModularHandguard;
 
                 ConfigureModularHandguard(selectedPart);
             }
             if (ModularStockPartsID != string.Empty)
             {
-                selectedPart = ModularFVRFireArm.IsInTakeAndHold && !ModularFVRFireArm.WasUnvaulted && !ModularFVRFireArm.ModularStockAttachmentPoint.DisallowTakeAndHoldRandomization ? ModularWorkshopManager.ModularWorkshopPartsGroupsDictionary[ModularStockPartsID].GetRandomPart() : SelectedModularStock;
+                selectedPart = ModularFVRFireArm.IsInTakeAndHold && !ModularFVRFireArm.WasUnvaulted && 
+                    !ModularFVRFireArm.ModularStockAttachmentPoint.DisallowTakeAndHoldRandomization ? ModularWorkshopManager.ModularWorkshopPartsGroupsDictionary[ModularStockPartsID].GetRandomPart() : SelectedModularStock;
 
                 ConfigureModularStock(selectedPart);
             }
@@ -118,7 +124,8 @@ namespace ModularWorkshop
 
                 if (ModularWorkshopManager.ModularWorkshopPartsGroupsDictionary.TryGetValue(attachmentPoint.ModularPartsGroupID, out ModularWorkshopPartsDefinition prefabs) && prefabs.PartsDictionary.Count > 0)
                 {
-                    selectedPart = ModularFVRFireArm.IsInTakeAndHold && !ModularFVRFireArm.WasUnvaulted && !attachmentPoint.DisallowTakeAndHoldRandomization ? ModularWorkshopManager.ModularWorkshopPartsGroupsDictionary[attachmentPoint.ModularPartsGroupID].GetRandomPart() : attachmentPoint.SelectedModularWeaponPart;
+                    selectedPart = ModularFVRFireArm.IsInTakeAndHold && !ModularFVRFireArm.WasUnvaulted && 
+                        !attachmentPoint.DisallowTakeAndHoldRandomization ? ModularWorkshopManager.ModularWorkshopPartsGroupsDictionary[attachmentPoint.ModularPartsGroupID].GetRandomPart() : attachmentPoint.SelectedModularWeaponPart;
 
                     ConfigureModularWeaponPart(attachmentPoint, selectedPart, ModularFVRFireArm.IsInTakeAndHold);
                 }
