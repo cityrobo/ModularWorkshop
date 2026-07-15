@@ -117,7 +117,6 @@ namespace ModularWorkshop
                         else
                         {
                             partsDefinitionOld.ModularPrefabs.AddRange(partDefinition.ModularPrefabs);
-                            //partsDefinitionOld.ModularPrefabs.InsertRange(0, partDefinition.ModularPrefabs);
                             Logger.LogInfo($"Added more parts from ModularWorkshopPartsDefinition \"{partDefinition.name}\" to ModularPartsGroupID \"{partDefinition.ModularPartsGroupID}\".");
                         }
                     }
