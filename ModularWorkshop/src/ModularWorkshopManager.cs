@@ -92,6 +92,13 @@ namespace ModularWorkshop
 
         private IEnumerator UpdatePartsDatabase()
         {
+            foreach (var partDefinition in s_foundModularPartsDefinitions)
+            {
+                var runtimeSet = new HashSet<GameObject>(partDefinition.RuntimeAdditionalModularPrefabs);
+                partDefinition.ModularPrefabs.RemoveAll(runtimeSet.Contains);
+                partDefinition.RuntimeAdditionalModularPrefabs.Clear();
+            }
+            
             _numberOfPartsTries = 0;
             _loadingPartsDatabase = true;
             s_foundModularPartsDefinitions.Clear();
@@ -117,6 +124,7 @@ namespace ModularWorkshop
                         else
                         {
                             partsDefinitionOld.ModularPrefabs.AddRange(partDefinition.ModularPrefabs);
+                            partsDefinitionOld.RuntimeAdditionalModularPrefabs.AddRange(partDefinition.ModularPrefabs);
                             Logger.LogInfo($"Added more parts from ModularWorkshopPartsDefinition \"{partDefinition.name}\" to ModularPartsGroupID \"{partDefinition.ModularPartsGroupID}\".");
                         }
                     }
@@ -139,6 +147,13 @@ namespace ModularWorkshop
 
         private IEnumerator UpdateSkinDatabase()
         {
+            foreach (var skinDefinition in s_foundModularSkinsDefinitions)
+            {
+                var runtimeSet = new HashSet<ModularWorkshopSkinsDefinition.SkinDefinition>(skinDefinition.RuntimeAdditionalSkinDefinitions);
+                skinDefinition.SkinDefinitions.RemoveAll(runtimeSet.Contains);
+                skinDefinition.RuntimeAdditionalSkinDefinitions.Clear();
+            }
+            
             _numberOfSkinsTries = 0;
             _loadingSkinsDatabase = true;
             s_foundModularSkinsDefinitions.Clear();
@@ -159,6 +174,7 @@ namespace ModularWorkshop
                         if (ModularWorkshopSkinsDictionary.TryGetValue(skinPath, out ModularWorkshopSkinsDefinition skinsDefinitionOld))
                         {
                             skinsDefinitionOld.SkinDefinitions.AddRange(skinDefinition.SkinDefinitions);
+                            skinsDefinitionOld.RuntimeAdditionalSkinDefinitions.AddRange(skinDefinition.SkinDefinitions);
                             Logger.LogInfo($"Added more skins from ModularWorkshopSkinsDefinition \"{skinDefinition.name}\" to ModularSkin \"{skinPath}\".");
                         }
                         else
