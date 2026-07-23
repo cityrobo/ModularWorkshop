@@ -157,10 +157,19 @@ namespace ModularWorkshop
             _numberOfSkinsTries = 0;
             _loadingSkinsDatabase = true;
             s_foundModularSkinsDefinitions.Clear();
-            ModularWorkshopSkinsDictionary.Clear();
+            
+            // AutomaticallyCreated skins are created when spawning objects
+            var nonAutoCreatedKeys = ModularWorkshopSkinsDictionary
+                .Where(pair => !pair.Value.AutomaticallyCreated)
+                .Select(pair => pair.Key)
+                .ToList();
+            foreach (var key in nonAutoCreatedKeys)
+                ModularWorkshopSkinsDictionary.Remove(key);
+
             while (_numberOfSkinsTries < MaximumNumberOfTries.Value)
             {
-                ModularWorkshopSkinsDefinition[] skinsDefinitions = Resources.FindObjectsOfTypeAll<ModularWorkshopSkinsDefinition>().Where(d => !d.AutomaticallyCreated).ToArray();
+                var skinsDefinitions = Resources.FindObjectsOfTypeAll<ModularWorkshopSkinsDefinition>()
+                    .Where(d => !d.AutomaticallyCreated).ToArray();
 
                 foreach (var skinDefinition in skinsDefinitions)
                 {
