@@ -92,6 +92,14 @@ namespace ModularWorkshop
 
         private IEnumerator UpdatePartsDatabase()
         {
+            foreach (var partDefinition in s_foundModularPartsDefinitions)
+            {
+                var runtimeSet = new HashSet<GameObject>(partDefinition.RuntimeAdditionalModularPrefabs);
+                partDefinition.ModularPrefabs.RemoveAll(runtimeSet.Contains);
+                partDefinition.RuntimeAdditionalModularPrefabs.Clear();
+            }
+            
+            _numberOfPartsTries = 0;
             _loadingPartsDatabase = true;
             s_foundModularPartsDefinitions.Clear();
             ModularWorkshopPartsGroupsDictionary.Clear();
@@ -116,6 +124,7 @@ namespace ModularWorkshop
                         else
                         {
                             partsDefinitionOld.ModularPrefabs.AddRange(partDefinition.ModularPrefabs);
+                            partsDefinitionOld.RuntimeAdditionalModularPrefabs.AddRange(partDefinition.ModularPrefabs);
                             Logger.LogInfo($"Added more parts from ModularWorkshopPartsDefinition \"{partDefinition.name}\" to ModularPartsGroupID \"{partDefinition.ModularPartsGroupID}\".");
                         }
                     }
@@ -138,12 +147,29 @@ namespace ModularWorkshop
 
         private IEnumerator UpdateSkinDatabase()
         {
+            foreach (var skinDefinition in s_foundModularSkinsDefinitions)
+            {
+                var runtimeSet = new HashSet<ModularWorkshopSkinsDefinition.SkinDefinition>(skinDefinition.RuntimeAdditionalSkinDefinitions);
+                skinDefinition.SkinDefinitions.RemoveAll(runtimeSet.Contains);
+                skinDefinition.RuntimeAdditionalSkinDefinitions.Clear();
+            }
+            
+            _numberOfSkinsTries = 0;
             _loadingSkinsDatabase = true;
-            s_foundModularPartsDefinitions.Clear();
-            ModularWorkshopSkinsDictionary.Clear();
+            s_foundModularSkinsDefinitions.Clear();
+            
+            // AutomaticallyCreated skins are created when spawning objects
+            var nonAutoCreatedKeys = ModularWorkshopSkinsDictionary
+                .Where(pair => !pair.Value.AutomaticallyCreated)
+                .Select(pair => pair.Key)
+                .ToList();
+            foreach (var key in nonAutoCreatedKeys)
+                ModularWorkshopSkinsDictionary.Remove(key);
+
             while (_numberOfSkinsTries < MaximumNumberOfTries.Value)
             {
-                ModularWorkshopSkinsDefinition[] skinsDefinitions = Resources.FindObjectsOfTypeAll<ModularWorkshopSkinsDefinition>().Where(d => !d.AutomaticallyCreated).ToArray();
+                var skinsDefinitions = Resources.FindObjectsOfTypeAll<ModularWorkshopSkinsDefinition>()
+                    .Where(d => !d.AutomaticallyCreated).ToArray();
 
                 foreach (var skinDefinition in skinsDefinitions)
                 {
@@ -157,6 +183,7 @@ namespace ModularWorkshop
                         if (ModularWorkshopSkinsDictionary.TryGetValue(skinPath, out ModularWorkshopSkinsDefinition skinsDefinitionOld))
                         {
                             skinsDefinitionOld.SkinDefinitions.AddRange(skinDefinition.SkinDefinitions);
+                            skinsDefinitionOld.RuntimeAdditionalSkinDefinitions.AddRange(skinDefinition.SkinDefinitions);
                             Logger.LogInfo($"Added more skins from ModularWorkshopSkinsDefinition \"{skinDefinition.name}\" to ModularSkin \"{skinPath}\".");
                         }
                         else

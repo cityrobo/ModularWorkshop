@@ -19,6 +19,10 @@ namespace ModularWorkshop
         public string PartName;
         [Tooltip("List of the different skins of the part.")]
         public List<SkinDefinition> SkinDefinitions;
+        
+        /// Used only for reverting SkinDefinitions back to initial state during database reload
+        internal readonly List<SkinDefinition> RuntimeAdditionalSkinDefinitions = [];
+        
         [HideInInspector]
         public bool AutomaticallyCreated = false;
 

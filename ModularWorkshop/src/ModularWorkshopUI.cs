@@ -301,10 +301,24 @@ namespace ModularWorkshop
                 _isShowingSkins = true;
 
                 string partName = _partNames[_selectedPart];
-                _skinDictionary = ModularWorkshopManager.ModularWorkshopSkinsDictionary[ModularPartsGroupID + "/" + partName].SkinDictionary;
-                _skinNames = _skinDictionary.Keys.ToArray();
-                _skinSprites = _skinDictionary.Values.Select(s => s.Icon).ToArray();
-                _skinDisplayNames = _skinDictionary.Values.Select(s => s.DisplayName).ToArray();
+                string skinPath = ModularPartsGroupID + "/" + partName;
+                
+                if (ModularWorkshopManager.ModularWorkshopSkinsDictionary.TryGetValue(skinPath, out var skinsDefinition))
+                {
+                    _skinDictionary = skinsDefinition.SkinDictionary;
+                    _skinNames = _skinDictionary.Keys.ToArray();
+                    _skinSprites = _skinDictionary.Values.Select(s => s.Icon).ToArray();
+                    _skinDisplayNames = _skinDictionary.Values.Select(s => s.DisplayName).ToArray();
+                }
+                else
+                {
+                    ModularWorkshopManager.LogWarning($"[InitializeArrays] Missing skin path " +
+                                                      $"'{skinPath}' in UI: {DisplayNameText?.text}");
+                    _skinDictionary = [];
+                    _skinNames = [];
+                    _skinSprites = [];
+                    _skinDisplayNames = [];
+                }
                 string skinName = string.Empty;
                 if (ModularWeapon != null) skinName = ModularWeapon.AllAttachmentPoints[ModularPartsGroupID].CurrentSkin;
                 else if (ModularPhysicalObject != null) skinName = ModularPhysicalObject.AllAttachmentPoints[ModularPartsGroupID].CurrentSkin;
@@ -326,10 +340,23 @@ namespace ModularWorkshop
                 string skinPath = string.Empty;
                 if (ModularWeapon != null) skinPath = ModularWeapon.GetModularFVRFireArm.SkinPath;
                 else if (ModularPhysicalObject != null) skinPath = ModularPhysicalObject.SkinPath;
-                _skinDictionary = ModularWorkshopManager.ModularWorkshopSkinsDictionary[skinPath].SkinDictionary;
-                _skinNames = _skinDictionary.Keys.ToArray();
-                _skinSprites = _skinDictionary.Values.Select(s => s.Icon).ToArray();
-                _skinDisplayNames = _skinDictionary.Values.Select(s => s.DisplayName).ToArray();
+                
+                if (ModularWorkshopManager.ModularWorkshopSkinsDictionary.TryGetValue(skinPath, out var skinsDefinition))
+                {
+                    _skinDictionary = skinsDefinition.SkinDictionary;
+                    _skinNames = _skinDictionary.Keys.ToArray();
+                    _skinSprites = _skinDictionary.Values.Select(s => s.Icon).ToArray();
+                    _skinDisplayNames = _skinDictionary.Values.Select(s => s.DisplayName).ToArray();
+                }
+                else
+                {
+                    ModularWorkshopManager.LogWarning($"[SetupReceiverSkinOnlyMode(false)] Missing skin path " +
+                                                      $"'{skinPath}' in UI: {DisplayNameText?.text}");
+                    _skinDictionary = [];
+                    _skinNames = [];
+                    _skinSprites = [];
+                    _skinDisplayNames = [];
+                }
                 string skinName = string.Empty;
                 if (ModularWeapon != null) skinName = ModularWeapon.GetModularFVRFireArm.CurrentSelectedReceiverSkinID;
                 else if (ModularPhysicalObject != null) skinName = ModularPhysicalObject.CurrentSelectedReceiverSkinID;
@@ -341,10 +368,22 @@ namespace ModularWorkshop
             {
                 string skinPath = SkinSystem.SkinPath;
 
-                _skinDictionary = ModularWorkshopManager.ModularWorkshopSkinsDictionary[skinPath].SkinDictionary;
-                _skinNames = _skinDictionary.Keys.ToArray();
-                _skinSprites = _skinDictionary.Values.Select(s => s.Icon).ToArray();
-                _skinDisplayNames = _skinDictionary.Values.Select(s => s.DisplayName).ToArray();
+                if (ModularWorkshopManager.ModularWorkshopSkinsDictionary.TryGetValue(skinPath, out var skinsDefinition))
+                {
+                    _skinDictionary = skinsDefinition.SkinDictionary;
+                    _skinNames = _skinDictionary.Keys.ToArray();
+                    _skinSprites = _skinDictionary.Values.Select(s => s.Icon).ToArray();
+                    _skinDisplayNames = _skinDictionary.Values.Select(s => s.DisplayName).ToArray();
+                }
+                else
+                {
+                    ModularWorkshopManager.LogWarning($"[SetupReceiverSkinOnlyMode(true)] Missing skin path " +
+                                                      $"'{skinPath}' in UI: {DisplayNameText?.text}");
+                    _skinDictionary = [];
+                    _skinNames = [];
+                    _skinSprites = [];
+                    _skinDisplayNames = [];
+                }
                 string skinName = SkinSystem.CurrentSelectedReceiverSkinID;
                 _selectedSkin = Array.IndexOf(_skinNames, skinName);
                 _skinPageIndex = Mathf.FloorToInt(_selectedSkin / PartButtons.Length);

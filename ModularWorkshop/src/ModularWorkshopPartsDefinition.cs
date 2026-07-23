@@ -16,6 +16,9 @@ namespace ModularWorkshop
         [Tooltip("Optional Display name. If left empty, the ModularPartsGroupID will be used as a display name instead.")]
         public string DisplayName;
         public List<GameObject> ModularPrefabs;
+        
+        /// Used only for reverting ModularPrefabs back to initial state during database reload
+        internal readonly List<GameObject> RuntimeAdditionalModularPrefabs = [];
 
         [HideInInspector]
         public bool _usesCategories = false;
